@@ -1,0 +1,10 @@
+{{ partial "header" . }}
+
+<main>
+    {{ range (.Paginator 5).Pages }} {{ partial "list-item" . }} {{ end }}
+
+</main>
+
+{{ partial "paginator" . }}
+
+{{ partial "footer" . }}

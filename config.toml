@@ -1,3 +1,36 @@
 baseURL = "http://pion.ly/"
 languageCode = "en-us"
-title = "Pion, the easiest way to build realtime experiences"
+title = "Pions"
+theme = "minimal"
+
+[params]
+    author = "Pion Team"
+    description = "building blocks for realtime communication"
+    githubUsername = "pions"
+    accent = "red"
+    showBorder = true
+    backgroundColor = "white"
+    font = "Anonymous+Pro"
+    highlight = true
+    highlightStyle = "solarized-dark"
+    highlightLanguages = ["go"]
+
+[[menu.main]]
+    url = "/docs/"
+    name = "Docs"
+    weight = 3
+
+[[menu.main]]
+    url = "/about/"
+    name = "What's Pions?"
+    weight = 3
+
+[[menu.icon]]
+    url = "mailto:team@pion.ly"
+    name = "envelope-o"
+    weight = 1
+
+[[menu.icon]]
+    url = "https://github.com/pions/"
+    name = "github"
+    weight = 2
