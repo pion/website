@@ -17,14 +17,24 @@ theme = "minimal"
     highlightLanguages = ["go"]
 
 [[menu.main]]
-    url = "/docs/"
-    name = "Docs"
+    url = "/"
+    name = "Home"
+    weight = 1
+
+[[menu.main]]
+    url = "/project/"
+    name = "Pions"
+    weight = 2
+
+[[menu.main]]
+    url = "/post/"
+    name = "Blog"
     weight = 3
 
 [[menu.main]]
     url = "/about/"
-    name = "What's Pions?"
-    weight = 3
+    name = "About"
+    weight = 4
 
 [[menu.icon]]
     url = "mailto:team@pion.ly"
