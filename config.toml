@@ -31,6 +31,11 @@ theme = "minimal"
     weight = 1
 
 [[menu.icon]]
+    url = "http://gophers.slack.com/messages/pion"
+    name = "slack"
+    weight = 2
+
+[[menu.icon]]
     url = "https://github.com/pions/"
     name = "github"
-    weight = 2
+    weight = 3
