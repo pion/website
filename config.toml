@@ -5,7 +5,7 @@ theme = "minimal"
 
 [params]
     author = "Pion Team"
-    description = "building blocks for realtime communication"
+    profilePic = "logo.png"
     description = "Building Blocks for Realtime Communication"
     githubUsername = "pions"
     accent = "#e53935"
