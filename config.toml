@@ -6,11 +6,12 @@ theme = "minimal"
 [params]
     author = "Pion Team"
     description = "building blocks for realtime communication"
+    description = "Building Blocks for Realtime Communication"
     githubUsername = "pions"
     accent = "#e53935"
     showBorder = true
     backgroundColor = "white"
-    font = "Anonymous+Pro"
+    font = "Quicksand"
     highlight = true
     highlightStyle = "solarized-dark"
     highlightLanguages = ["go"]
