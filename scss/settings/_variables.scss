@@ -1,0 +1,46 @@
+// Colors & Palette
+$white: #fff;
+$black: #000;
+
+$brand-gray: #090A0C;
+$brand-red: #E53935;
+
+$base: #141414;
+$dgray: lighten($base, 25%);
+$gray: lighten($base, 45%);
+$medgray: lighten($base, 65%);
+$lgray: lighten($base, 76%);
+$offwhite: #f6f6f6;
+
+$primary: #0432ff; // Blue
+
+// Fonts
+$basefontsize: 20px;
+$mainfont: 'Quicksand', sans-serif;
+$iconfont: 'noah-shrader';
+
+// Header
+$headerheight: 100px;
+
+// Footer
+$footerheight: 140px;
+
+// Book List
+$book-list-width: 550px;
+
+// Miscellaneous
+$intro-image-size: 480px;
+
+// Structure
+$radius: 2px;
+
+// Padding & Spacing
+$gutter: 60px;
+$vertical-padding: ($headerheight * 2);
+$horizontal-padding: ($headerheight * 2);
+
+// Breakpoints
+$maxdesktop: 1600px;
+$largedevice: 1024px;
+$mediumdevice: 800px;
+$smalldevice: 480px;

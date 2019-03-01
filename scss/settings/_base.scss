@@ -1,0 +1,273 @@
+*,
+*:after,
+*:before {
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	-webkit-font-smoothing: antialiased;
+	font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  font-size: 120%;
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+	background: $white;
+}
+
+body {
+  @include trans;
+	font-family: $mainfont;
+	font-size: $basefontsize;
+  font-weight: 400;
+
+  &.stuck {
+    overflow: hidden;
+  }
+}
+
+// Links
+a {
+  @include trans;
+  position: relative;
+  color: $primary;
+  vertical-align: baseline;
+  background: transparent;
+  text-decoration: none;
+  z-index: 10;
+  cursor: pointer;
+
+  p & {
+    &:hover {
+      color: $white;
+      background: $primary;
+    }
+  }
+
+  // Large links with circular arrows
+  &.main {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    color: $primary;
+    font-family: $mainfont;
+    font-weight: 700;
+
+    i {
+      --size: 60px;
+      @include trans;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      left: 10px;
+      font-size: 18px;
+      height: var(--size);
+      width: var(--size);
+      border: solid 2px $primary;
+      border-radius: var(--size);
+      z-index: 0;
+
+      &::before {
+        position: relative;
+        left: 1px;
+        top: 1px;
+      }
+
+      @media screen and (max-width: $smalldevice) {
+        --size: 50px;
+      }
+    }
+
+    &:hover {
+      color: $primary;
+      background: transparent;
+
+      i {
+        color: $white;
+        background: $primary;
+        left: 20px;
+      }
+    }
+
+    @media screen and (max-width: $mediumdevice) {
+      font-size: 0.9em;
+      justify-content: center;
+    }
+  }
+}
+
+// Links
+a,
+a:active,
+a:visited {
+  color: $brand-red;
+  outline: none;
+
+  &:hover {
+    color: darken($brand-red, 20%);
+  }
+
+  p &,
+  li & {
+    border-bottom: dotted 1px $brand-red;
+
+    &:hover {
+      border-bottom-color: darken($brand-red, 20%);
+    }
+  }
+}
+
+// Images
+img {
+	max-width: 100%;
+}
+
+// Accents
+strong,
+strong a {
+	font-weight: 600;
+}
+
+[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+ul {
+  li {
+    margin-bottom: ($gutter / 10);
+  }
+}
+
+// Blockquotes
+blockquote,
+q {
+	position: relative;
+	color: $base;
+	font-size: 1.6em;
+	font-weight: 400;
+	line-height: 1.8em;
+  text-align: center;
+  padding: 1.6em ($gutter / 2);
+  margin: 2em 0;
+
+  &::before,
+  &::after {
+  	content: '';
+  	position: absolute;
+  	left: 50%;
+  	margin-left: -40px;
+  	height: 2px;
+  	width: 60px;
+  	background: $gray;
+  }
+
+  &::before {
+  	top: 0;
+  }
+
+  &::after {
+  	bottom: 0;
+  }
+
+  @media screen and (max-width: $mediumdevice) {
+    font-size: 1.4em;
+  }
+
+	@media screen and (max-width: $smalldevice) {
+		font-size: 1.2em;
+		line-height: 1.6em;
+		padding: $gutter ($gutter / 2);
+	}
+}
+
+// Selection
+::selection {
+  color: $white;
+  background: $primary;
+}
+
+// Code
+pre {
+	@include border-radius;
+	font-size: .8em;
+	line-height: 1.4em;
+	padding: 1.6em;
+	margin-bottom: 32px;
+	background: $lgray;
+	border-left: solid 5px $primary;
+}
+
+// Page wrapper
+.container {
+  margin: 0;
+}
+
+main {
+  @include trans;
+  padding: 0;
+  margin: 0 auto;
+	min-height: min-content;
+  width: 100%;
+
+  // When book library modal is open
+  &.open {
+    opacity: 0.25;
+    pointer-events: none;
+  }
+}
+
+section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: $vertical-padding ($gutter / 2);
+
+  .section-wrap {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 1300px;
+  }
+
+  .section-header {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: $maxdesktop;
+
+    @media screen and (max-width: $mediumdevice) {
+      text-align: center;
+      padding: 0 ($gutter / 2);
+    }
+  }
+
+  &.top {
+    padding-top: $vertical-padding;
+  }
+
+  @media screen and (max-width: $largedevice) {
+    padding-right: ($headerheight + ($gutter / 2));
+    padding-left: ($headerheight + ($gutter / 2));
+  }
+
+  @media screen and (max-width: $mediumdevice) {
+    padding: ($vertical-padding / 2) ($gutter / 2);
+  }
+}
+
+// Inner section wrapper
+.wrap {
+  display: flex;
+  margin: 0 auto;
+  width: 100%;
+  max-width: $maxdesktop;
+
+  @media screen and (max-width: $mediumdevice) {
+    flex-direction: column;
+  }
+}
