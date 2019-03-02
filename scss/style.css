@@ -677,6 +677,8 @@ header {
   header.shadow {
     background: #fff;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2); }
+    header.shadow .menu a {
+      color: #000; }
   header .menu {
     display: flex;
     justify-content: space-between;
@@ -779,6 +781,10 @@ header {
     .intro svg.visible {
       transform: scale(1) translateY(-50%);
       opacity: 1; }
+  .intro .button {
+    color: #090A0C; }
+    .intro .button:hover {
+      color: #fff; }
 
 .blog {
   max-width: 900px;
