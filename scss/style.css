@@ -679,6 +679,8 @@ header {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2); }
     header.shadow .menu a {
       color: #000; }
+      header.shadow .menu a:hover {
+        color: #E53935; }
   header .menu {
     display: flex;
     justify-content: space-between;
@@ -718,7 +720,7 @@ header {
           z-index: 0;
           transform: translateY(-50%); }
         header .menu div a:hover {
-          color: #E53935; }
+          color: #000; }
           header .menu div a:hover::before {
             opacity: 1;
             visibility: visible; }
