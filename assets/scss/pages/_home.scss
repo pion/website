@@ -59,4 +59,12 @@
       opacity: 1;
     }
   }
+
+  .button {
+    color: $brand-gray;
+
+    &:hover {
+      color: $white;
+    }
+  }
 }
