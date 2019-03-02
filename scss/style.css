@@ -681,6 +681,10 @@ header {
       color: #000; }
       header.shadow .menu a:hover {
         color: #E53935; }
+    header.shadow .logo {
+      content: url("../img/pion-logo.svg"); }
+  header .logo {
+    content: url("../img/pion-logo-white.svg"); }
   header .menu {
     display: flex;
     justify-content: space-between;
