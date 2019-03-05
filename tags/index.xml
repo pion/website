@@ -6,9 +6,28 @@
     <description>Recent content in Tags on Pion</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
+    <lastBuildDate>Tue, 05 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://pion.ly/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Pion</title>
+      <link>https://pion.ly/tags/pion/</link>
+      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/tags/pion/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Webrtc</title>
+      <link>https://pion.ly/tags/webrtc/</link>
+      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/tags/webrtc/</guid>
+      <description></description>
+    </item>
     
   </channel>
 </rss>

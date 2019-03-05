@@ -674,14 +674,14 @@ header {
     top: 0; }
   header .logo {
     height: 45px; }
-  header.shadow {
+  header.shadow, header.force-shadow {
     background: #fff;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2); }
-    header.shadow .menu a {
+    header.shadow .menu a, header.force-shadow .menu a {
       color: #000; }
-      header.shadow .menu a:hover {
+      header.shadow .menu a:hover, header.force-shadow .menu a:hover {
         color: #E53935; }
-    header.shadow .logo {
+    header.shadow .logo, header.force-shadow .logo {
       content: url("../img/pion-logo.svg"); }
   header .logo {
     content: url("../img/pion-logo-white.svg"); }
