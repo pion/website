@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Blog on Pion</title>
-    <link>https://pion.ly/blog/</link>
-    <description>Recent content in Blog on Pion</description>
+    <title>Sdp on Pion</title>
+    <link>https://pion.ly/tags/sdp/</link>
+    <description>Recent content in Sdp on Pion</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 05 Mar 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="https://pion.ly/blog/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://pion.ly/tags/sdp/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>Why Pion</title>
-      <link>https://pion.ly/blog/why-pion/</link>
+      <title>SDP Overview</title>
+      <link>https://pion.ly/kb/sdp-overview/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://pion.ly/blog/why-pion/</guid>
+      <guid>https://pion.ly/kb/sdp-overview/</guid>
       <description>// TODO</description>
     </item>
     
