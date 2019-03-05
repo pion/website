@@ -1,6 +1,6 @@
 ---
 title: "Cloud Native WebRTC"
-description: "The Open Source, Cross Platform Stack for Real-time Media and Data Communication"
+description: "The Open Source, Cross Platform Stack for Real-time Media and Data Communication."
 ---
 
 ### Real-time

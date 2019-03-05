@@ -8,6 +8,7 @@
   <link rel="mask-icon" href="{{ "safari-pinned-tab.svg" | absURL }}" color="#e53935">
   <meta name="msapplication-TileColor" content="#e53935">
   <meta name="theme-color" content="#ffffff">
+  {{if .Description}}<meta name="description" content="{{ .Description }}">{{end}}
 
   {{ $sass := resources.Get "scss/style.scss" }}
   {{ $style := $sass | resources.ToCSS }}
