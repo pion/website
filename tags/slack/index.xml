@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Pion</title>
-    <link>https://pion.ly/tags/pion/</link>
-    <description>Recent content on Pion</description>
+    <title>Slack on Pion</title>
+    <link>https://pion.ly/tags/slack/</link>
+    <description>Recent content in Slack on Pion</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 05 Mar 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="https://pion.ly/tags/pion/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://pion.ly/tags/slack/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -19,24 +19,6 @@
       <guid>https://pion.ly/slack/</guid>
       <description>Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality. Join the Slack by following these two easy steps:
  Invite yourself to the Golang Slack. Join the #pion channel.  </description>
-    </item>
-    
-    <item>
-      <title>WebRTC Deep Dive</title>
-      <link>https://pion.ly/knowledge-base/webrtc/webrtc-deep-dive/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/knowledge-base/webrtc/webrtc-deep-dive/</guid>
-      <description> TODO </description>
-    </item>
-    
-    <item>
-      <title>Why Pion</title>
-      <link>https://pion.ly/blog/why-pion/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/blog/why-pion/</guid>
-      <description>// TODO</description>
     </item>
     
   </channel>
