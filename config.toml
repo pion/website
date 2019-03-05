@@ -1,4 +1,5 @@
 baseURL = "https://pion.ly"
+defaultContentLanguage = "en"
 languageCode = "en-us"
 title = "Pion"
 theme = "vanilla-bootstrap-hugo-theme"
@@ -15,6 +16,12 @@ theme = "vanilla-bootstrap-hugo-theme"
     name = "Knowledge Base"
     url = "/kb/"
     weight = 2
+
+[languages]
+  [languages.en]
+    contentDir = "content/en"
+    languageName = "English"
+    weight = 1
 
 [params]
   includeBootstrapJs = false
