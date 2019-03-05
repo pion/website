@@ -13,10 +13,10 @@
     
     <item>
       <title>WebRTC Architecture</title>
-      <link>https://pion.ly/kb/webrtc-architecture/</link>
+      <link>https://pion.ly/knowledge-base/webrtc/webrtc-architecture/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://pion.ly/kb/webrtc-architecture/</guid>
+      <guid>https://pion.ly/knowledge-base/webrtc/webrtc-architecture/</guid>
       <description>This article covers the major components used in a WebRTC deployment. Please note that the article assumes you have a basic understanding of WebRTC. Consider reading trough the WebRTC Introduction if you are new to WebRTC.
 Signaling server The first step in setting up a WebRTC connection is what&amp;rsquo;s known as signaling. This is en exchange of information needed to safely connect two peers to each other. The WebRTC API provides this data in a plain text a format known as SDP.</description>
     </item>
