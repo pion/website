@@ -1,0 +1,5 @@
+includeBootstrapJs = false
+showActiveNav = true
+containerMaxWidth = "100%"
+dateFormat = "Jan 2, 2006"
+hideFooter = false

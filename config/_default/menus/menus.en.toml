@@ -1,0 +1,8 @@
+[[nav]]
+    name = "Blog"
+    url = "/blog/"
+    weight = 1
+[[nav]]
+    name = "Knowledge Base"
+    url = "/knowledge-base/"
+    weight = 2
