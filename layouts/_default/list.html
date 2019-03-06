@@ -1,13 +1,9 @@
 {{ define "main" }}
 
-<section class="top blog">
-  <h1>{{ .Title }}</h1>
-  {{ range .Pages.ByPublishDate.Reverse }}
-  <article class="post">
-    <h4><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h4>
-    {{ partial "date-and-tags.html" . }}
-  </article>
+  {{ if eq .Section "blog" }}
+    {{ partial "blog/list" . }}
+  {{ else }}
+      {{ partial "knowledge-base/list" . }}
   {{ end }}
-</section>
 
 {{ end }}

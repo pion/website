@@ -7,9 +7,9 @@
     <div class="pion-links">
         <h4>Connect</h4>
         <ul>
-          <li><a href="https://github.com/pions">Github</a></li>
-          <li><a href="/slack/">Slack</a></li>
-          <li><a href="mailto:team@pion.ly">team@pion.ly</a></li>
+          {{ range .Site.Menus.connect }}
+          <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+          {{ end }}
         </ul>
     </div>
   </div>

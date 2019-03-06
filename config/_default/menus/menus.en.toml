@@ -6,3 +6,27 @@
     name = "Knowledge Base"
     url = "/knowledge-base/"
     weight = 2
+
+[[kb]]
+  name = "About Pion"
+  weight = 1
+  identifier = "about"
+  url = "/knowledge-base/about/"
+  
+[[kb]]
+  name = "WebRTC"
+  weight = 1
+  identifier = "webrtc"
+  url = "/knowledge-base/webrtc/"
+
+[[connect]]
+    name = "Github"
+    url = "https://github.com/pions"
+
+[[connect]]
+    name = "Slack"
+    url = "/slack/"
+
+[[connect]]
+    name = "team@pion.ly"
+    url = "mailto:team@pion.ly"

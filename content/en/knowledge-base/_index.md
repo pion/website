@@ -4,4 +4,4 @@ description: "The pion knowledge base provides a wealth of knowledge about WebRT
 type: page
 layout: knowledge-base
 ---
-## [WebRTC](webrtc/)
+The Pion knowledge base provides a wealth of knowledge about [WebRTC](webrtc/) and related technologies.

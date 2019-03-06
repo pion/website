@@ -1,0 +1,7 @@
+<nav role="navigation"></nav>
+    <ul>
+    {{ range .Site.Menus.kb.ByWeight }}
+        <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+    {{ end }}
+    </ul>
+</nav>
