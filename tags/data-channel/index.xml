@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Blog on Pion</title>
-    <link>https://pion.ly/blog/</link>
-    <description>Recent content in Blog on Pion</description>
+    <title>Data Channel on Pion</title>
+    <link>https://pion.ly/tags/data-channel/</link>
+    <description>Recent content in Data Channel on Pion</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Fri, 08 Mar 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="https://pion.ly/blog/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://pion.ly/tags/data-channel/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -19,15 +19,6 @@
       <guid>https://pion.ly/blog/data-channels-introduction/</guid>
       <description>Today we&amp;rsquo;ll walk through setting up a Data Channel connection in Go using pions/webrtc. Check out our knowledge base articles on WebRTC if you&amp;rsquo;re new to it. You can also skip to the full examples if you just want to look at the code.
 Preparation Let&amp;rsquo;s quickly cover how to get started with pions/webrtc. If you&amp;rsquo;re familiar with Go you can skip to the next section. To start you can download the library using go get: go get github.</description>
-    </item>
-    
-    <item>
-      <title>Why Pion</title>
-      <link>https://pion.ly/blog/why-pion/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/blog/why-pion/</guid>
-      <description>// TODO</description>
     </item>
     
   </channel>

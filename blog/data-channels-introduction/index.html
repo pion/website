@@ -1,0 +1,308 @@
+<!doctype html>
+
+<html lang="en" class="h-100">
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://pion.ly/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://pion.ly/favicon-16x16.png">
+  <link rel="manifest" href="https://pion.ly/site.webmanifest">
+  <link rel="mask-icon" href="https://pion.ly/safari-pinned-tab.svg" color="#e53935">
+  <meta name="msapplication-TileColor" content="#e53935">
+  <meta name="theme-color" content="#ffffff">
+  
+
+  
+  
+  <link rel="stylesheet" href="https://pion.ly/scss/style.css">
+
+  <meta name="generator" content="Hugo 0.54.0" />
+  <link href="https://fonts.googleapis.com/css?family=Quicksand:400,500,700" rel="stylesheet">
+  
+  
+  <title>WebRTC Data Channels in Go | Pion</title>
+  <style>
+.container {
+  max-width: 100%;
+}
+#nav a {
+  font-weight: bold;
+  color: inherit;
+}
+#nav a.nav-link-active {
+  background-color: #212529;
+  color: #fff;
+}
+#nav-border {
+  border-bottom: 1px solid #212529;
+}
+#main {
+  margin-top: 1em;
+  margin-bottom: 4em;
+}
+#home-jumbotron {
+  background-color: inherit;
+}
+#footer .container {
+  padding: 1em 0;
+}
+#footer a {
+  color: inherit;
+  text-decoration: underline;
+}
+.font-125 {
+  font-size: 125%;
+}
+.tag-btn {
+  margin-bottom: 0.3em;
+}
+pre {
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 16px;
+}
+pre code {
+  padding: 0;
+  font-size: inherit;
+  color: inherit; 
+  background-color: transparent;
+  border-radius: 0;
+}
+code {
+  padding: 2px 4px;
+  font-size: 90%;
+  color: #c7254e;
+  background-color: #f9f2f4;
+  border-radius: 4px;
+}
+img,
+iframe,
+embed,
+video,
+audio {
+  max-width: 100%;
+}
+</style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.0/TweenMax.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg-min.js"></script>
+  <script src="https://pion.ly/js/min/site.js"></script>
+</head>
+
+  <body class="d-flex flex-column h-100">
+    <header  class="force-shadow"  >
+  <nav class="menu">
+    <a href="/"><img class="logo"></a>
+    <div class="left">
+      
+      
+      
+        
+        <a class="nav-link" href="/blog/">Blog</a>
+      
+        
+        <a class="nav-link" href="/knowledge-base/">Knowledge Base</a>
+      
+    </div>
+    <div class="right">
+      <a href="/slack/">Slack</a>
+      <a class="github" href="https://github.com/pions">Github</a>
+    </div>
+  </nav>
+</header>
+
+    <main>
+      
+
+
+<section class="top blog">
+  <h1>WebRTC Data Channels in Go</h1>
+  
+
+<p>Today we&rsquo;ll walk through setting up a Data Channel connection in <a href="https://golang.org/">Go</a> using <a href="https://github.com/pions/webrtc">pions/webrtc</a>. Check out our knowledge base articles on <a href="/knowledge-base/webrtc/">WebRTC</a> if you&rsquo;re new to it. You can also skip to the <a href="#full-examples">full examples</a> if you just want to look at the code.</p>
+
+<h2 id="preparation">Preparation</h2>
+
+<p>Let&rsquo;s quickly cover how to get started with <a href="https://github.com/pions/webrtc">pions/webrtc</a>. If you&rsquo;re familiar with Go you can skip to the <a href="#peer-connection">next section</a>. To start you can download the library using <code>go get</code>:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go get github.com/pions/webrtc</code></pre></div></p>
+
+<p>Next, import the library into your project:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> (
+	<span style="color:#e6db74">&#34;github.com/pions/webrtc&#34;</span>
+)</code></pre></div>
+
+<h2 id="peer-connection">Peer Connection</h2>
+
+<p>Ok, now let&rsquo;s start setting up the WebRTC connection. To do this we&rsquo;ll create a PeerConnection which is used to represent our connection:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Prepare the configuration
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">config</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">Configuration</span>{
+    <span style="color:#a6e22e">ICEServers</span>: []<span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">ICEServer</span>{
+        {
+            <span style="color:#a6e22e">URLs</span>: []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;stun:stun.l.google.com:19302&#34;</span>},
+        },
+    },
+}
+
+<span style="color:#75715e">// Create a new RTCPeerConnection
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">peerConnection</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">NewPeerConnection</span>(<span style="color:#a6e22e">config</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>) <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}</code></pre></div></p>
+
+<p>Note that we provide a <a href="/knowledge-base/webrtc/webrtc-architecture/#stun-server">STUN Server</a> to the configuration to allow the WebRTC connection to punch trough a <a href="/knowledge-base/webrtc/webrtc-intro/#network-address-translation">NAT</a>.</p>
+
+<h2 id="data-channels">Data Channels</h2>
+
+<p>Next we configure the data channels. Here we need to differentiate between two sides of the connection. We&rsquo;ll go into more depth about the two sides of the connection in the next section.</p>
+
+<p>One side of the connection will create the Data Channel:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Create a datachannel with label &#39;data&#39;
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">dataChannel</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">CreateDataChannel</span>(<span style="color:#e6db74">&#34;data&#34;</span>, <span style="color:#66d9ef">nil</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>) <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}</code></pre></div></p>
+
+<p>The other side of the connection will receive the incoming Data Channel:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Register data channel creation handling
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">OnDataChannel</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">dataChannel</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">DataChannel</span>) {
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;New DataChannel %s %d\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">ID</span>)
+    
+    <span style="color:#75715e">// Handle data channel
+</span><span style="color:#75715e"></span>}</code></pre></div></p>
+
+<p>Now we have a Data Channel configured. However, in order to use it we first have to wait for the Data Channel to be opened. To do this we register the <code>OnOpen</code> callback:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">OnOpen</span>(<span style="color:#66d9ef">func</span>() {
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Data channel &#39;%s&#39;-&#39;%d&#39; open.\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">ID</span>)
+
+    <span style="color:#75715e">// Now we can start sending data.
+</span><span style="color:#75715e"></span>}</code></pre></div></p>
+
+<p>We also need a way to receive messages from the Data Channel. This is done by registering the <code>OnMessage</code> callback:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Register text message handling
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">OnMessage</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">DataChannelMessage</span>) {
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Message from DataChannel &#39;%s&#39;: &#39;%s&#39;\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>, string(<span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">Data</span>))
+
+    <span style="color:#75715e">// Handle the message here
+</span><span style="color:#75715e"></span>})</code></pre></div></p>
+
+<p>Finally, we can start sending messages on our Data Channel. This is done as follows:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Send the message as text
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">SendText</span>(<span style="color:#a6e22e">message</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>) <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}</code></pre></div></p>
+
+<p>Remember, this should only be called after the <code>OnOpen</code> callback is fired. In order to open the Data Channel we have to start the connection first. This is covered in the next section.</p>
+
+<h2 id="signaling">Signaling</h2>
+
+<p>The first step in starting up a WebRTC connection is known as <a href="/knowledge-base/webrtc/webrtc-intro/#signaling">signaling</a>. Here we exchange some data between the peers so they can find each other.</p>
+
+<p>As mentioned before there are two sides in a WebRTC connection. These sides are:</p>
+
+<ul>
+<li>The offerer. This side creates an offer. The offer should be sent to the other side.</li>
+<li>The answerer: This side receives the offer and uses it to create an answer. This answer is sent back to the offerer in order to conclude the signaling step.</li>
+</ul>
+
+<p>In our example the signaling data is exchanged by copy/pasting it to the other side. WebRTC deployments commonly use a <a href="/knowledge-base/webrtc/webrtc-architecture/#signaling-server">Signaling Server</a> to accomplish this task.
+<br><br>
+Let&rsquo;s look at the offering side first:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Create an offer to send to the browser
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">offer</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">CreateOffer</span>(<span style="color:#66d9ef">nil</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>) <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">// Sets the LocalDescription, and starts our UDP listeners
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">SetLocalDescription</span>(<span style="color:#a6e22e">offer</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>) <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">// Output the offer in base64 so we can paste it in browser
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">signal</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">offer</span>))
+
+<span style="color:#75715e">// Wait for the answer to be pasted
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">answer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">SessionDescription</span>{}
+<span style="color:#a6e22e">signal</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#a6e22e">signal</span>.<span style="color:#a6e22e">MustReadStdin</span>(), <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">answer</span>)
+
+<span style="color:#75715e">// Apply the answer as the remote description
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">SetRemoteDescription</span>(<span style="color:#a6e22e">answer</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>)  <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}</code></pre></div></p>
+
+<p>The answering side looks as follows:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Wait for the offer to be pasted
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">offer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">SessionDescription</span>{}
+<span style="color:#a6e22e">signal</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#a6e22e">signal</span>.<span style="color:#a6e22e">MustReadStdin</span>(), <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">offer</span>)
+
+<span style="color:#75715e">// Set the remote SessionDescription
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">SetRemoteDescription</span>(<span style="color:#a6e22e">offer</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>)  <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">// Create an answer
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">answer</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">CreateAnswer</span>(<span style="color:#66d9ef">nil</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>)  <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">// Sets the LocalDescription, and starts our UDP listeners
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">SetLocalDescription</span>(<span style="color:#a6e22e">answer</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+    panic(<span style="color:#a6e22e">err</span>)  <span style="color:#75715e">// Please handle your errors correctly!
+</span><span style="color:#75715e"></span>}</code></pre></div></p>
+
+<p>And that&rsquo;s it! You now know how to send data over a WebRTC Data Channel in Go.</p>
+
+<h2 id="full-examples">Full examples</h2>
+
+<p>The full examples corresponding covered in this post can be found in the <a href="https://github.com/pions/webrtc">pions/webrtc</a> repository:</p>
+
+<ul>
+<li>The <a href="https://github.com/pions/webrtc/tree/master/examples/data-channels-create">data-channels-create</a> example shows the offering side of the connection.</li>
+<li>The <a href="https://github.com/pions/webrtc/tree/master/examples/data-channels">data-channels</a> example shows the answering side of the connection.</li>
+</ul>
+
+</section>
+
+
+
+    </main>
+    <footer>
+  <div class="footer-wrap">
+    <div class="pion-blurb">
+        <h4>Community</h4>
+        <p>Pion only exists because of the community that builds it. Join us and get help building out your next big idea.</p>
+    </div>
+    <div class="pion-links">
+        <h4>Connect</h4>
+        <ul>
+          
+          <li><a href="https://github.com/pions">Github</a></li>
+          
+          <li><a href="/slack/">Slack</a></li>
+          
+          <li><a href="mailto:team@pion.ly">team@pion.ly</a></li>
+          
+        </ul>
+    </div>
+  </div>
+</footer>
+
+    <script src="https://pion.ly/js/feather.min.js"></script>
+<script>
+  feather.replace()
+</script>
+
+
+  </body>
+</html>
