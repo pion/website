@@ -1,5 +1,7 @@
 \.DS_Store
 *.codekit3
 
+assets/scss/style.css
+
 public
 resources
