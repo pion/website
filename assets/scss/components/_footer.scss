@@ -1,11 +1,29 @@
 // Social media
 footer {
-  display: flex;
-  padding: ($gutter * 2) ($gutter / 2);
+  padding: 0 ($gutter / 2);
+  background: $offwhite;
+
+  .footer-cta {
+    position: relative;
+    top: -120px;
+    text-align: center;
+    margin: 0 auto;
+    padding: ($gutter * 1.5);
+    max-width: 1400px;
+    background: $brand-red;
+    border-radius: 30px;
+    box-shadow: 0 60px 135px rgba(0,0,0,0.14), 0 15px 65px rgba(0,0,0,0.14);
+
+    h4 {
+      color: $white;
+      margin-bottom: ($gutter / 2);
+    }
+  }
 
   .footer-wrap {
     display: flex;
     margin: 0 auto;
+    padding: ($gutter * 2) 0;
     max-width: 1300px;
   }
 
