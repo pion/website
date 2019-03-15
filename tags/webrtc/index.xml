@@ -6,10 +6,20 @@
     <description>Recent content in Webrtc on Pion</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 08 Mar 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 15 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://pion.ly/tags/webrtc/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>WebRTC Everywhere</title>
+      <link>https://pion.ly/blog/webrtc-everywhere/</link>
+      <pubDate>Fri, 15 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/blog/webrtc-everywhere/</guid>
+      <description>In this post we&amp;rsquo;ll take a look at all the places you can run pions/webrtc.
+Server The first use-case for a Go WebRTC library naturally is running WebRTC on the server. This enables you to connect to browsers and other WebRTC servers directly while punching through NATs. Because the Pion WebRTC stack is written completely in Go, you can run it anywhere Go runs. And that&amp;rsquo;s a lot of places, including: Linux, MaxOS and Windows on both x86 and ARM.</description>
+    </item>
     
     <item>
       <title>WebRTC Data Channels in Go</title>

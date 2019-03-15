@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css?family=Quicksand:400,500,700" rel="stylesheet">
   
   
-  <title>Webrtc | Pion</title>
+  <title>WebRTC Everywhere | Pion</title>
   <style>
 .container {
   max-width: 100%;
@@ -113,63 +113,39 @@ audio {
     <main>
       
 
+
+<section class="top blog">
+  <h1>WebRTC Everywhere</h1>
   
-      <section class="top knowledge-base">
-  <div class="kb-flex">
-    <div class="kb-nav">
-      <nav role="navigation"></nav>
-    <ul>
-    
-        <li><a href="/knowledge-base/about/">About Pion</a></li>
-    
-        <li><a href="/knowledge-base/webrtc/">WebRTC</a></li>
-    
-    </ul>
-</nav>
-    </div>
-    <div class="kb-content">
-      <h1>Webrtc</h1>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/blog/webrtc-everywhere/">WebRTC Everywhere</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/blog/data-channels-introduction/">WebRTC Data Channels in Go</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/blog/why-pion/">Why Pion</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc/webrtc-intro/">WebRTC Introduction</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc/webrtc-deep-dive/">WebRTC Deep Dive</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc/webrtc-architecture/">WebRTC Architecture</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc/turn-overview/">TURN Overview</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc/stun-overview/">STUN Overview</a></h4>
-      </article>
-      
-      <article class="post">
-          <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc/sdp-overview/">SDP Overview</a></h4>
-      </article>
-      
-    </div>
-  </div>
+
+<p>In this post we&rsquo;ll take a look at all the places you can run <a href="https://github.com/pions/webrtc">pions/webrtc</a>.</p>
+
+<h2 id="server">Server</h2>
+
+<p>The first use-case for a Go WebRTC library naturally is running WebRTC on the server. This enables you to connect to browsers and other WebRTC servers directly while punching through <a href="../webrtc-intro#network-address-translation">NAT</a>s. Because the Pion WebRTC stack is written completely in Go, you can run it anywhere Go runs. And that&rsquo;s a lot of <a href="https://golang.org/doc/install#requirements">places</a>, including: Linux, MaxOS and Windows on both x86 and ARM.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pions/webrtc">pions/webrtc</a> on an unconventional platform. We&rsquo;d love to hear about it and feature it here!</p>
+
+<h2 id="mobile">Mobile</h2>
+
+<p>With the introduction of <a href="https://github.com/golang/mobile">Go on Mobile</a> you can run Go on mobile devices. This means you can run Pion WebRTC on mobile devices as well. Go mobile supports writing <a href="https://godoc.org/golang.org/x/mobile/app">all-go apps</a> or you can write an <a href="https://godoc.org/golang.org/x/mobile/cmd/gobind">SDK</a> in Go and use it in your existing mobile app.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pions/webrtc">pions/webrtc</a> on mobile. We&rsquo;d love to hear about it and feature it here!</p>
+
+<h2 id="browser">Browser</h2>
+
+<p>We recently <a href="https://github.com/pions/webrtc/pull/479">landed</a> initial support for <a href="https://webassembly.org/">WebAssembly</a>, also know as WASM. When compiling Pion WebRTC with <code>GOOS=js GOARCH=wasm</code> the library will act as a wrapper around the JavaScript WebRTC API that&rsquo;s available in the browser. This means you can use the same API on both the server and client side. Check out the <a href="https://github.com/pions/webrtc/tree/master/examples#webassembly">WebAssembly examples</a> to get started.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pions/webrtc">pions/webrtc</a> in the browser. We&rsquo;d love to hear about it and feature it here!</p>
+
+<h2 id="node-js">Node.js</h2>
+
+<p>As mentioned in the previous section, we recently <a href="https://github.com/pions/webrtc/pull/479">landed</a> initial support for <a href="https://webassembly.org/">WebAssembly</a>. <a href="https://nodejs.org/en/">Node.js</a> also has support for WebAssembly. As mentioned, Pion WebRTC will act as a wrapper to the JavaScript API when compiled to WASM. This API isn&rsquo;t available in Node by default. However, you can use the <a href="https://www.npmjs.com/package/wrtc">wrtc</a> package to make it available.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pions/webrtc">pions/webrtc</a> from Node. We&rsquo;d love to hear about it and feature it here!</p>
+
 </section>
-  
+
 
 
     </main>

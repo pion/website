@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://pion.ly/blog/webrtc-everywhere/</loc>
+    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/blog/data-channels-introduction/</loc>
     <lastmod>2019-03-08T00:00:00+00:00</lastmod>
   </url>
@@ -59,17 +64,23 @@
   
   <url>
     <loc>https://pion.ly/blog/</loc>
-    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://pion.ly/</loc>
-    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://pion.ly/tags/data-channel/</loc>
     <lastmod>2019-03-08T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/tags/everywhere/</loc>
+    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -126,7 +137,7 @@
   
   <url>
     <loc>https://pion.ly/tags/webrtc/</loc>
-    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
