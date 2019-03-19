@@ -6,23 +6,23 @@
     <h4>{{.Description}}</h4>
     <a class="button" href="https://github.com/pions">Get Started</a>
   </div>
-  <div class="nectar-shape-divider-wrap no-color " style=" height:350px;" data-front="" data-style="waves_opacity_alt" data-position="bottom">
+  <div class="section-divider" style=" height:350px;" data-front="" data-style="waves_opacity_alt" data-position="bottom">
     <svg viewBox="0 0 100 23">
       <path fill="#ffffff" d="M0 30 V12 Q30 17 55 12 T100 11 V30z"></path>
     </svg>
   </div>
 </section>
 
-<section class="more">
+<section class="more content">
   {{ range .Params.Features }}
-    <div class="section-wrap">
-      <h3>{{.heading}}</h3>
-      <p>{{.copy}}</p>
-      </br>
-      <p><a href="{{.url}}">Learn more</a></p>
-      </br></br>
-    </div>
-    {{ end }}
+  <div class="section-wrap">
+    <h3>{{.heading}}</h3>
+    <p>{{.copy}}</p>
+    </br>
+    <p><a href="{{.url}}">Learn more</a></p>
+    </br></br>
+  </div>
+  {{ end }}
 </section>
 
 {{ end }}

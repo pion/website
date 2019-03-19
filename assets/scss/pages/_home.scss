@@ -14,7 +14,6 @@
       transform: scale(2);
       transform-origin: 50%;
     }
-
     to {
       opacity: 0.3;
       transform: scale(1);
@@ -36,7 +35,7 @@
     margin-bottom: $gutter;
   }
 
-  .nectar-shape-divider-wrap {
+  .section-divider {
     position: absolute;
     top: auto;
     bottom: 0;
@@ -47,22 +46,4 @@
     z-index: 3;
     transform: translateZ(0);
   }
-
-  .nectar-shape-divider-wrap.no-color .nectar-shape-divider {
-    fill: #fff;
-}
-
-.nectar-shape-divider {
-  width: 100%;
-  left: 0;
-  bottom: -1px;
-  height: 100%;
-  position: absolute;
-}
-}
-
-.portfolio-filters-inline.full-width-section:not(.non-fw), .portfolio-filters-inline.full-width-content, .post-area.full-width-content.standard-minimal, .full-width-content.blog-fullwidth-wrap, .wpb_row.full-width-content, .full-width-content.nectar-shop-outer, .page-submenu > .full-width-section, .page-submenu .full-width-content, .wpb_row.full-width-section .mobile-video-image, body .full-width-section .row-bg-wrap, body .full-width-section .nectar-parallax-scene, body .full-width-section > .nectar-shape-divider-wrap, body .full-width-section > .video-color-overlay, body[data-aie="zoom-out"] .first-section .row-bg-wrap, body[data-aie="long-zoom-out"] .first-section .row-bg-wrap, body[data-aie="zoom-out"] .top-level.full-width-section .row-bg-wrap, body[data-aie="long-zoom-out"] .top-level.full-width-section .row-bg-wrap, body .full-width-section.parallax_section .row-bg-wrap, .nectar-slider-wrap[data-full-width="true"] {
-  margin-left: -50vw;
-  left: 50%;
-  width: 100vw;
 }

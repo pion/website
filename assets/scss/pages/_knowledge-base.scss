@@ -10,21 +10,22 @@
     max-width: 1600px;
 
     @media screen and ( max-width: 700px) {
-        flex-direction: column;
+      flex-direction: column;
     }
   }
 
   .kb-nav {
     flex: 1 60px; order: 0;
+
     li {
-        list-style: none;
-        margin-top: 1em;
+      list-style: none;
+      margin-top: 1em;
     }
   }
 
   .kb-content {
     flex: 4; order: 1;
-    min-height: 400px;
+    min-height: 300px;
   }
 
   .post {

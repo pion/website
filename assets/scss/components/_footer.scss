@@ -22,9 +22,18 @@ footer {
 
   .footer-wrap {
     display: flex;
+    color: $white;
     margin: 0 auto;
     padding: ($gutter * 2) 0;
     max-width: 1300px;
+
+    h4 {
+      color: $white;
+    }
+
+    p {
+      color: rgba($white, 0.5);
+    }
   }
 
   .pion-blurb {

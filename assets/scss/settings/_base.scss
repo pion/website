@@ -225,7 +225,7 @@ section {
     position: relative;
     margin: 0 auto;
     width: 100%;
-    max-width: 1600px;
+    max-width: 1400px;
   }
 
   .section-header {
@@ -240,14 +240,6 @@ section {
     }
   }
 
-  .content {
-    position: relative;
-    margin: 0 auto;
-    width: 100%;
-    max-width: 1600px;
-    padding: $gutter $gutter ($gutter * 4);
-  }
-
   &.top {
     padding-top: $vertical-padding;
   }
@@ -260,6 +252,14 @@ section {
   @media screen and (max-width: $mediumdevice) {
     padding: ($vertical-padding / 2) ($gutter / 2);
   }
+}
+
+.content {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1400px;
+  padding: $gutter $gutter ($gutter * 4);
 }
 
 // Inner section wrapper

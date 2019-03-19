@@ -80,9 +80,12 @@ header {
           justify-content: center;
           color: $white;
           font-weight: 700;
+          padding: 0;
           margin-left: ($gutter / 4);
           min-width: 120px;
+          min-height: 42px;
           background: $brand-red;
+          border-color: $brand-red;
           border-radius: 80px;
         }
 
