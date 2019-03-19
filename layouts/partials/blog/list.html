@@ -1,9 +1,15 @@
-<section class="top blog">
-    <h1>{{ .Title }}</h1>
+<section class="blog">
+  <div class="banner">
+    <div class="banner-wrap">
+      <h2>{{ .Title }}</h2>
+    </div>
+  </div>
+  <div class="blog-content content">
     {{ range .Pages.ByPublishDate.Reverse }}
     <article class="post">
         <h4><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h4>
         {{ partial "date-and-tags.html" . }}
     </article>
     {{ end }}
+  </div>
 </section>

@@ -213,12 +213,6 @@ main {
   margin: 0 auto;
 	min-height: min-content;
   width: 100%;
-
-  // When book library modal is open
-  &.open {
-    opacity: 0.25;
-    pointer-events: none;
-  }
 }
 
 section {
@@ -244,6 +238,14 @@ section {
       text-align: center;
       padding: 0 ($gutter / 2);
     }
+  }
+
+  .content {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 1600px;
+    padding: $gutter $gutter ($gutter * 4);
   }
 
   &.top {

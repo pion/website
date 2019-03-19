@@ -6,21 +6,7 @@
   min-height: min-content;
   height: 95vh;
   overflow: hidden;
-  background-image: -webkit-linear-gradient(145deg, #F23C38 0%, $brand-red 100%) !important;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    background-image: url('../img/hello.png');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.25;
-    animation: grow 2s forwards;
-  }
+  background: $black;
 
   @keyframes grow {
     from {

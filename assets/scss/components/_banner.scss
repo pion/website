@@ -1,0 +1,23 @@
+.banner {
+  text-align: center;
+  padding: ($vertical-padding + $gutter) $gutter ($gutter * 2);
+  background: $black;
+
+  .single & {
+    background: $white;
+
+    h2 {
+      color: $black;
+    }
+  }
+
+  &-wrap {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 1600px;
+  }
+
+  h2 {
+    color: $white;
+  }
+}

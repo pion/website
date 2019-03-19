@@ -1,10 +1,14 @@
-<section class="top knowledge-base">
-  <div class="kb-flex">
+<section class="knowledge-base">
+  <div class="banner">
+    <div class="banner-wrap">
+      <h2>{{ .Title }}</h2>
+    </div>
+  </div>
+  <div class="kb-flex content">
     <div class="kb-nav">
       {{ partial "knowledge-base/nav" . }}
     </div>
     <div class="kb-content">
-      <h1>{{ .Title }}</h1>
       {{ range .Pages.ByPublishDate.Reverse }}
       <article class="post">
           <h4><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h4>

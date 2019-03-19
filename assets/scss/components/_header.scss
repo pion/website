@@ -2,7 +2,7 @@ header {
   @include trans(
     $trans-speed: 0.6s
   );
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   display: flex;
@@ -11,15 +11,16 @@ header {
   padding: 0 ($gutter / 2);
   width: 100%;
   height: $headerheight;
+  background: $black;
   z-index: 9999;
 
   // Pion logo
   .logo {
-    height: 45px;
+    height: 35px;
   }
 
   .logo {
-    content: url('../img/pion-logo-white.svg');
+    content: url('../img/pion-logo.svg');
   }
 
   // Navigation
@@ -48,7 +49,7 @@ header {
         display: flex;
         align-items: center;
         color: $white;
-        font-size: 0.9em;
+        font-size: 0.8em;
         font-weight: 600;
         padding: ($gutter / 4) ($gutter / 3);
 
@@ -58,7 +59,7 @@ header {
           content: '';
           position: absolute;
           top: 50%;
-          right: 3px;
+          right: 0;
           height: 30px;
           width: 15px;
           background: $brand-red;
@@ -67,7 +68,7 @@ header {
         }
 
         &:hover {
-          color: $black;
+          color: $white;
 
           &::before {
             @include visible;

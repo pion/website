@@ -1,11 +1,15 @@
-<section class="top knowledge-base">
-    <div class="kb-flex">
-      <div class="kb-nav">
-        {{ partial "knowledge-base/nav" . }}
-      </div>
-      <div class="kb-content">
-          <h1>{{ .Title }}</h1>
-          {{ .Content }}
-      </div>
+<section class="knowledge-base">
+  <div class="banner">
+    <div class="banner-wrap">
+      <h2>{{ .Title }}</h2>
     </div>
-  </section>
+  </div>
+  <div class="kb-flex">
+    <div class="kb-nav">
+      {{ partial "knowledge-base/nav" . }}
+    </div>
+    <div class="kb-content">
+      {{ .Content }}
+    </div>
+  </div>
+</section>
