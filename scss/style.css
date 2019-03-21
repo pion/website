@@ -391,7 +391,7 @@ a:visited {
   a:hover,
   a:active:hover,
   a:visited:hover {
-    color: #9f1815; }
+    color: #E53935; }
   p a,
   li a, p
   a:active,
@@ -423,7 +423,9 @@ strong a {
   pointer-events: none; }
 
 ul li {
-  margin-bottom: 6px; }
+  font-family: "Quicksand", sans-serif;
+  font-size: 0.95em;
+  margin-bottom: 30px; }
 
 blockquote,
 q {
@@ -471,7 +473,7 @@ pre {
   font-size: .8em;
   line-height: 1.4em;
   padding: 1.6em;
-  margin-bottom: 32px;
+  margin: 60px 0;
   background: #d6d6d6;
   border-left: solid 5px #0432ff; }
 
@@ -554,10 +556,11 @@ h1,
 h2,
 h3,
 h4,
-h5 {
+h5,
+p {
   color: #000;
   font-family: "Quicksand", sans-serif;
-  font-weight: 700;
+  font-weight: 500;
   padding: 0;
   margin: 0; }
 
@@ -572,8 +575,11 @@ h1 {
       font-size: 2.8em; } }
 
 h2 {
-  font-size: 3em;
-  line-height: 1.05em; }
+  font-size: 2em;
+  line-height: 1.05em;
+  margin: 60px 0 30px; }
+  .banner h2 {
+    font-size: 3.6em; }
   @media screen and (max-width: 1024px) {
     h2 {
       font-size: 2.6em; } }
@@ -583,8 +589,10 @@ h2 {
       line-height: 1.1em; } }
 
 h3 {
-  font-size: 1.8em;
-  line-height: 1.2em; }
+  font-size: 1.6em;
+  font-weight: 600;
+  line-height: 1.2em;
+  margin: 30px 0 15px; }
   @media screen and (max-width: 1024px) {
     h3 {
       font-size: 1.6em; } }
@@ -594,9 +602,8 @@ h3 {
       line-height: 1.2em; } }
 
 h4 {
-  font-size: 1.3em;
-  line-height: 1.3em;
-  margin-bottom: 0.5em; }
+  font-size: 1.4em;
+  line-height: 1.3em; }
   @media screen and (max-width: 480px) {
     h4 {
       font-size: 0.9em; } }
@@ -616,14 +623,8 @@ p {
   color: #141414;
   font-size: 0.95em;
   font-weight: 500;
-  line-height: 1.5em;
-  margin: 0;
-  padding: 0; }
-  p.small {
-    font-size: 0.85em; }
-    @media screen and (max-width: 480px) {
-      p.small {
-        font-size: 0.7em; } }
+  line-height: 1.8em;
+  margin-bottom: 30px; }
   @media screen and (max-width: 480px) {
     p {
       font-size: 0.8em; } }
@@ -635,7 +636,8 @@ p {
   .single .banner {
     background: #fff; }
     .single .banner h2 {
-      color: #000; }
+      color: #000;
+      margin-bottom: 0; }
   .banner-wrap {
     margin: 0 auto;
     width: 100%;
@@ -799,11 +801,22 @@ header {
   .blog .blog-content {
     margin: 0 auto;
     width: 100%;
-    max-width: 1200px; }
+    max-width: 1140px; }
   .blog .post {
     padding: 60px; }
+    .blog .post-date {
+      display: block;
+      color: #878787;
+      margin-bottom: 15px; }
     .blog .post-title {
-      color: #090A0C; }
+      display: block;
+      color: #090A0C;
+      margin-bottom: 15px; }
+    .blog .post-excerpt {
+      font-size: 0.9em; }
+    .blog .post-tags {
+      font-size: 0.8em;
+      padding-top: 15px; }
 
 .knowledge-base {
   margin: 0 auto;
