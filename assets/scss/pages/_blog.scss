@@ -5,14 +5,31 @@
   .blog-content {
     margin: 0 auto;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1140px;
   }
 
   .post {
     padding: $gutter;
 
+    &-date {
+      display: block;
+      color: $gray;
+      margin-bottom: ($gutter / 4);
+    }
+
     &-title {
+      display: block;
       color: $brand-gray;
+      margin-bottom: ($gutter / 4);
+    }
+
+    &-excerpt {
+      font-size: 0.9em;
+    }
+
+    &-tags {
+      font-size: 0.8em;
+      padding-top: ($gutter / 4);
     }
   }
 }

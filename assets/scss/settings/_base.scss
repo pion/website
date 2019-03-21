@@ -108,7 +108,7 @@ a:visited {
   outline: none;
 
   &:hover {
-    color: darken($brand-red, 20%);
+    color: $brand-red;
   }
 
   p &,
@@ -139,7 +139,9 @@ strong a {
 
 ul {
   li {
-    margin-bottom: ($gutter / 10);
+    font-family: $secfont;
+    font-size: 0.95em;
+    margin-bottom: ($gutter / 2);
   }
 }
 
@@ -197,7 +199,7 @@ pre {
 	font-size: .8em;
 	line-height: 1.4em;
 	padding: 1.6em;
-	margin-bottom: 32px;
+	margin: $gutter 0;
 	background: $lgray;
 	border-left: solid 5px $primary;
 }

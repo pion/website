@@ -3,10 +3,11 @@ h1,
 h2,
 h3,
 h4,
-h5 {
+h5,
+p {
   color: $black;
   font-family: $secfont;
-  font-weight: 700;
+  font-weight: 500;
 	padding: 0;
 	margin: 0;
 }
@@ -25,8 +26,13 @@ h1 {
 }
 
 h2 {
-  font-size: 3em;
+  font-size: 2em;
   line-height: 1.05em;
+  margin: $gutter 0 ($gutter / 2);
+
+  .banner & {
+    font-size: 3.6em;
+  }
 
   @media screen and (max-width: $largedevice) {
     font-size: 2.6em;
@@ -39,8 +45,10 @@ h2 {
 }
 
 h3 {
-  font-size: 1.8em;
+  font-size: 1.6em;
+  font-weight: 600;
   line-height: 1.2em;
+  margin: ($gutter / 2) 0 ($gutter / 4);
 
   @media screen and (max-width: $largedevice) {
     font-size: 1.6em;
@@ -53,9 +61,8 @@ h3 {
 }
 
 h4 {
-  font-size: 1.3em;
+  font-size: 1.4em;
   line-height: 1.3em;
-  margin-bottom: 0.5em;
 
  	@media screen and (max-width: $smalldevice) {
     font-size: 0.9em;
@@ -72,17 +79,8 @@ p {
   color: $base;
   font-size: 0.95em;
   font-weight: 500;
-  line-height: 1.5em;
-  margin: 0;
-  padding: 0;
-
-  &.small {
-    font-size: 0.85em;
-
-    @media screen and (max-width: $smalldevice) {
-      font-size: 0.7em;
-    }
-  }
+  line-height: 1.8em;
+  margin-bottom: ($gutter / 2);
 
 	@media screen and (max-width: $smalldevice) {
 		font-size: 0.8em;

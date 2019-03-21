@@ -7,8 +7,19 @@
   <div class="blog-content content">
     {{ range .Pages.ByPublishDate.Reverse }}
     <article class="post">
-        <h4><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h4>
-        {{ partial "date-and-tags.html" . }}
+        {{ $dateTime := .PublishDate.Format "2006-01-02" }}
+        {{ $dateFormat := .Site.Params.dateFormat | default "Jan 2, 2006" }}
+        <time class="post-date" datetime="{{ $dateTime }}">{{ .PublishDate.Format $dateFormat }}</time>
+        <h3><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h3>
+        <p class="post-excerpt">{{ .Summary }}</p>
+        <div class="post-tags">
+          {{ with .Params.tags }}
+            {{ range . }}
+            {{ $href := print (absURL "tags/") (urlize .) }}
+            <a class="btn btn-sm btn-outline-dark tag-btn" href="{{ $href }}">{{ . }}</a>
+            {{ end }}
+          {{ end }}
+        </div>
     </article>
     {{ end }}
   </div>
