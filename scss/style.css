@@ -647,6 +647,7 @@ footer {
   padding: 0 30px;
   background: #000; }
   footer .footer-cta {
+    display: none;
     position: relative;
     top: -120px;
     text-align: center;
