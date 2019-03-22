@@ -2,18 +2,16 @@
   <div class="banner">
     <div class="banner-wrap">
       <h2>{{ .Title }}</h2>
+      <div class="kb-nav">
+        {{ partial "knowledge-base/nav" . }}
+      </div>
     </div>
   </div>
-  <div class="kb-flex content">
-    <div class="kb-nav">
-      {{ partial "knowledge-base/nav" . }}
-    </div>
-    <div class="kb-content">
-      {{ range .Pages.ByPublishDate.Reverse }}
-      <article class="post">
-          <h4><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h4>
-      </article>
-      {{ end }}
-    </div>
+  <div class="kb-main list content">
+    {{ range .Pages.ByPublishDate.Reverse }}
+    <article class="post">
+      <h4><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h4>
+    </article>
+    {{ end }}
   </div>
 </section>

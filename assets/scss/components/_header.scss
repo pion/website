@@ -44,7 +44,7 @@ header {
         padding-left: ($gutter / 2);
       }
 
-      a {
+      a:not(.github) {
         position: relative;
         display: flex;
         align-items: center;
@@ -75,24 +75,23 @@ header {
           }
         }
 
-        &.github {
-          @include border-radius;
-          justify-content: center;
-          color: $white;
-          font-weight: 700;
-          padding: 0;
-          margin-left: ($gutter / 4);
-          min-width: 120px;
-          min-height: 42px;
-          background: $brand-red;
-          border-color: $brand-red;
-          border-radius: 80px;
-        }
-
         span {
           position: relative;
           z-index: 1;
         }
+      }
+
+      .github {
+        @include border-radius;
+        justify-content: center;
+        color: $white;
+        padding: 0;
+        margin-left: ($gutter / 4);
+        min-width: 120px;
+        min-height: 42px;
+        background: $brand-red;
+        border-color: $brand-red;
+        border-radius: 80px;
       }
     }
   }

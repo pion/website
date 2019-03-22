@@ -62,7 +62,8 @@ h3 {
 
 h4 {
   font-size: 1.4em;
-  line-height: 1.3em;
+  line-height: 1.4em;
+  margin: ($gutter / 2) 0 ($gutter / 4);
 
  	@media screen and (max-width: $smalldevice) {
     font-size: 0.9em;

@@ -44,5 +44,13 @@ footer {
   .pion-links {
     flex: 1;
     padding-left: $gutter;
+
+    ul {
+      @include clean-ul;
+
+      li {
+        margin-bottom: ($gutter / 6);
+      }
+    }
   }
 }

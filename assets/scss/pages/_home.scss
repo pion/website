@@ -4,21 +4,12 @@
   justify-content: center;
   text-align: center;
   min-height: min-content;
-  height: 95vh;
+  height: 85vh;
   overflow: hidden;
   background: $black;
 
-  @keyframes grow {
-    from {
-      opacity: 0;
-      transform: scale(2);
-      transform-origin: 50%;
-    }
-    to {
-      opacity: 0.3;
-      transform: scale(1);
-      transform-origin: 50%;
-    }
+  .section-wrap {
+    padding-top: $gutter;
   }
 
   h1,
@@ -33,17 +24,6 @@
 
   h4 {
     margin-bottom: $gutter;
-  }
-
-  .section-divider {
-    position: absolute;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 150px;
-    z-index: 3;
-    transform: translateZ(0);
+    max-width: 740px;
   }
 }

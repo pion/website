@@ -2,34 +2,48 @@
   margin: 0 auto;
   padding: 0;
 
-  .kb-flex {
-    display: flex;
-    flex-flow: row wrap;
+  .kb-nav {
+    padding: ($gutter / 2) $gutter 0;
+
+    ul {
+      @include clean-ul;
+      display: flex;
+      justify-content: center;
+
+      li {
+        list-style: none;
+        margin: 0;
+        padding: 0 ($gutter / 2);
+
+        a {
+          color: $white;
+        }
+      }
+    }
+  }
+
+  .kb-main {
     margin: 0 auto;
     width: 100%;
-    max-width: 1600px;
+
+    &.list {
+      display: grid;
+      grid-gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      max-width: $largewidth;
+    }
+
+    &.single {
+      max-width: $smallwidth;
+    }
 
     @media screen and ( max-width: 700px) {
       flex-direction: column;
     }
   }
 
-  .kb-nav {
-    flex: 1 60px; order: 0;
-
-    li {
-      list-style: none;
-      margin-top: 1em;
-    }
-  }
-
-  .kb-content {
-    flex: 4; order: 1;
-    min-height: 300px;
-  }
-
   .post {
-    padding: $gutter;
+    padding: ($gutter / 2);
 
     &-title {
       color: $brand-gray;

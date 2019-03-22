@@ -30,89 +30,20 @@ body {
 }
 
 // Links
-a {
-  @include trans;
-  position: relative;
-  color: $primary;
-  vertical-align: baseline;
-  background: transparent;
-  text-decoration: none;
-  z-index: 10;
-  cursor: pointer;
-
-  p & {
-    &:hover {
-      color: $white;
-      background: $primary;
-    }
-  }
-
-  // Large links with circular arrows
-  &.main {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    color: $primary;
-    font-family: $mainfont;
-    font-weight: 700;
-
-    i {
-      --size: 60px;
-      @include trans;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      left: 10px;
-      font-size: 18px;
-      height: var(--size);
-      width: var(--size);
-      border: solid 2px $primary;
-      border-radius: var(--size);
-      z-index: 0;
-
-      &::before {
-        position: relative;
-        left: 1px;
-        top: 1px;
-      }
-
-      @media screen and (max-width: $smalldevice) {
-        --size: 50px;
-      }
-    }
-
-    &:hover {
-      color: $primary;
-      background: transparent;
-
-      i {
-        color: $white;
-        background: $primary;
-        left: 20px;
-      }
-    }
-
-    @media screen and (max-width: $mediumdevice) {
-      font-size: 0.9em;
-      justify-content: center;
-    }
-  }
-}
-
-// Links
 a,
 a:active,
 a:visited {
+  @include trans;
   color: $brand-red;
   outline: none;
+  text-decoration: none;
 
   &:hover {
     color: $brand-red;
   }
 
   p &,
-  li & {
+  .menu-list & {
     border-bottom: dotted 1px $brand-red;
 
     &:hover {
@@ -190,7 +121,7 @@ q {
 // Selection
 ::selection {
   color: $white;
-  background: $primary;
+  background: $brand-red;
 }
 
 // Code
@@ -201,7 +132,7 @@ pre {
 	padding: 1.6em;
 	margin: $gutter 0;
 	background: $lgray;
-	border-left: solid 5px $primary;
+	border-left: solid 5px $brand-red;
 }
 
 // Page wrapper
@@ -234,7 +165,7 @@ section {
     margin-left: auto;
     margin-right: auto;
     width: 100%;
-    max-width: $maxdesktop;
+    max-width: $largewidth;
 
     @media screen and (max-width: $mediumdevice) {
       text-align: center;
@@ -260,7 +191,7 @@ section {
   position: relative;
   margin: 0 auto;
   width: 100%;
-  max-width: 1400px;
+  max-width: $smallwidth;
   padding: $gutter $gutter ($gutter * 4);
 }
 
@@ -269,7 +200,7 @@ section {
   display: flex;
   margin: 0 auto;
   width: 100%;
-  max-width: $maxdesktop;
+  max-width: $largewidth;
 
   @media screen and (max-width: $mediumdevice) {
     flex-direction: column;

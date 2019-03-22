@@ -7,20 +7,17 @@ a.button {
   display: inline-flex;
   align-items: center;
   color: $white;
+  font-family: $secfont;
   font-size: 0.9em;
   font-weight: 700;
   text-align: center;
   padding: 0 $gutter;
-  min-width: 100px;
-  min-height: 50px;
+  min-width: 80px;
+  min-height: 55px;
   border: solid 2px $white;
   border-radius: 60px;
 
   &:hover {
 
-  }
-
-  &.secondary {
-    border: solid 1px $primary;
   }
 }

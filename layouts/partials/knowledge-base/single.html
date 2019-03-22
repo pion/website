@@ -2,14 +2,12 @@
   <div class="banner">
     <div class="banner-wrap">
       <h2>{{ .Title }}</h2>
+      <div class="kb-nav">
+        {{ partial "knowledge-base/nav" . }}
+      </div>
     </div>
   </div>
-  <div class="kb-flex">
-    <div class="kb-nav">
-      {{ partial "knowledge-base/nav" . }}
-    </div>
-    <div class="kb-content">
-      {{ .Content }}
-    </div>
+  <div class="kb-main single content">
+    {{ .Content }}
   </div>
 </section>

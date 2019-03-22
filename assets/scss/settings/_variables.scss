@@ -12,25 +12,13 @@ $medgray: lighten($base, 65%);
 $lgray: lighten($base, 76%);
 $offwhite: #f6f6f6;
 
-$primary: #0432ff; // Blue
-
 // Fonts
 $basefontsize: 20px;
 $mainfont: 'Source Code Pro', monospace;
 $secfont: 'Quicksand', sans-serif;
-$iconfont: 'noah-shrader';
 
 // Header
 $headerheight: 70px;
-
-// Footer
-$footerheight: 140px;
-
-// Book List
-$book-list-width: 550px;
-
-// Miscellaneous
-$intro-image-size: 480px;
 
 // Structure
 $radius: 2px;
@@ -41,7 +29,9 @@ $vertical-padding: ($headerheight * 2);
 $horizontal-padding: ($headerheight * 2);
 
 // Breakpoints
-$maxdesktop: 1600px;
+$largewidth: 1400px;
+$smallwidth: 1140px;
+
 $largedevice: 1024px;
 $mediumdevice: 800px;
 $smalldevice: 480px;
