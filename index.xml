@@ -32,26 +32,6 @@ Preparation Let&amp;rsquo;s quickly cover how to get started with pions/webrtc. 
     </item>
     
     <item>
-      <title>Join us on Slack</title>
-      <link>https://pion.ly/built-with/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/built-with/</guid>
-      <description>Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality. Join the Slack by following these two easy steps:
- Invite yourself to the Golang Slack. Join the #pion channel.  </description>
-    </item>
-    
-    <item>
-      <title>Join us on Slack</title>
-      <link>https://pion.ly/slack/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/slack/</guid>
-      <description>Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality. Join the Slack by following these two easy steps:
- Invite yourself to the Golang Slack. Join the #pion channel.  </description>
-    </item>
-    
-    <item>
       <title>WebRTC Architecture</title>
       <link>https://pion.ly/knowledge-base/webrtc-basics/architecture/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
@@ -98,6 +78,26 @@ Network Address Translation // TODO</description>
       <guid>https://pion.ly/blog/why-pion/</guid>
       <description>&amp;lsquo;Why would I use Pion&amp;rsquo; this is the first question we get asked by potential users, and it is a great one. Learning new software is an investment, as developers we know how frustrating it can be when you make the wrong choice.
 The answer is different depending on your needs. However it seems to always come down to a few major reasons. Here is what drives Pion, and why we think you should give us a try.</description>
+    </item>
+    
+    <item>
+      <title>Built with Pion</title>
+      <link>https://pion.ly/built-with/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/built-with/</guid>
+      <description>Developers are building so many interesting things with Pion, here are the things we know about.
+Reach out to us via Slack or Email, and we would love to share your project here (of all types and sizes!)</description>
+    </item>
+    
+    <item>
+      <title>Join us on Slack</title>
+      <link>https://pion.ly/slack/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/slack/</guid>
+      <description>Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality. Join the Slack by following these two easy steps:
+ Invite yourself to the Golang Slack. Join the #pion channel.  </description>
     </item>
     
   </channel>
