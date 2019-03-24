@@ -1,9 +1,12 @@
 {{ define "main" }}
 
-{{ if eq .Section "blog" }}
-{{ partial "blog/single" . }}
-{{ else }}
-  {{ partial "knowledge-base/single" . }}
-{{ end }}
+<section class="blog">
+  <div class="banner">
+    <h2>{{ .Title }}</h2>
+  </div>
+  <div class="content">
+    {{ .Content }}
+  </div>
+</section>
 
 {{ end }}

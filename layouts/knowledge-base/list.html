@@ -1,9 +1,11 @@
+{{ define "main" }}
+
 <section class="knowledge-base">
   <div class="banner">
     <div class="banner-wrap">
       <h2>{{ .Title }}</h2>
       <div class="kb-nav">
-        {{ partial "knowledge-base/nav" . }}
+        {{ partial "knowledge-base-nav" . }}
       </div>
     </div>
   </div>
@@ -15,3 +17,5 @@
     {{ end }}
   </div>
 </section>
+
+{{ end }}

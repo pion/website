@@ -1,9 +1,0 @@
-{{ define "main" }}
-
-  {{ if eq .Section "blog" }}
-    {{ partial "blog/list" . }}
-  {{ else }}
-      {{ partial "knowledge-base/list" . }}
-  {{ end }}
-
-{{ end }}
