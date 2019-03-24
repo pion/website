@@ -10,7 +10,7 @@
     </div>
   </div>
   <div class="kb-main list content">
-    {{ range .Pages.ByPublishDate.Reverse }}
+    {{ range .Pages }}
     <article class="post">
       <h4><a class="post-title" href="{{ .Permalink }}">{{ .Title }}</a></h4>
     </article>

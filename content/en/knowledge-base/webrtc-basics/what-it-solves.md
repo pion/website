@@ -1,7 +1,4 @@
-
 ---
-date: "2019-03-05"
-tags: ["webrtc", "introduction"]
-title: "What does WebRTC solve for me?"
-description: "What problems is WebRTC actually solving?"
+title: "What is WebRTC solving?"
+description: "WebRTC feels like magic, what problems is it overcoming behind the scenes?"
 ---
