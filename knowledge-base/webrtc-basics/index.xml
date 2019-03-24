@@ -6,15 +6,25 @@
     <description>Recent content in WebRTC Basics on Pion</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 05 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://pion.ly/knowledge-base/webrtc-basics/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>WebRTC Introduction</title>
+      <link>https://pion.ly/knowledge-base/webrtc-basics/intro/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/knowledge-base/webrtc-basics/intro/</guid>
+      <description>// TODO
+Signaling // TODO
+Network Address Translation // TODO</description>
+    </item>
+    
+    <item>
       <title>WebRTC Architecture</title>
       <link>https://pion.ly/knowledge-base/webrtc-basics/architecture/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://pion.ly/knowledge-base/webrtc-basics/architecture/</guid>
       <description>This article covers the major components used in a WebRTC deployment. Please note that the article assumes you have a basic understanding of WebRTC. Consider reading trough the WebRTC Introduction if you are new to WebRTC.
@@ -24,27 +34,16 @@ Signaling server The first step in setting up a WebRTC connection is what&amp;rs
     <item>
       <title>WebRTC Deep Dive</title>
       <link>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</guid>
       <description> TODO </description>
     </item>
     
     <item>
-      <title>WebRTC Introduction</title>
-      <link>https://pion.ly/knowledge-base/webrtc-basics/intro/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/knowledge-base/webrtc-basics/intro/</guid>
-      <description>// TODO
-Signaling // TODO
-Network Address Translation // TODO</description>
-    </item>
-    
-    <item>
-      <title>What does WebRTC solve for me?</title>
+      <title>What is WebRTC solving?</title>
       <link>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</guid>
       <description></description>

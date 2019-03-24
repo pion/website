@@ -3,6 +3,10 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/intro/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/blog/webrtc-everywhere/</loc>
     <lastmod>2019-03-15T00:00:00+00:00</lastmod>
   </url>
@@ -13,34 +17,8 @@
   </url>
   
   <url>
-    <loc>https://pion.ly/knowledge-base/webrtc-basics/architecture/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/webrtc-basics/intro/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://pion.ly/blog/why-pion/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/tags/architecture/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-    <priority>0</priority>
   </url>
   
   <url>
@@ -75,12 +53,6 @@
   
   <url>
     <loc>https://pion.ly/knowledge-base/ice/</loc>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/tags/introduction/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-    <priority>0</priority>
   </url>
   
   <url>
@@ -131,19 +103,30 @@
   
   <url>
     <loc>https://pion.ly/tags/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
+    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/architecture/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/knowledge-base/webrtc-basics/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</loc>
   </url>
   
   <url>
     <loc>https://pion.ly/tags/webrtc/</loc>
     <lastmod>2019-03-15T00:00:00+00:00</lastmod>
     <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</loc>
   </url>
   
 </urlset>
