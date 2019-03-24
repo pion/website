@@ -32,60 +32,42 @@ Preparation Let&amp;rsquo;s quickly cover how to get started with pions/webrtc. 
     </item>
     
     <item>
-      <title>SDP Overview</title>
-      <link>https://pion.ly/knowledge-base/webrtc/sdp-overview/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/knowledge-base/webrtc/sdp-overview/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>STUN Overview</title>
-      <link>https://pion.ly/knowledge-base/webrtc/stun-overview/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/knowledge-base/webrtc/stun-overview/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>TURN Overview</title>
-      <link>https://pion.ly/knowledge-base/webrtc/turn-overview/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/knowledge-base/webrtc/turn-overview/</guid>
-      <description>// TODO</description>
-    </item>
-    
-    <item>
       <title>WebRTC Architecture</title>
-      <link>https://pion.ly/knowledge-base/webrtc/webrtc-architecture/</link>
+      <link>https://pion.ly/knowledge-base/webrtc-basics/architecture/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://pion.ly/knowledge-base/webrtc/webrtc-architecture/</guid>
+      <guid>https://pion.ly/knowledge-base/webrtc-basics/architecture/</guid>
       <description>This article covers the major components used in a WebRTC deployment. Please note that the article assumes you have a basic understanding of WebRTC. Consider reading trough the WebRTC Introduction if you are new to WebRTC.
 Signaling server The first step in setting up a WebRTC connection is what&amp;rsquo;s known as signaling. This is en exchange of information needed to safely connect two peers to each other. The WebRTC API provides this data in a plain text a format known as SDP.</description>
     </item>
     
     <item>
       <title>WebRTC Deep Dive</title>
-      <link>https://pion.ly/knowledge-base/webrtc/webrtc-deep-dive/</link>
+      <link>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://pion.ly/knowledge-base/webrtc/webrtc-deep-dive/</guid>
+      <guid>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</guid>
       <description> TODO </description>
     </item>
     
     <item>
       <title>WebRTC Introduction</title>
-      <link>https://pion.ly/knowledge-base/webrtc/webrtc-intro/</link>
+      <link>https://pion.ly/knowledge-base/webrtc-basics/intro/</link>
       <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://pion.ly/knowledge-base/webrtc/webrtc-intro/</guid>
+      <guid>https://pion.ly/knowledge-base/webrtc-basics/intro/</guid>
       <description>// TODO
 Signaling // TODO
 Network Address Translation // TODO</description>
+    </item>
+    
+    <item>
+      <title>What does WebRTC solve for me?</title>
+      <link>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</link>
+      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</guid>
+      <description></description>
     </item>
     
     <item>

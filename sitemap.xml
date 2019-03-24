@@ -13,47 +13,38 @@
   </url>
   
   <url>
+    <loc>https://pion.ly/built-with/</loc>
+    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/slack/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://pion.ly/knowledge-base/webrtc/sdp-overview/</loc>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/architecture/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://pion.ly/knowledge-base/webrtc/stun-overview/</loc>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://pion.ly/knowledge-base/webrtc/turn-overview/</loc>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/intro/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>https://pion.ly/knowledge-base/webrtc/webrtc-architecture/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/webrtc/webrtc-deep-dive/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/webrtc/webrtc-intro/</loc>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://pion.ly/blog/why-pion/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/about/</loc>
   </url>
   
   <url>
@@ -73,6 +64,10 @@
   </url>
   
   <url>
+    <loc>https://pion.ly/knowledge-base/dtls/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/tags/data-channel/</loc>
     <lastmod>2019-03-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
@@ -82,6 +77,10 @@
     <loc>https://pion.ly/tags/everywhere/</loc>
     <lastmod>2019-03-15T00:00:00+00:00</lastmod>
     <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/ice/</loc>
   </url>
   
   <url>
@@ -95,15 +94,37 @@
   </url>
   
   <url>
+    <loc>https://pion.ly/knowledge-base/media/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/tags/pion/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://pion.ly/tags/sdp/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-    <priority>0</priority>
+    <loc>https://pion.ly/knowledge-base/pion-basics/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/rtcp/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/rtp/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/sctp/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/srtp/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/stun/</loc>
   </url>
   
   <url>
@@ -113,9 +134,7 @@
   </url>
   
   <url>
-    <loc>https://pion.ly/tags/stun/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-    <priority>0</priority>
+    <loc>https://pion.ly/knowledge-base/turn/</loc>
   </url>
   
   <url>
@@ -125,13 +144,7 @@
   </url>
   
   <url>
-    <loc>https://pion.ly/tags/turn/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/webrtc/</loc>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
   </url>
   

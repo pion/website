@@ -11,7 +11,7 @@
   <link rel="mask-icon" href="https://pion.ly/safari-pinned-tab.svg" color="#e53935">
   <meta name="msapplication-TileColor" content="#e53935">
   <meta name="theme-color" content="#ffffff">
-  
+  <meta name="description" content="An overview of the common components in a WebRTC enabled deployment.">
 
   
   
@@ -21,7 +21,7 @@
   <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700|Source+Code+Pro:400" rel="stylesheet">
   
   
-  <title>Webrtc | Pion</title>
+  <title>WebRTC Architecture | Pion</title>
   <style>
 .container {
   max-width: 100%;
@@ -116,11 +116,11 @@ audio {
     <main>
       
 
-  
-      <section class="knowledge-base">
+
+  <section class="knowledge-base">
   <div class="banner">
     <div class="banner-wrap">
-      <h2>Webrtc</h2>
+      <h2>WebRTC Architecture</h2>
       <div class="kb-nav">
         <nav role="navigation"></nav>
     <ul>
@@ -158,39 +158,46 @@ audio {
       </div>
     </div>
   </div>
-  <div class="kb-main list content">
+  <div class="kb-main single content">
     
-    <article class="post">
-      <h4><a class="post-title" href="https://pion.ly/blog/webrtc-everywhere/">WebRTC Everywhere</a></h4>
-    </article>
-    
-    <article class="post">
-      <h4><a class="post-title" href="https://pion.ly/blog/data-channels-introduction/">WebRTC Data Channels in Go</a></h4>
-    </article>
-    
-    <article class="post">
-      <h4><a class="post-title" href="https://pion.ly/blog/why-pion/">Why Pion</a></h4>
-    </article>
-    
-    <article class="post">
-      <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/">What does WebRTC solve for me?</a></h4>
-    </article>
-    
-    <article class="post">
-      <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc-basics/intro/">WebRTC Introduction</a></h4>
-    </article>
-    
-    <article class="post">
-      <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc-basics/deep-dive/">WebRTC Deep Dive</a></h4>
-    </article>
-    
-    <article class="post">
-      <h4><a class="post-title" href="https://pion.ly/knowledge-base/webrtc-basics/architecture/">WebRTC Architecture</a></h4>
-    </article>
-    
+
+<p>This article covers the major components used in a WebRTC deployment.
+<br><br>
+Please note that the article assumes you have a basic understanding of WebRTC. Consider reading trough the <a href="../webrtc-intro/">WebRTC Introduction</a> if you are new to WebRTC.</p>
+
+<h2 id="signaling-server">Signaling server</h2>
+
+<p>The first step in setting up a WebRTC connection is what&rsquo;s known as <a href="../webrtc-intro#signaling">signaling</a>. This is en exchange of information needed to safely connect two peers to each other. The WebRTC API provides this data in a plain text a format known as <a href="../sdp-overview/">SDP</a>. It is up to the user to safely exchange this information between the two peers who want to establish a connection.
+<br><br>
+WebRTC deployments commonly use what&rsquo;s known as a signaling server to accomplish this task. This server usually consists of a HTTPS or Secure WebSocket server tasked with exchanging the signaling information between the correct peers.
+<br><br>
+The Pion family doesn&rsquo;t contain an of-the-shelf signaling server yet. However, there is an example implementation available under the <a href="https://github.com/pions/signaler">pions/signaler</a> repository.</p>
+
+<h2 id="stun-server">STUN Server</h2>
+
+<p>As the name suggests a STUN server is a server that speaks the <a href="../stun-overview/">STUN</a> protocol. This server allows a peer to discover it&rsquo;s own public IP address. This IP address is sent to the remote peer during the <a href="../webrtc-intro#signaling">signaling</a> step in order to establish the peer to peer connection.
+<br><br>
+A STUN server has low resource requirements. Because of this there are public STUN servers available. However, it is not recommend to rely on a public STUN server for production use.
+<br><br>
+The Pion <a href="#turn-server">TURN server</a> can be configured to act as a STUN server specifically.</p>
+
+<h2 id="turn-server">TURN Server</h2>
+
+<p>As the name suggests a TURN server is a server that speaks the <a href="../turn-overview/">TURN</a> protocol. This server is used to relay WebRTC traffic around a strict <a href="../webrtc-intro#network-address-translation">NAT</a> or firewall. This server is used as a fallback in case the WebRTC protocol can&rsquo;t find another way to connect two peers. A TURN server is not required in order to setup a WebRTC connection. However, it does enable a broader spectrum of users to use your WebRTC enabled application. It is often users behind strict corporate NAT/firewalls that require a TURN server in order to make a WebRTC connection.<br />
+<br><br>
+A TURN server usually has high bandwidth requirements since it has to forward all the data send over a WebRTC connection. Because of this there are little to no public TURN servers available. You can rent a TURN server or set-up your own. Most TURN servers also act as a <a href="#stun-server">STUN server</a>.
+<br><br>
+The Pion TURN Server can be found under the <a href="https://github.com/pions/turn">pions/turn</a> repository.</p>
+
+<h2 id="media-server">Media server</h2>
+
+<p>A media server refers to any server that does server side processing on the WebRTC media. This processing can take many forms, including: routing, mixing, recording and transcoding.
+<br><br>
+The Pion Media Server can be found under the <a href="https://github.com/pions/media-server">pions/media-server</a> repository.</p>
+
   </div>
 </section>
-  
+
 
 
     </main>
