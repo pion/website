@@ -1,6 +1,15 @@
 <nav role="navigation"></nav>
     <ul>
     {{ range .Site.Menus.kb.ByWeight }}
+    <li><h4> <a href="{{ .URL }}">{{ .Name }}</a></h4></li>
+    {{ end }}
+    </ul>
+
+    <!--Temporary, we should emphanize the top list more, and then a break for 'minor' topics  -->
+    <div style="padding-bottom: 3em"> </div>
+
+    <ul>
+    {{ range .Site.Menus.kbsub.ByWeight }}
         <li><a href="{{ .URL }}">{{ .Name }}</a></li>
     {{ end }}
     </ul>

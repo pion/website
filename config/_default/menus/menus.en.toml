@@ -1,24 +1,3 @@
-[[nav]]
-    name = "Blog"
-    url = "/blog/"
-    weight = 1
-[[nav]]
-    name = "Knowledge Base"
-    url = "/knowledge-base/"
-    weight = 2
-
-[[kb]]
-  name = "About Pion"
-  weight = 1
-  identifier = "about"
-  url = "/knowledge-base/about/"
-  
-[[kb]]
-  name = "WebRTC"
-  weight = 1
-  identifier = "webrtc"
-  url = "/knowledge-base/webrtc/"
-
 [[connect]]
     name = "Github"
     url = "https://github.com/pions"
@@ -30,3 +9,79 @@
 [[connect]]
     name = "team@pion.ly"
     url = "mailto:team@pion.ly"
+
+# Top level navigation
+[[nav]]
+    name = "Blog"
+    url = "/blog/"
+    weight = 1
+[[nav]]
+    name = "Knowledge Base"
+    url = "/knowledge-base/"
+    weight = 2
+
+[[nav]]
+    name = "Built With"
+    url = "/built-with/"
+    weight = 3
+
+# Knowledge Base
+[[kb]]
+  name = "WebRTC Basics"
+  weight = 1
+  identifier = "webrtc-basics"
+  url = "/knowledge-base/webrtc-basics/"
+
+[[kb]]
+  name = "Pion Basics"
+  weight = 2
+  identifier = "pion-basics"
+  url = "/knowledge-base/pion-basics/"
+
+[[kbSub]]
+  name = "ICE"
+  weight = 1
+  identifier = "ice"
+  url = "/knowledge-base/ice/"
+
+[[kbSub]]
+  name = "STUN"
+  weight = 2
+  identifier = "stun"
+  url = "/knowledge-base/stun/"
+
+[[kbSub]]
+  name = "TURN"
+  weight = 3
+  identifier = "turn"
+  url = "/knowledge-base/turn/"
+
+[[kbSub]]
+  name = "DTLS"
+  weight = 4
+  identifier = "dtls"
+  url = "/knowledge-base/dtls/"
+
+[[kbSub]]
+  name = "SCTP"
+  weight = 5
+  identifier = "sctp"
+  url = "/knowledge-base/sctp/"
+
+[[kbSub]]
+  name = "RTP"
+  weight = 6
+  identifier = "RTP"
+  url = "/knowledge-base/rtp/"
+
+[[kbSub]]
+  name = "RTCP"
+  weight = 7
+  identifier = "RTCP"
+  url = "/knowledge-base/rtp/"
+
+[[kbSub]]
+  name = "Media"
+  weight = 8
+  identifier = "Media"
+  url = "/knowledge-base/media/"
