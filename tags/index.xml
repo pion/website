@@ -6,7 +6,6 @@
     <description>Recent content in Tags on Pion</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 08 Mar 2019 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://pion.ly/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,7 +13,7 @@
     <item>
       <title>Data Channel</title>
       <link>https://pion.ly/tags/data-channel/</link>
-      <pubDate>Fri, 08 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://pion.ly/tags/data-channel/</guid>
       <description></description>
@@ -23,7 +22,7 @@
     <item>
       <title>Everywhere</title>
       <link>https://pion.ly/tags/everywhere/</link>
-      <pubDate>Fri, 15 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://pion.ly/tags/everywhere/</guid>
       <description></description>
@@ -32,7 +31,7 @@
     <item>
       <title>Pion</title>
       <link>https://pion.ly/tags/pion/</link>
-      <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://pion.ly/tags/pion/</guid>
       <description></description>
@@ -41,7 +40,7 @@
     <item>
       <title>Webrtc</title>
       <link>https://pion.ly/tags/webrtc/</link>
-      <pubDate>Fri, 15 Mar 2019 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://pion.ly/tags/webrtc/</guid>
       <description></description>

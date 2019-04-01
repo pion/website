@@ -116,11 +116,39 @@ audio {
     <main>
       
 
-<section class="blog">
+<section class="knowledge-base">
   <div class="banner">
-    <h2>WebRTC Data Channels in Go</h2>
+    <div class="banner-wrap">
+      <h2>WebRTC Data Channels in Go</h2>
+      <div class="kb-nav">
+        <header  class="force-shadow"  >
+  <nav class="menu">
+    <a href="/"><img class="logo"></a>
+    <div class="left">
+      
+      
+      
+        
+        <a class="nav-link" href="/blog/">Blog</a>
+      
+        
+        <a class="nav-link" href="/knowledge-base/">Knowledge Base</a>
+      
+        
+        <a class="nav-link" href="/built-with/">Built With</a>
+      
+    </div>
+    <div class="right">
+      <a href="/slack/">Slack</a>
+      <a class="github button" href="https://github.com/pions">Github</a>
+    </div>
+  </nav>
+</header>
+
+      </div>
+    </div>
   </div>
-  <div class="content">
+  <div class="kb-main single content">
     
 
 <p>Today we&rsquo;ll walk through setting up a Data Channel connection in <a href="https://golang.org/">Go</a> using <a href="https://github.com/pions/webrtc">pions/webrtc</a>. Check out our knowledge base articles on <a href="/knowledge-base/webrtc/">WebRTC</a> if you&rsquo;re new to it. You can also skip to the <a href="#full-examples">full examples</a> if you just want to look at the code.</p>
@@ -173,7 +201,7 @@ audio {
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Register data channel creation handling
 </span><span style="color:#75715e"></span><span style="color:#a6e22e">peerConnection</span>.<span style="color:#a6e22e">OnDataChannel</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">dataChannel</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">DataChannel</span>) {
     <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;New DataChannel %s %d\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">ID</span>)
-    
+
     <span style="color:#75715e">// Handle data channel
 </span><span style="color:#75715e"></span>}</code></pre></div></p>
 

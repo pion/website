@@ -7,23 +7,7 @@
   </url>
   
   <url>
-    <loc>https://pion.ly/blog/webrtc-everywhere/</loc>
-    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/blog/data-channels-introduction/</loc>
-    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/blog/why-pion/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://pion.ly/blog/</loc>
-    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -32,7 +16,6 @@
   
   <url>
     <loc>https://pion.ly/</loc>
-    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -41,13 +24,11 @@
   
   <url>
     <loc>https://pion.ly/tags/data-channel/</loc>
-    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://pion.ly/tags/everywhere/</loc>
-    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -69,7 +50,6 @@
   
   <url>
     <loc>https://pion.ly/tags/pion/</loc>
-    <lastmod>2019-03-05T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -103,7 +83,6 @@
   
   <url>
     <loc>https://pion.ly/tags/</loc>
-    <lastmod>2019-03-08T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -116,17 +95,28 @@
   </url>
   
   <url>
+    <loc>https://pion.ly/knowledge-base/pion-basics/data-channels-introduction/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/knowledge-base/webrtc-basics/deep-dive/</loc>
   </url>
   
   <url>
+    <loc>https://pion.ly/knowledge-base/pion-basics/webrtc-everywhere/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/tags/webrtc/</loc>
-    <lastmod>2019-03-15T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://pion.ly/knowledge-base/webrtc-basics/what-it-solves/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/pion-basics/why-pion/</loc>
   </url>
   
 </urlset>
