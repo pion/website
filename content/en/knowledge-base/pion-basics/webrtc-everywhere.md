@@ -1,5 +1,4 @@
 ---
-date: "2019-03-15"
 tags: ["webrtc", "everywhere"]
 title: "WebRTC Everywhere"
 authors:

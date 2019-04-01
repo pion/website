@@ -1,5 +1,4 @@
 ---
-date: "2019-03-08"
 tags: ["webrtc", "data channel"]
 title: "WebRTC Data Channels in Go"
 authors:
@@ -62,7 +61,7 @@ The other side of the connection will receive the incoming Data Channel:
 // Register data channel creation handling
 peerConnection.OnDataChannel(func(dataChannel *webrtc.DataChannel) {
     fmt.Printf("New DataChannel %s %d\n", dataChannel.Label, dataChannel.ID)
-    
+
     // Handle data channel
 }
 {{< / highlight >}}
@@ -160,7 +159,7 @@ if err != nil {
 }
 {{< / highlight >}}
 
-And that's it! You now know how to send data over a WebRTC Data Channel in Go. 
+And that's it! You now know how to send data over a WebRTC Data Channel in Go.
 
 ## Full examples
 The full examples corresponding covered in this post can be found in the [pions/webrtc](https://github.com/pions/webrtc) repository:
