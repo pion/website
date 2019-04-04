@@ -11,7 +11,7 @@ The first step in setting up a WebRTC connection is what's known as [signaling](
 <br><br>
 WebRTC deployments commonly use what's known as a signaling server to accomplish this task. This server usually consists of a HTTPS or Secure WebSocket server tasked with exchanging the signaling information between the correct peers.
 <br><br>
-The Pion family doesn't contain an of-the-shelf signaling server yet. However, there is an example implementation available under the [pions/signaler](https://github.com/pions/signaler) repository.
+The Pion family doesn't contain an of-the-shelf signaling server yet. However, there is an example implementation available under the [pion/signaler](https://github.com/pion/signaler) repository.
 
 ## STUN Server
 As the name suggests a STUN server is a server that speaks the [STUN](../stun-overview/) protocol. This server allows a peer to discover it's own public IP address. This IP address is sent to the remote peer during the [signaling](../webrtc-intro#signaling) step in order to establish the peer to peer connection.
@@ -25,9 +25,9 @@ As the name suggests a TURN server is a server that speaks the [TURN](../turn-ov
 <br><br>
 A TURN server usually has high bandwidth requirements since it has to forward all the data send over a WebRTC connection. Because of this there are little to no public TURN servers available. You can rent a TURN server or set-up your own. Most TURN servers also act as a [STUN server](#stun-server).
 <br><br>
-The Pion TURN Server can be found under the [pions/turn](https://github.com/pions/turn) repository.
+The Pion TURN Server can be found under the [pion/turn](https://github.com/pion/turn) repository.
 
 ## Media server
 A media server refers to any server that does server side processing on the WebRTC media. This processing can take many forms, including: routing, mixing, recording and transcoding.
 <br><br>
-The Pion Media Server can be found under the [pions/media-server](https://github.com/pions/media-server) repository.
+The Pion Media Server can be found under the [pion/media-server](https://github.com/pion/media-server) repository.

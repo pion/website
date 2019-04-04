@@ -5,12 +5,12 @@ authors:
   - Michiel De Backker
 ---
 
-Today we'll walk through setting up a Data Channel connection in [Go](https://golang.org/) using [pions/webrtc](https://github.com/pions/webrtc). Check out our knowledge base articles on [WebRTC](/knowledge-base/webrtc/) if you're new to it. You can also skip to the [full examples](#full-examples) if you just want to look at the code.
+Today we'll walk through setting up a Data Channel connection in [Go](https://golang.org/) using [pion/webrtc](https://github.com/pion/webrtc). Check out our knowledge base articles on [WebRTC](/knowledge-base/webrtc/) if you're new to it. You can also skip to the [full examples](#full-examples) if you just want to look at the code.
 
 ## Preparation
-Let's quickly cover how to get started with [pions/webrtc](https://github.com/pions/webrtc). If you're familiar with Go you can skip to the [next section](#peer-connection). To start you can download the library using `go get`:
+Let's quickly cover how to get started with [pion/webrtc](https://github.com/pion/webrtc). If you're familiar with Go you can skip to the [next section](#peer-connection). To start you can download the library using `go get`:
 {{< highlight sh "" >}}
-go get github.com/pions/webrtc
+go get github.com/pion/webrtc
 {{< / highlight >}}
 
 Next, import the library into your project:
@@ -19,7 +19,7 @@ Next, import the library into your project:
 package main
 
 import (
-	"github.com/pions/webrtc"
+	"github.com/pion/webrtc"
 )
 {{< / highlight >}}
 
@@ -162,7 +162,7 @@ if err != nil {
 And that's it! You now know how to send data over a WebRTC Data Channel in Go.
 
 ## Full examples
-The full examples corresponding covered in this post can be found in the [pions/webrtc](https://github.com/pions/webrtc) repository:
+The full examples corresponding covered in this post can be found in the [pion/webrtc](https://github.com/pion/webrtc) repository:
 
-- The [data-channels-create](https://github.com/pions/webrtc/tree/master/examples/data-channels-create) example shows the offering side of the connection.
-- The [data-channels](https://github.com/pions/webrtc/tree/master/examples/data-channels) example shows the answering side of the connection.
+- The [data-channels-create](https://github.com/pion/webrtc/tree/master/examples/data-channels-create) example shows the offering side of the connection.
+- The [data-channels](https://github.com/pion/webrtc/tree/master/examples/data-channels) example shows the answering side of the connection.

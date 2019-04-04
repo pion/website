@@ -1,6 +1,6 @@
 [[connect]]
     name = "Github"
-    url = "https://github.com/pions"
+    url = "https://github.com/pion"
 
 [[connect]]
     name = "Slack"
