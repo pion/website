@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Release Notes on Pion</title>
+    <link>https://pion.ly/knowledge-base/release-notes/</link>
+    <description>Recent content in Release Notes on Pion</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    
+	<atom:link href="https://pion.ly/knowledge-base/release-notes/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Pion WebRTC v2.0.0 Release Notes</title>
+      <link>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</guid>
+      <description>The Pion team is very excited to annouce v2.0.0, our 4th release that includes 5th months of work! With this release we have lots of new features, performance improvements and bug fixes.
+This release does introduce a few breaking changes. We had accumulated a fair amount of technical debt, and these changes were needed to allow us to move forward on things like ORTC and TURN.
+Please read these changes carefully, most of these things aren&amp;rsquo;t caught at compile time and could save a lot of time debugging.</description>
+    </item>
+    
+  </channel>
+</rss>

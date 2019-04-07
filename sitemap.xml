@@ -58,11 +58,19 @@
   </url>
   
   <url>
+    <loc>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/knowledge-base/rtcp/</loc>
   </url>
   
   <url>
     <loc>https://pion.ly/knowledge-base/rtp/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/release-notes/</loc>
   </url>
   
   <url>

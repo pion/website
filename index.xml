@@ -42,6 +42,17 @@ Reach out to us via Slack or Email, and we would love to share your project here
     </item>
     
     <item>
+      <title>Pion WebRTC v2.0.0 Release Notes</title>
+      <link>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</guid>
+      <description>The Pion team is very excited to annouce v2.0.0, our 4th release that includes 5th months of work! With this release we have lots of new features, performance improvements and bug fixes.
+This release does introduce a few breaking changes. We had accumulated a fair amount of technical debt, and these changes were needed to allow us to move forward on things like ORTC and TURN.
+Please read these changes carefully, most of these things aren&amp;rsquo;t caught at compile time and could save a lot of time debugging.</description>
+    </item>
+    
+    <item>
       <title>WebRTC Architecture</title>
       <link>https://pion.ly/knowledge-base/webrtc-basics/architecture/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
