@@ -85,3 +85,9 @@
   weight = 8
   identifier = "Media"
   url = "/knowledge-base/media/"
+
+[[kbSub]]
+  name = "Release Notes"
+  weight = 9
+  identifier = "Release Notes"
+  url = "/knowledge-base/release-notes/"
