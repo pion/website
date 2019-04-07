@@ -11,18 +11,37 @@ Please read these changes carefully, most of these things aren't caught at compi
 
 ## Breaking Changes
 
-### Import has changed to `github.com/pion/webrtc/v2`
-####  We have moved from `github.com/pions/webrtc` -> `github.com/pion/webrtc`
-Thank you to Ion Pana for making `github.com/pion` available!
+### Imports have changed
+#### We now use 'github.com/pion'
+We have moved from `github.com/pions/webrtc` -> `github.com/pion/webrtc`. Thank you to Ion Pana for making `github.com/pion` available!
 
-#### We have created a new major version `github.com/pion/webrtc` -> `github.com/pion/webrtc/v2`
-We version our libraries, allowing us to distribute old versions still if we need.
+#### This release is a new major version
+This moves us from `github.com/pion/webrtc` -> `github.com/pion/webrtc/v2`. We version our libraries, allowing us to distribute old versions still if we need.
 
 To quickly rewrite everything you can use the following commands
 ```
     find . -type f -name '*.go' | xargs sed -i '' 's/github.com\/pion\/webrtc/github.com\/pion\/webrtc\/v2/g'
     find . -type f -name '*.go' | xargs sed -i '' 's/github.com\/pions\/webrtc/github.com\/pion\/webrtc\/v2/g' # If you are still using github.com/pions/webrtc
 ```
+
+### Unified Plan is now the default SDP format
+This change will effect you if you are receiving media, or sending multiple tracks. If you have already done this migration for your Javascript this will feel very similar.
+
+#### You must call AddTransceiver for every incoming track
+```
+	// Allow us to receive 1 audio track, and 2 video tracks
+	if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeAudio); err != nil {
+		panic(err)
+	} else if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeVideo); err != nil {
+		panic(err)
+	} else if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeVideo); err != nil {
+		panic(err)
+	}
+```
+
+
+This was changed with [1202db](https://github.com/pion/webrtc/commit/1202db)
+
 
 ### The RTC prefix was removed from structs in the webrtc package
 - This makes it so the names don't studder when the package name is added.
@@ -58,8 +77,6 @@ This was changed because it diverged from the WebRTC RFC. To fix this update you
 ```
 
 This was changed with [b67f73](https://github.com/pion/webrtc/commit/b67f73)
-
-
 
 ### Media API
 The Track API has been rewritten to remove Channels from the public API. This was done because we ran into the following issues.
@@ -136,7 +153,7 @@ peerConnection.OnTrack(func(track *webrtc.Track, receiver *webrtc.RTPReceiver) {
 })
 ```
 
-##### Raw and Sample tracks now share a constructor
+#### Raw and Sample tracks now share a constructor
 The only behavior difference is that the user must supply a SSRC for Sample tracks. A random uint32 is all that should be needed in most cases.
 
 ###### Before
@@ -181,6 +198,11 @@ This was changed with [5fcbc7](https://github.com/pion/webrtc/commit/5fcbc7)
 Previously state was exposed via attributes. This cannot safely be used concurrently. The state is now exposed using methods instead. This allow the library to add locking when needed.
 
 ## New Features
+
+### `example-webrtc-applications` repository
+We know have a repository for examples that use 3rd party libraries, or are more complicated then the standard example.
+
+We would love to see what the community can build, come check out what we have and contribute more at [example-webrtc-applications](https://github.com/pion/example-webrtc-applications)
 
 ### WASM
 Experimental support for WASM has been added. You can now compile Pion WebRTC with `goos=js goarch=wasm`. When setting `goos=js` the Pion API will act as a wrapper around the JavaScript WebRTC API. This change allows you to use the same code on the server and in the browser in many cases. We aim to keep the API for both implementations as similar as possible.
