@@ -159,21 +159,39 @@ audio {
 
 <h2 id="breaking-changes">Breaking Changes</h2>
 
-<h3 id="import-has-changed-to-github-com-pion-webrtc-v2">Import has changed to <code>github.com/pion/webrtc/v2</code></h3>
+<h3 id="imports-have-changed">Imports have changed</h3>
 
-<h4 id="we-have-moved-from-github-com-pions-webrtc-github-com-pion-webrtc">We have moved from <code>github.com/pions/webrtc</code> -&gt; <code>github.com/pion/webrtc</code></h4>
+<h4 id="we-now-use-github-com-pion">We now use &lsquo;github.com/pion&rsquo;</h4>
 
-<p>Thank you to Ion Pana for making <code>github.com/pion</code> available!</p>
+<p>We have moved from <code>github.com/pions/webrtc</code> -&gt; <code>github.com/pion/webrtc</code>. Thank you to Ion Pana for making <code>github.com/pion</code> available!</p>
 
-<h4 id="we-have-created-a-new-major-version-github-com-pion-webrtc-github-com-pion-webrtc-v2">We have created a new major version <code>github.com/pion/webrtc</code> -&gt; <code>github.com/pion/webrtc/v2</code></h4>
+<h4 id="this-release-is-a-new-major-version">This release is a new major version</h4>
 
-<p>We version our libraries, allowing us to distribute old versions still if we need.</p>
+<p>This moves us from <code>github.com/pion/webrtc</code> -&gt; <code>github.com/pion/webrtc/v2</code>. We version our libraries, allowing us to distribute old versions still if we need.</p>
 
 <p>To quickly rewrite everything you can use the following commands</p>
 
 <pre><code>    find . -type f -name '*.go' | xargs sed -i '' 's/github.com\/pion\/webrtc/github.com\/pion\/webrtc\/v2/g'
     find . -type f -name '*.go' | xargs sed -i '' 's/github.com\/pions\/webrtc/github.com\/pion\/webrtc\/v2/g' # If you are still using github.com/pions/webrtc
 </code></pre>
+
+<h3 id="unified-plan-is-now-the-default-sdp-format">Unified Plan is now the default SDP format</h3>
+
+<p>This change will effect you if you are receiving media, or sending multiple tracks. If you have already done this migration for your Javascript this will feel very similar.</p>
+
+<h4 id="you-must-call-addtransceiver-for-every-incoming-track">You must call AddTransceiver for every incoming track</h4>
+
+<pre><code>	// Allow us to receive 1 audio track, and 2 video tracks
+	if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeAudio); err != nil {
+		panic(err)
+	} else if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeVideo); err != nil {
+		panic(err)
+	} else if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeVideo); err != nil {
+		panic(err)
+	}
+</code></pre>
+
+<p>This was changed with <a href="https://github.com/pion/webrtc/commit/1202db">1202db</a></p>
 
 <h3 id="the-rtc-prefix-was-removed-from-structs-in-the-webrtc-package">The RTC prefix was removed from structs in the webrtc package</h3>
 
@@ -293,7 +311,7 @@ audio {
 })
 </code></pre>
 
-<h5 id="raw-and-sample-tracks-now-share-a-constructor">Raw and Sample tracks now share a constructor</h5>
+<h4 id="raw-and-sample-tracks-now-share-a-constructor">Raw and Sample tracks now share a constructor</h4>
 
 <p>The only behavior difference is that the user must supply a SSRC for Sample tracks. A random uint32 is all that should be needed in most cases.</p>
 
@@ -348,6 +366,12 @@ audio {
 <p>Previously state was exposed via attributes. This cannot safely be used concurrently. The state is now exposed using methods instead. This allow the library to add locking when needed.</p>
 
 <h2 id="new-features">New Features</h2>
+
+<h3 id="example-webrtc-applications-repository"><code>example-webrtc-applications</code> repository</h3>
+
+<p>We know have a repository for examples that use 3rd party libraries, or are more complicated then the standard example.</p>
+
+<p>We would love to see what the community can build, come check out what we have and contribute more at <a href="https://github.com/pion/example-webrtc-applications">example-webrtc-applications</a></p>
 
 <h3 id="wasm">WASM</h3>
 
