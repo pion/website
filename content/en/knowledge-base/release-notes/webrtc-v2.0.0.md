@@ -25,7 +25,7 @@ To quickly rewrite everything you can use the following commands
 ```
 
 ### Unified Plan is now the default SDP format
-This change will effect you if you are receiving media, or sending multiple tracks. If you have already done this migration for your Javascript this will feel very similar.
+This change will affect you if you are receiving media, or sending multiple tracks. If you have already done this migration for your Javascript this will feel very similar.
 
 #### You must call AddTransceiver for every incoming track
 ```
@@ -44,7 +44,7 @@ This was changed with [1202db](https://github.com/pion/webrtc/commit/1202db)
 
 
 ### The RTC prefix was removed from structs in the webrtc package
-- This makes it so the names don't studder when the package name is added.
+- This makes it so the names don't stutter when the package name is added.
 - `webrtc.RTCPeerConnection` became `webrtc.PeerConnection`, for example
 
 This was changed with [0e7086](https://github.com/pion/webrtc/commit/0e7086)
