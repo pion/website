@@ -78,7 +78,7 @@
   name = "RTCP"
   weight = 7
   identifier = "RTCP"
-  url = "/knowledge-base/rtp/"
+  url = "/knowledge-base/rtcp/"
 
 [[kbSub]]
   name = "Media"
