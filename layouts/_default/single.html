@@ -1,0 +1,19 @@
+{{ define "main"}}
+
+  <section>
+    <div class="columns has-text-centered" style="padding-top: 3em;">
+      <div class="column">
+        <h1 class="title" style="font-size: 3rem">{{.Title }}</h1>
+        <hr class="pion-hr">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="columns" style="padding: 3em;">
+      <div class="column">
+        {{ .Content }}
+      </div>
+    </div>
+  </section>
+{{ end }}
