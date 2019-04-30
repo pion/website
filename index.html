@@ -1,191 +1,159 @@
-<!doctype html>
-
-<html lang="en" class="h-100">
+<!DOCTYPE html>
+<html>
   <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="https://pion.ly/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="https://pion.ly/favicon-16x16.png">
-  <link rel="manifest" href="https://pion.ly/site.webmanifest">
-  <link rel="mask-icon" href="https://pion.ly/safari-pinned-tab.svg" color="#e53935">
-  <meta name="msapplication-TileColor" content="#e53935">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="The Open Source, Cross Platform Stack for Real-time Media and Data Communication.">
+	<meta name="generator" content="Hugo 0.54.0" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pion</title>
 
-  
-  
-  <link rel="stylesheet" href="https://pion.ly/scss/style.css">
+    <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAC+lBMVEUAAADmOTblOTXmOjXlOjbmOjblOzXlOzbnOjbmOzbkOTTnOzjnOzfkODTnOTbvPjzpPDflOTbrQD/kODXsQDblODXmOzfmOjfWJiTiNzPmOTXfNjDvREHfMy7uQT7zRUToPjnlOjXcMy/iNjLnOjjgNTHqOzjeMzDpOjnlODPmPzroOzfjNzTjODTjODPjNTHpOzfsPzrmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOzblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjblOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjbmOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXmOTblOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXmOTblOTXlOTXlOTXmOTXnOzfmOjblOTXmOjblOTXlOTXlOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXnOzflOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTbmOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXmPDflOTX///+vM0BfAAAA/HRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEdW5zM5/TVKAcsG4TT+PlKWuXRgSYBEXTf/erI+k1i3XIPJ7D798BsLgr+TAlew60lM8vODlgQYdTHKqAfJKn8xSMTtI0NEZmnDXudDBKqaS3hHhk0CCJQGCCJwvBWo7tmvg6/U7cWFcoCiosIEH3xR+sw47UX2iE7g8Zq9ldd1+IEmgm97q8IAQPtBbPcCLyyYPNAbdaWL7FzCis88oa2fklwMnnbFIWe2JRv3gKuC83SdayXZKQDATZn2VF2pg7Q72sNBs+MTgFx1Y14AAAAAWJLR0T9SwmT6QAAAAd0SU1FB+MCDxQvITv9oyUAAANQSURBVDjLbZN5WJRVFMbv98JNhprSCixsUdsstWVEcgxjxkTCBsaFYWbED03DmITBBtAapVSgQiwTTR2pVCqh0txwQXNrQyxaLbXNbLHNbN/fP7rffI3a83T++e7znd9zzj3nvq8Q/4ZmG5A6MO36QfbBuCF9iC1O/DfibYNvzHBQhXMobhqWOTzrZnlK+jRkj7iFdOXkptE9EqOc5OgxeegSy0t48r30+ccWjEvV3YUYP+FWJ70TJyHBzFtwWxE5OfX2xNNRbABnWAN3TCFLCmAx8meiNI3eYBk0IUxA1bROvTPE8gqcpQBUTqN3+l0w4BgguuLusIszZqpzt7OrXLzn3mj+JKCOs2bTPeccKVBdw6JanGtJuu/+B0ygbm49krvDY6d9HsR5D9JXDCmR/tD8h6PA+QvYkAVNJi30cgREmZ2LHkkRGLKYviVmheE6l0YgsKyR5ZUi1cexSJCPPsbQ48tNYMVAXV/ZQ5OoYtMTIswnn1J06So2Z8ME0OLn08+on882cbVYw7RsdMdzXFuIeBOwYJ3btR4XoH4Dp4mNzG/V5IWbOKUFsTFRO5rTrVLbvIUZYiuDF0nZ2saGbSkxIGVmCRdsl/L5iawROxi8WMqdu7h4XPyJCnlFDPaUvRSwUdSwrTUK7C4zW4xUH88wrkZy/J4XaBflbAxA7nyR3pcgUeh8+RVYktp1h8HV7+VS0cGcfZCtr6oHrwDyXpvTCby+l43LFPDGm3xLFPvYroB8pba3sxLVk8ve1X46RqntJ77Dpv1iQAb9ASjAF6L93epI/XsHDtLV0Wl0mMzyQ+KS9+mcADVm2wdOpcoNH+7Q6ftoFpRoPnZxjLHkw8yc+skRhj9d+FlU177c9ZshLsW+3fy8VoGXfRHijENHGbZeHilc+WVH1f7KK6Tog5ZmOr5KUuJH4AhDmxoYvrLbSSNchcjXOoOdhrr6YlIJvQ6G+8UJ7RtP3be9hEjpX7pL56JaRA2WgII1qnX4ak3g2GF7OpKvqfzuOOn3mLI3jFMx280Oa1x01d8Hjv2Q66b7x3kx4whxLX5qb56rjKEA18+Zv+jUj//6G647xZ3S9rvNuPCSkDHooKIDdQma+J9A6R85B7f8+Vfk7xPe/gdCN2wvY+TSJAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOS0wMi0xNVQyMDo0NzozMyswMTowMOnp2+YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTktMDItMTVUMjA6NDc6MzMrMDE6MDCYtGNaAAAAV3pUWHRSYXcgcHJvZmlsZSB0eXBlIGlwdGMAAHic4/IMCHFWKCjKT8vMSeVSAAMjCy5jCxMjE0uTFAMTIESANMNkAyOzVCDL2NTIxMzEHMQHy4BIoEouAOoXEXTyQjWVAAAAAElFTkSuQmCC">
 
-  <meta name="generator" content="Hugo 0.54.0" />
-  <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700|Source+Code+Pro:400" rel="stylesheet">
-  
-  
-    
-  
-  <title>Pion</title>
-  <style>
-.container {
-  max-width: 100%;
-}
-#nav a {
-  font-weight: bold;
-  color: inherit;
-}
-#nav a.nav-link-active {
-  background-color: #212529;
-  color: #fff;
-}
-#nav-border {
-  border-bottom: 1px solid #212529;
-}
-#main {
-  margin-top: 1em;
-  margin-bottom: 4em;
-}
-#home-jumbotron {
-  background-color: inherit;
-}
-#footer .container {
-  padding: 1em 0;
-}
-#footer a {
-  color: inherit;
-  text-decoration: underline;
-}
-.font-125 {
-  font-size: 125%;
-}
-.tag-btn {
-  margin-bottom: 0.3em;
-}
-pre {
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 16px;
-}
-pre code {
-  padding: 0;
-  font-size: inherit;
-  color: inherit; 
-  background-color: transparent;
-  border-radius: 0;
-}
-code {
-  padding: 2px 4px;
-  font-size: 90%;
-  color: #c7254e;
-  background-color: #f9f2f4;
-  border-radius: 4px;
-}
-img,
-iframe,
-embed,
-video,
-audio {
-  max-width: 100%;
-}
-</style>
-  <script src="https://pion.ly/js/site-min.js"></script>
-</head>
+    <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <link href="/css/main.css" rel="stylesheet">
 
-  <body class="d-flex flex-column h-100">
-    <header  >
-  <nav class="menu">
-    <a href="/"><img class="logo"></a>
-    <div class="left">
-      
-      
-      
-        
-        <a class="nav-link" href="/blog/">Blog</a>
-      
-        
-        <a class="nav-link" href="/knowledge-base/">Knowledge Base</a>
-      
-        
-        <a class="nav-link" href="/built-with/">Built With</a>
-      
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="/js/bulma-menu.js"></script>
+  </head>
+  <body>
+
+  <nav class="navbar is-black" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <img src="/img/pion-logo.svg" width="112" height="28">
+      </a>
+
+      <a class="navbar-item is-hidden-desktop" href="https://github.com/pion" target="_blank">
+        <span class="icon">
+          <i class="fab fa-github"></i>
+        </span>
+      </a>
+
+      <a class="navbar-item is-hidden-desktop" href="/slack/">
+        <span class="icon">
+          <i class="fab fa-slack"></i>
+        </span>
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarMenuItems">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
     </div>
-    <div class="right">
-      <a href="/slack/">Slack</a>
-      <a class="github button" href="https://github.com/pion">Github</a>
+
+    <div id="navbarMenuItems" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item">
+          Knowledge Base
+        </a>
+        <a class="navbar-item">
+          Customers
+        </a>
+        <a class="navbar-item">
+          Open Source
+        </a>
+        <a class="navbar-item">
+          Blog
+        </a>
+      </div>
+
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <div class="buttons is-hidden-touch">
+            <a class="navbar-item navbar-item-desktop" href="https://github.com/pion" target="_blank">
+              <span class="icon">
+                <i class="fab fa-github"></i>
+              </span>
+            </a>
+
+            <a class="navbar-item navbar-item-desktop" href="/slack/" >
+              <span class="icon">
+                <i class="fab fa-slack"></i>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </nav>
-</header>
 
-    <main>
-      
+  <main>
 
-<section class="intro">
-  <div class="section-wrap">
-    <h1>Cloud Native WebRTC</h1>
-    <h4>The Open Source, Cross Platform Stack for Real-time Media and Data Communication.</h4>
-    <a class="button" href="https://github.com/pion">Get Started</a>
+<section>
+  <div class="columns has-text-centered" style="padding-top: 3em;">
+    <div class="column">
+      <h1 class="title" style="font-size: 5rem">Pion</h1>
+      <hr class="pion-hr">
+      <h2 class="subtitle has-text-grey">The Modern Stack for Web Real-Time Communication.</h2>
+
+      <a class="button is-large" href="https://github.com/pion" id="index-github-button">
+        <span>View on GitHub</span>
+      </a>
+    </div>
   </div>
 </section>
 
-<section class="more content">
-  
-  <div class="section-wrap">
-    <h3>Real-time</h3>
-    <p>WebRTC provides real-time, low latency communication. This enables time sensitive use-cases including video conferencing and video games.</p>
-    <p><a href="knowledge-base/pion-basics/why-pion">Learn more</a></p>
+<section style="padding-top: 10em;">
+  <div class="columns has-text-centered">
+    <div class="column">
+      <span class="index-image">
+        <i class="fas fa-shipping-fast"></i>
+      </span>
+      <h1 class="is-size-4"> API You Know </h1>
+      <p class="index-reason-padding"> Pion implements the WebRTC API. Spend more time building and less time learning a new API. </p>
+    </div>
+
+    <div class="column">
+      <span>
+        <img src="/img/go-logo.svg">
+      </span>
+      <h1 class="is-size-4"> Build Quickly </h1>
+      <p class="index-reason-padding"> Pion is fast! With quick build times, examples and godoc you will be deploying in no time. <p>
+    </div>
+
+    <div class="column">
+      <span class="index-image">
+        <i class="fas fa-mobile-alt"></i>
+      </span>
+      <h1 class="is-size-4"> Ship Everywhere </h1>
+      <p class="index-reason-padding"> Pion works almost everywhere thanks to Go. Ship to Mobile, Desktop, Servers and WASM all with one code base. </p>
+    </div>
   </div>
-  
-  <div class="section-wrap">
-    <h3>Open Source</h3>
-    <p>Pion fully embraces open source. Our entire stack is open source and has a vibrant community of contributors, maintainers and users. We actively encourage and mentor contributions. Feel free to open a ticket or pull request in on of our repositories. Let us know about your project. We&#39;re always looking to help people building on our tools.</p>
-    <p><a href="knowledge-base/pion-basics/why-pion">Learn more</a></p>
-  </div>
-  
-  <div class="section-wrap">
-    <h3>Frictionless Deployment</h3>
-    <p>A single binary, no runtime &amp; cross platform, adding zero friction to your project&#39;s deployment! All this is possible because the entire Pion stack is written in Go.</p>
-    <p><a href="knowledge-base/pion-basics/why-pion">Learn more</a></p>
-  </div>
-  
-  <div class="section-wrap">
-    <h3>Peer to Peer</h3>
-    <p>WebRTC allows direct connections between two peers, avoiding potentially costly relay servers.</p>
-    <p><a href="knowledge-base/pion-basics/why-pion">Learn more</a></p>
-  </div>
-  
 </section>
 
+<hr class="pion-hr">
 
-    </main>
-    <footer>
-  <div class="footer-cta">
-    <h4>Build your dream project</h4>
-    <a class="button">Get Started</a>
-  </div>
-  <div class="footer-wrap">
-    <div class="pion-blurb">
-        <h4>Community</h4>
-        <p>Pion only exists because of the community that builds it. Join us and get help building out your next big idea.</p>
+<section>
+  <div class="columns has-text-centered">
+    <div class="column">
+      <span class="index-image">
+        <i class="fas fa-graduation-cap"></i>
+      </span>
+      <h1 class="is-size-4"> Learn While You Build </h1>
+      <p class="index-reason-padding"> We built everything from scratch, come learn from our journey. We have docs not just on Pion, but also deep WebRTC knowledge. </p>
     </div>
-    <div class="pion-links">
-        <h4>Connect</h4>
-        <ul>
-          
-          <li><a href="https://github.com/pion">Github</a></li>
-          
-          <li><a href="/slack/">Slack</a></li>
-          
-          <li><a href="mailto:team@pion.ly">team@pion.ly</a></li>
-          
-        </ul>
+
+    <div class="column">
+      <span class="index-image">
+        <i class="fas fa-people-carry"></i>
+      </span>
+      <h1 class="is-size-4"> Community Owned </h1>
+      <p class="index-reason-padding"> Pion is owned by the community, no private bugs or roadmaps. Come join in the development on GitHub and Slack. </p>
+    </div>
+
+    <div class="column">
+      <span class="index-image">
+        <i class="fab fa-cloudscale"></i>
+      </span>
+      <h1 class="is-size-4"> Proven </h1>
+      <p class="index-reason-padding"> Pion has multiple large production users already. Come learn from them and be the next! </p>
     </div>
   </div>
-</footer>
+</section>
 
-    <script src="https://pion.ly/js/feather.min.js"></script>
-<script>
-  feather.replace()
-</script>
-
+</main>
 
   </body>
-</html>
+  </html>
