@@ -92,7 +92,7 @@
   <section>
     <div class="columns has-text-centered" style="padding-top: 3em;">
       <div class="column">
-        <h1 class="title" style="font-size: 3rem">Join us on Slack</h1>
+        <h1 class="title" style="font-size: 3rem">WebRTC Everywhere</h1>
         <hr class="pion-hr">
       </div>
     </div>
@@ -103,16 +103,31 @@
       <div class="column">
         
 
-<p>Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&rsquo;re likely to find someone willing to assist in making your idea a reality.</p>
+<p>In this post we&rsquo;ll take a look at all the places you can run <a href="https://github.com/pion/webrtc">pion/webrtc</a>.</p>
 
-<hr />
+<h2 id="server">Server</h2>
 
-<h2 id="join-the-slack-by-following-these-two-easy-steps">Join the Slack by following these two easy steps:</h2>
+<p>The first use-case for a Go WebRTC library naturally is running WebRTC on the server. This enables you to connect to browsers and other WebRTC servers directly while punching through <a href="../webrtc-intro#network-address-translation">NAT</a>s. Because the Pion WebRTC stack is written completely in Go, you can run it anywhere Go runs. And that&rsquo;s a lot of <a href="https://golang.org/doc/install#requirements">places</a>, including: Linux, MaxOS and Windows on both x86 and ARM.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pion/webrtc">pion/webrtc</a> on an unconventional platform. We&rsquo;d love to hear about it and feature it here!</p>
 
-<ol>
-<li><a href="https://invite.slack.golangbridge.org/">Invite</a> yourself to the Golang Slack.</li>
-<li>Join the <a href="http://gophers.slack.com/messages/pion">#pion</a> channel.</li>
-</ol>
+<h2 id="mobile">Mobile</h2>
+
+<p>With the introduction of <a href="https://github.com/golang/mobile">Go on Mobile</a> you can run Go on mobile devices. This means you can run Pion WebRTC on mobile devices as well. Go mobile supports writing <a href="https://godoc.org/golang.org/x/mobile/app">all-go apps</a> or you can write an <a href="https://godoc.org/golang.org/x/mobile/cmd/gobind">SDK</a> in Go and use it in your existing mobile app.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pion/webrtc">pion/webrtc</a> on mobile. We&rsquo;d love to hear about it and feature it here!</p>
+
+<h2 id="browser">Browser</h2>
+
+<p>We recently <a href="https://github.com/pion/webrtc/pull/479">landed</a> initial support for <a href="https://webassembly.org/">WebAssembly</a>, also know as WASM. When compiling Pion WebRTC with <code>GOOS=js GOARCH=wasm</code> the library will act as a wrapper around the JavaScript WebRTC API that&rsquo;s available in the browser. This means you can use the same API on both the server and client side. Check out the <a href="https://github.com/pion/webrtc/tree/master/examples#webassembly">WebAssembly examples</a> to get started.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pion/webrtc">pion/webrtc</a> in the browser. We&rsquo;d love to hear about it and feature it here!</p>
+
+<h2 id="node-js">Node.js</h2>
+
+<p>As mentioned in the previous section, we recently <a href="https://github.com/pion/webrtc/pull/479">landed</a> initial support for <a href="https://webassembly.org/">WebAssembly</a>. <a href="https://nodejs.org/en/">Node.js</a> also has support for WebAssembly. As mentioned, Pion WebRTC will act as a wrapper to the JavaScript API when compiled to WASM. This API isn&rsquo;t available in Node by default. However, you can use the <a href="https://www.npmjs.com/package/wrtc">wrtc</a> package to make it available.
+<br><br>
+Please reach out to us if you run <a href="https://github.com/pion/webrtc">pion/webrtc</a> from Node. We&rsquo;d love to hear about it and feature it here!</p>
 
       </div>
     </div>

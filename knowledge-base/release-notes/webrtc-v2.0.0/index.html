@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pion</title>
+
+    <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAC+lBMVEUAAADmOTblOTXmOjXlOjbmOjblOzXlOzbnOjbmOzbkOTTnOzjnOzfkODTnOTbvPjzpPDflOTbrQD/kODXsQDblODXmOzfmOjfWJiTiNzPmOTXfNjDvREHfMy7uQT7zRUToPjnlOjXcMy/iNjLnOjjgNTHqOzjeMzDpOjnlODPmPzroOzfjNzTjODTjODPjNTHpOzfsPzrmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOzblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjblOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjbmOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXmOTblOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXmOTblOTXlOTXlOTXmOTXnOzfmOjblOTXmOjblOTXlOTXlOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXnOzflOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTbmOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXmPDflOTX///+vM0BfAAAA/HRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEdW5zM5/TVKAcsG4TT+PlKWuXRgSYBEXTf/erI+k1i3XIPJ7D798BsLgr+TAlew60lM8vODlgQYdTHKqAfJKn8xSMTtI0NEZmnDXudDBKqaS3hHhk0CCJQGCCJwvBWo7tmvg6/U7cWFcoCiosIEH3xR+sw47UX2iE7g8Zq9ldd1+IEmgm97q8IAQPtBbPcCLyyYPNAbdaWL7FzCis88oa2fklwMnnbFIWe2JRv3gKuC83SdayXZKQDATZn2VF2pg7Q72sNBs+MTgFx1Y14AAAAAWJLR0T9SwmT6QAAAAd0SU1FB+MCDxQvITv9oyUAAANQSURBVDjLbZN5WJRVFMbv98JNhprSCixsUdsstWVEcgxjxkTCBsaFYWbED03DmITBBtAapVSgQiwTTR2pVCqh0txwQXNrQyxaLbXNbLHNbN/fP7rffI3a83T++e7znd9zzj3nvq8Q/4ZmG5A6MO36QfbBuCF9iC1O/DfibYNvzHBQhXMobhqWOTzrZnlK+jRkj7iFdOXkptE9EqOc5OgxeegSy0t48r30+ccWjEvV3YUYP+FWJ70TJyHBzFtwWxE5OfX2xNNRbABnWAN3TCFLCmAx8meiNI3eYBk0IUxA1bROvTPE8gqcpQBUTqN3+l0w4BgguuLusIszZqpzt7OrXLzn3mj+JKCOs2bTPeccKVBdw6JanGtJuu/+B0ygbm49krvDY6d9HsR5D9JXDCmR/tD8h6PA+QvYkAVNJi30cgREmZ2LHkkRGLKYviVmheE6l0YgsKyR5ZUi1cexSJCPPsbQ48tNYMVAXV/ZQ5OoYtMTIswnn1J06So2Z8ME0OLn08+on882cbVYw7RsdMdzXFuIeBOwYJ3btR4XoH4Dp4mNzG/V5IWbOKUFsTFRO5rTrVLbvIUZYiuDF0nZ2saGbSkxIGVmCRdsl/L5iawROxi8WMqdu7h4XPyJCnlFDPaUvRSwUdSwrTUK7C4zW4xUH88wrkZy/J4XaBflbAxA7nyR3pcgUeh8+RVYktp1h8HV7+VS0cGcfZCtr6oHrwDyXpvTCby+l43LFPDGm3xLFPvYroB8pba3sxLVk8ve1X46RqntJ77Dpv1iQAb9ASjAF6L93epI/XsHDtLV0Wl0mMzyQ+KS9+mcADVm2wdOpcoNH+7Q6ftoFpRoPnZxjLHkw8yc+skRhj9d+FlU177c9ZshLsW+3fy8VoGXfRHijENHGbZeHilc+WVH1f7KK6Tog5ZmOr5KUuJH4AhDmxoYvrLbSSNchcjXOoOdhrr6YlIJvQ6G+8UJ7RtP3be9hEjpX7pL56JaRA2WgII1qnX4ak3g2GF7OpKvqfzuOOn3mLI3jFMx280Oa1x01d8Hjv2Q66b7x3kx4whxLX5qb56rjKEA18+Zv+jUj//6G647xZ3S9rvNuPCSkDHooKIDdQma+J9A6R85B7f8+Vfk7xPe/gdCN2wvY+TSJAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOS0wMi0xNVQyMDo0NzozMyswMTowMOnp2+YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTktMDItMTVUMjA6NDc6MzMrMDE6MDCYtGNaAAAAV3pUWHRSYXcgcHJvZmlsZSB0eXBlIGlwdGMAAHic4/IMCHFWKCjKT8vMSeVSAAMjCy5jCxMjE0uTFAMTIESANMNkAyOzVCDL2NTIxMzEHMQHy4BIoEouAOoXEXTyQjWVAAAAAElFTkSuQmCC">
+
+    <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <link href="/css/main.css" rel="stylesheet">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="/js/bulma-menu.js"></script>
+  </head>
+  <body>
+
+  <nav class="navbar is-black" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <img src="/img/pion-logo.svg" width="112" height="28">
+      </a>
+
+      <a class="navbar-item is-hidden-desktop" href="https://github.com/pion" target="_blank">
+        <span class="icon">
+          <i class="fab fa-github"></i>
+        </span>
+      </a>
+
+      <a class="navbar-item is-hidden-desktop" href="/slack/">
+        <span class="icon">
+          <i class="fab fa-slack"></i>
+        </span>
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarMenuItems">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbarMenuItems" class="navbar-menu">
+      <div class="navbar-start">
+      
+        
+        <a class="navbar-item" href="/knowledge-base/">
+          Knowledge Base
+        </a>
+      
+        
+        <a class="navbar-item" href="/customers">
+          Customers
+        </a>
+      
+        
+        <a class="navbar-item" href="/open-source/">
+          Open Source
+        </a>
+      
+        
+        <a class="navbar-item" href="/blog/">
+          Blog
+        </a>
+      
+
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <div class="buttons is-hidden-touch">
+            <a class="navbar-item navbar-item-desktop" href="https://github.com/pion" target="_blank">
+              <span class="icon">
+                <i class="fab fa-github"></i>
+              </span>
+            </a>
+
+            <a class="navbar-item navbar-item-desktop" href="/slack/" >
+              <span class="icon">
+                <i class="fab fa-slack"></i>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+  <section>
+    <div class="columns has-text-centered" style="padding-top: 3em;">
+      <div class="column">
+        <h1 class="title" style="font-size: 3rem">Pion WebRTC v2.0.0 Release Notes</h1>
+        <hr class="pion-hr">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="columns" style="padding: 3em;">
+      <div class="column">
+        
+
+<p>The Pion team is very excited to annouce v2.0.0, our 4th release that includes 5th months of work! With this release we have lots of new features, performance improvements and bug fixes.</p>
+
+<p>This release does introduce a few breaking changes. We had accumulated a fair amount of technical debt, and these changes were needed to allow us to move forward on things like ORTC and TURN.</p>
+
+<p>Please read these changes carefully, most of these things aren&rsquo;t caught at compile time and could save a lot of time debugging. Each change will have a linked commit, so looking at <code>examples/</code> should show what code you need to change in your application.</p>
+
+<h2 id="breaking-changes">Breaking Changes</h2>
+
+<h3 id="imports-have-changed">Imports have changed</h3>
+
+<h4 id="we-now-use-github-com-pion">We now use &lsquo;github.com/pion&rsquo;</h4>
+
+<p>We have moved from <code>github.com/pions/webrtc</code> -&gt; <code>github.com/pion/webrtc</code>. Thank you to Ion Pana for making <code>github.com/pion</code> available!</p>
+
+<h4 id="this-release-is-a-new-major-version">This release is a new major version</h4>
+
+<p>This moves us from <code>github.com/pion/webrtc</code> -&gt; <code>github.com/pion/webrtc/v2</code>. We version our libraries, allowing us to distribute old versions still if we need.</p>
+
+<p>To quickly rewrite everything you can use the following commands</p>
+
+<pre><code>    find . -type f -name '*.go' | xargs sed -i '' 's/github.com\/pion\/webrtc/github.com\/pion\/webrtc\/v2/g'
+    find . -type f -name '*.go' | xargs sed -i '' 's/github.com\/pions\/webrtc/github.com\/pion\/webrtc\/v2/g' # If you are still using github.com/pions/webrtc
+</code></pre>
+
+<h3 id="unified-plan-is-now-the-default-sdp-format">Unified Plan is now the default SDP format</h3>
+
+<p>This change will affect you if you are receiving media, or sending multiple tracks. If you have already done this migration for your Javascript this will feel very similar.</p>
+
+<h4 id="you-must-call-addtransceiver-for-every-incoming-track">You must call AddTransceiver for every incoming track</h4>
+
+<pre><code>	// Allow us to receive 1 audio track, and 2 video tracks
+	if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeAudio); err != nil {
+		panic(err)
+	} else if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeVideo); err != nil {
+		panic(err)
+	} else if _, err = peerConnection.AddTransceiver(webrtc.RTPCodecTypeVideo); err != nil {
+		panic(err)
+	}
+</code></pre>
+
+<p>This was changed with <a href="https://github.com/pion/webrtc/commit/1202db">1202db</a></p>
+
+<h3 id="the-rtc-prefix-was-removed-from-structs-in-the-webrtc-package">The RTC prefix was removed from structs in the webrtc package</h3>
+
+<ul>
+<li>This makes it so the names don&rsquo;t stutter when the package name is added.</li>
+<li><code>webrtc.RTCPeerConnection</code> became <code>webrtc.PeerConnection</code>, for example</li>
+</ul>
+
+<p>This was changed with <a href="https://github.com/pion/webrtc/commit/0e7086">0e7086</a></p>
+
+<h3 id="setlocaldescription-is-no-longer-called-implicitly-by-createoffer-and-createanswer"><code>SetLocalDescription</code> is no longer called implicitly by <code>CreateOffer</code> and <code>CreateAnswer</code></h3>
+
+<p>Before <code>CreateOffer</code> and <code>CreateAnswer</code> would implicitly call <code>SetLocationDescription</code> for you, now you need to call it explicitly.</p>
+
+<p>This was changed because it diverged from the WebRTC RFC. To fix this update your code like below</p>
+
+<h4 id="before">Before</h4>
+
+<pre><code>  answer, err := peerConnection.CreateAnswer(nil)
+  if err != nil {
+    return err
+  }
+</code></pre>
+
+<h4 id="after">After</h4>
+
+<pre><code>  answer, err := peerConnection.CreateAnswer(nil)
+  if err != nil {
+    return err
+  }
+
+  err = peerConnection.SetLocalDescription(answer)
+  if err != nil {
+    return nil
+  }
+
+</code></pre>
+
+<p>This was changed with <a href="https://github.com/pion/webrtc/commit/b67f73">b67f73</a></p>
+
+<h3 id="media-api">Media API</h3>
+
+<p>The Track API has been rewritten to remove Channels from the public API. This was done because we ran into the following issues.</p>
+
+<ul>
+<li>Using tight loops to read/write from Channels to exchange RTP/RTCP packets is more expensive then I realized</li>
+<li>We were unable to return errors when reading/write RTP or RTCP</li>
+<li>We were unable to close channels (or risk causing a panic if the user writes to them)</li>
+<li>Packet drops because the buffered channel (size 15) is not large enough to handle surges.</li>
+</ul>
+
+<p>We also gained some unforeseen benefits moving to the new API.</p>
+
+<ul>
+<li>A Track can be added to multiple <code>PeerConnections</code> now. The most common use-case so far has been building SFUs, and this feature will reduce complexity for everyone. This also more closely follows the browser implementation of WebRTC.</li>
+</ul>
+
+<h4 id="rtpreceiver-is-now-emitted-via-ontrack">RTPReceiver is now emitted via <code>onTrack</code></h4>
+
+<h5 id="before-1">Before</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track) {
+})
+</code></pre>
+
+<h5 id="after-1">After</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track, receiver *webrtc.RTPReceiver) {
+})
+</code></pre>
+
+<h4 id="rtcp-is-now-received-via-rtpsender-and-rtpreceiver-instead-of-track">RTCP is now received via <code>RTPSender</code> and <code>RTPReceiver</code> instead of <code>Track</code></h4>
+
+<h5 id="before-2">Before</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track) {
+    &lt;-track.RTCPPackets
+})
+</code></pre>
+
+<h5 id="after-2">After</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track, receiver *webrtc.RTPReceiver) {
+    pkt, header, err := receiver.ReadRTCP()
+})
+</code></pre>
+
+<h4 id="rtp-is-now-received-via-read-or-readrtp-on-track-instead-of-a-channel">RTP is now received via <code>Read</code> or <code>ReadRTP</code> on <code>Track</code>, instead of a channel</h4>
+
+<h5 id="before-3">Before</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track) {
+    &lt;-track.Packets
+})
+</code></pre>
+
+<h5 id="after-3">After</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track, receiver *webrtc.RTPReceiver) {
+    pkt, err := track.ReadRTP()
+})
+</code></pre>
+
+<h4 id="rtp-is-now-written-via-write-writertp-or-writesample-on-track-instead-of-send-on-a-channel">RTP is now written via <code>Write</code>,  <code>WriteRTP</code> or <code>WriteSample</code> on <code>Track</code>, instead of send on a channel</h4>
+
+<h5 id="before-4">Before</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track) {
+    vp8Track.RawRTP &lt;- &amp;rtp.Packet{}
+})
+</code></pre>
+
+<h5 id="after-4">After</h5>
+
+<pre><code>peerConnection.OnTrack(func(track *webrtc.Track, receiver *webrtc.RTPReceiver) {
+    i, err := track.WriteRTP(&amp;rtp.Packet{})
+})
+</code></pre>
+
+<h4 id="raw-and-sample-tracks-now-share-a-constructor">Raw and Sample tracks now share a constructor</h4>
+
+<p>The only behavior difference is that the user must supply a SSRC for Sample tracks. A random uint32 is all that should be needed in most cases.</p>
+
+<h6 id="before-5">Before</h6>
+
+<pre><code>    peerConnection.NewRawRTPTrack(outboundPayloadType, outboundSSRC, &quot;video&quot;, &quot;pion&quot;)
+    pcOffer.NewSampleTrack(DefaultPayloadTypeVP8, &quot;video&quot;, &quot;pion&quot;)
+</code></pre>
+
+<h6 id="after-5">After</h6>
+
+<pre><code>    peerConnection.NewTrack(outboundPayloadType, outboundSSRC, &quot;video&quot;, &quot;pion&quot;)
+</code></pre>
+
+<p>This was changed with <a href="https://github.com/pion/webrtc/commit/6aeb34">6aeb34</a></p>
+
+<h3 id="correct-incorrect-api">Correct incorrect API</h3>
+
+<ul>
+<li>Instead of returning <code>ice.ConnectionState</code> the <code>OnICEConnectionStateChange</code> callback should return a <code>webrtc.RTCIceConnectionState</code>. This was changed with <a href="https://github.com/pion/webrtc/commit/bf422e0">bf422e0</a></li>
+<li><code>webrtc.AddIceCandidate</code> should take a <code>webrtc.RTCIceCandidateInit</code> instead of a string. This was changed with <a href="https://github.com/pion/webrtc/commit/0e619e2">0e619e2</a></li>
+<li>Trickle ICE: Changed candidate gathering from synchronous to asynchronous. <strong>This change has not landed in master yet</strong></li>
+</ul>
+
+<h3 id="names-were-made-more-consistent-across-the-codebase">Names were made more consistent across the codebase</h3>
+
+<ul>
+<li><code>Track</code>: <code>Ssrc</code> renamed <code>SSRC</code></li>
+<li><code>OAuthCredential</code>: <code>MacKey</code> renamed <code>MACKey</code></li>
+<li><code>SessionDescription</code>: <code>Sdp</code> renamed <code>SDP</code></li>
+<li><code>sdp.AttrKeyRtcpMux</code> renamed <code>sdp.AttrKeyRTCPMux</code></li>
+</ul>
+
+<p>This was changed with <a href="https://github.com/pion/webrtc/commit/9cba54">9cba54</a></p>
+
+<h3 id="datachannel-api">DataChannel API</h3>
+
+<p>The RTCDataChannel API, specifically the Payload objects, feels weird. One alternative was suggested in webrtc#365: Instead of passing a single byte in <code>Send</code> and <code>OnMessage</code> we could experiment with passing <code>io.Reader</code>s. This has the added advantage that it can work with any message size.</p>
+
+<p><strong>TODO: update docs</strong></p>
+
+<h3 id="don-t-expose-locks">Don&rsquo;t expose locks</h3>
+
+<p>The RTCPeerConnection object used to expose their Lock. These locks are now made private.</p>
+
+<p>This was changed because the user never has to hold this lock, and could cause a deadlock if they did</p>
+
+<p>This was changed with <a href="https://github.com/pion/webrtc/commit/5fcbc7">5fcbc7</a></p>
+
+<h3 id="expose-state-safely">Expose state safely</h3>
+
+<p>Previously state was exposed via attributes. This cannot safely be used concurrently. The state is now exposed using methods instead. This allow the library to add locking when needed.</p>
+
+<h2 id="new-features">New Features</h2>
+
+<h3 id="example-webrtc-applications-repository"><code>example-webrtc-applications</code> repository</h3>
+
+<p>We know have a repository for examples that use 3rd party libraries, or are more complicated then the standard example.</p>
+
+<p>We would love to see what the community can build, come check out what we have and contribute more at <a href="https://github.com/pion/example-webrtc-applications">example-webrtc-applications</a></p>
+
+<h3 id="wasm">WASM</h3>
+
+<p>Experimental support for WASM has been added. You can now compile Pion WebRTC with <code>goos=js goarch=wasm</code>. When setting <code>goos=js</code> the Pion API will act as a wrapper around the JavaScript WebRTC API. This change allows you to use the same code on the server and in the browser in many cases. We aim to keep the API for both implementations as similar as possible.</p>
+
+<h3 id="ortc">ORTC</h3>
+
+<p>The ORTC API has been added. Internally the WebRTC API is now also backed by the ORTC API.</p>
+
+<h3 id="quic">QUIC</h3>
+
+<p>Experimental support for webrtc-quic has been added. This has been tested between two pion clients. It has not yet been tested with chromium&rsquo;s or other experimental implementations.</p>
+
+<h3 id="out-of-tree">Out of tree</h3>
+
+<p>All code that is re-usable has been moved outside of the <code>pion/webrtc</code> repository. We want to share our work with the greater Go community.</p>
+
+<ul>
+<li><a href="https://github.com/pion/dtls">pion/dtls</a> (restructured to fit the common package structure.)</li>
+<li><a href="https://github.com/pion/sdp">pion/sdp</a></li>
+<li><a href="https://github.com/pion/rtp">pion/rtp</a></li>
+<li><a href="https://github.com/pion/rtcp">pion/rtcp</a></li>
+<li><a href="https://github.com/pion/srtp">pion/srtp</a></li>
+<li><a href="https://github.com/pion/sctp">pion/sctp</a></li>
+<li><a href="https://github.com/pion/datachannel">pion/datachannel</a></li>
+<li><a href="https://github.com/pion/quic">pion/quic</a></li>
+</ul>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+  </body>
+  </html>
