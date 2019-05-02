@@ -44,20 +44,14 @@
 
     <div id="navbarMenuItems" class="navbar-menu">
       <div class="navbar-start">
-        <a class="navbar-item">
-          Knowledge Base
+      {{ range .Site.Menus.nav }}
+        {{ $text := print .Name | safeHTML }}
+        <a class="navbar-item" href="{{ .URL }}">
+          {{ $text }}
         </a>
-        <a class="navbar-item">
-          Customers
-        </a>
-        <a class="navbar-item">
-          Open Source
-        </a>
-        <a class="navbar-item">
-          Blog
-        </a>
-      </div>
+      {{ end }}
 
+      </div>
       <div class="navbar-end">
         <div class="navbar-item">
           <div class="buttons is-hidden-touch">

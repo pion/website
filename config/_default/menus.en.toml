@@ -1,0 +1,19 @@
+[[nav]]
+    name = "Knowledge Base"
+    url = "/knowledge-base/"
+    weight = 1
+
+[[nav]]
+    name = "Customers"
+    url = "/customers"
+    weight = 2
+
+[[nav]]
+    name = "Open Source"
+    url = "/open-source/"
+    weight = 3
+
+[[nav]]
+    name = "Blog"
+    url = "/blog/"
+    weight = 4
