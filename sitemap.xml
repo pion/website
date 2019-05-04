@@ -3,7 +3,19 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://pion.ly/knowledge-base/webrtc-basics/</loc>
+  </url>
+  
+  <url>
     <loc>https://pion.ly/knowledge-base/webrtc-basics/intro/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/pion-basics/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/release-notes/</loc>
   </url>
   
   <url>
@@ -44,10 +56,6 @@
   </url>
   
   <url>
-    <loc>https://pion.ly/knowledge-base/pion-basics/</loc>
-  </url>
-  
-  <url>
     <loc>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</loc>
   </url>
   
@@ -57,10 +65,6 @@
   
   <url>
     <loc>https://pion.ly/knowledge-base/rtp/</loc>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/release-notes/</loc>
   </url>
   
   <url>
@@ -81,10 +85,6 @@
   
   <url>
     <loc>https://pion.ly/knowledge-base/webrtc-basics/architecture/</loc>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/webrtc-basics/</loc>
   </url>
   
   <url>
