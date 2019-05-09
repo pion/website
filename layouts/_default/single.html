@@ -10,10 +10,8 @@
   </section>
 
   <section>
-    <div class="columns" style="padding: 3em;">
-      <div class="column">
-        {{ .Content }}
-      </div>
+    <div class="content" style="padding: 3em;">
+    {{ .Content | replaceRE "(<h[1-9] id=\"([^\"]+)\".+)(</h[1-9]+>)" `${1}<a class="content-header-href" href="#${2}"><i class="fas fa-paperclip"></i></a> ${3}` | safeHTML }}
     </div>
   </section>
 {{ end }}
