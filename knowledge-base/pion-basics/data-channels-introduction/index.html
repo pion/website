@@ -101,13 +101,12 @@
   </section>
 
   <section>
-    <div class="columns" style="padding: 3em;">
-      <div class="column">
-        
+    <div class="content" style="padding: 3em;">
+    
 
 <p>Today we&rsquo;ll walk through setting up a Data Channel connection in <a href="https://golang.org/">Go</a> using <a href="https://github.com/pion/webrtc">pion/webrtc</a>. Check out our knowledge base articles on <a href="/knowledge-base/webrtc/">WebRTC</a> if you&rsquo;re new to it. You can also skip to the <a href="#full-examples">full examples</a> if you just want to look at the code.</p>
 
-<h2 id="preparation">Preparation</h2>
+<h2 id="preparation">Preparation<a class="content-header-href" href="#preparation"><i class="fas fa-paperclip"></i></a> </h2>
 
 <p>Let&rsquo;s quickly cover how to get started with <a href="https://github.com/pion/webrtc">pion/webrtc</a>. If you&rsquo;re familiar with Go you can skip to the <a href="#peer-connection">next section</a>. To start you can download the library using <code>go get</code>:
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go get github.com/pion/webrtc</code></pre></div></p>
@@ -120,7 +119,7 @@
 	<span style="color:#e6db74">&#34;github.com/pion/webrtc&#34;</span>
 )</code></pre></div>
 
-<h2 id="peer-connection">Peer Connection</h2>
+<h2 id="peer-connection">Peer Connection<a class="content-header-href" href="#peer-connection"><i class="fas fa-paperclip"></i></a> </h2>
 
 <p>Ok, now let&rsquo;s start setting up the WebRTC connection. To do this we&rsquo;ll create a PeerConnection which is used to represent our connection:
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Prepare the configuration
@@ -140,7 +139,7 @@
 
 <p>Note that we provide a <a href="/knowledge-base/webrtc/webrtc-architecture/#stun-server">STUN Server</a> to the configuration to allow the WebRTC connection to punch trough a <a href="/knowledge-base/webrtc/webrtc-intro/#network-address-translation">NAT</a>.</p>
 
-<h2 id="data-channels">Data Channels</h2>
+<h2 id="data-channels">Data Channels<a class="content-header-href" href="#data-channels"><i class="fas fa-paperclip"></i></a> </h2>
 
 <p>Next we configure the data channels. Here we need to differentiate between two sides of the connection. We&rsquo;ll go into more depth about the two sides of the connection in the next section.</p>
 
@@ -183,7 +182,7 @@
 
 <p>Remember, this should only be called after the <code>OnOpen</code> callback is fired. In order to open the Data Channel we have to start the connection first. This is covered in the next section.</p>
 
-<h2 id="signaling">Signaling</h2>
+<h2 id="signaling">Signaling<a class="content-header-href" href="#signaling"><i class="fas fa-paperclip"></i></a> </h2>
 
 <p>The first step in starting up a WebRTC connection is known as <a href="/knowledge-base/webrtc/webrtc-intro/#signaling">signaling</a>. Here we exchange some data between the peers so they can find each other.</p>
 
@@ -247,7 +246,7 @@ Let&rsquo;s look at the offering side first:
 
 <p>And that&rsquo;s it! You now know how to send data over a WebRTC Data Channel in Go.</p>
 
-<h2 id="full-examples">Full examples</h2>
+<h2 id="full-examples">Full examples<a class="content-header-href" href="#full-examples"><i class="fas fa-paperclip"></i></a> </h2>
 
 <p>The full examples corresponding covered in this post can be found in the <a href="https://github.com/pion/webrtc">pion/webrtc</a> repository:</p>
 
@@ -256,7 +255,6 @@ Let&rsquo;s look at the offering side first:
 <li>The <a href="https://github.com/pion/webrtc/tree/master/examples/data-channels">data-channels</a> example shows the answering side of the connection.</li>
 </ul>
 
-      </div>
     </div>
   </section>
 </main>

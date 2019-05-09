@@ -29,3 +29,17 @@ a {
   color: white !important;
   background-color: black !important;
 }
+
+.content-header-href {
+  padding-left: 4px;
+  visibility: hidden;
+}
+
+h1:hover .content-header-href,
+h2:hover .content-header-href,
+h3:hover .content-header-href,
+h4:hover .content-header-href,
+h5:hover .content-header-href,
+h6:hover .content-header-href {
+  visibility: visible;
+}
