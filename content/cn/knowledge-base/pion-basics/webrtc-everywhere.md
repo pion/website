@@ -8,7 +8,7 @@ authors:
 我们来看一下[pion/webrtc](https://github.com/pion/webrtc)的适用场景。
 
 ## 服务端
-第一个示例展示了pion/webrtc在服务端的使用。它使你可以穿越[NAT](../webrtc-intro#network-address-translation)连接到浏览器或其他WebRTC服务器。它是纯Go写的，Go能运行的地方都可以运行。包括：Linux/MaxOS/Windows(x86或ARM)等，参考[Go运行平台](https://golang.org/doc/install#requirements)。
+第一个示例展示了pion/webrtc在服务端的使用。它使你可以穿越[NAT](../webrtc-intro#network-address-translation)连接到浏览器或其他WebRTC服务器。它是纯Go写的，Go能运行的地方都可以运行。包括：Linux/macOS/Windows(x86或ARM)等，参考[Go运行平台](https://golang.org/doc/install#requirements)。
 
 <br><br>
 如果你在一个未知平台上运行[pion/webrtc](https://github.com/pion/webrtc)，请告知我们表现如何。
