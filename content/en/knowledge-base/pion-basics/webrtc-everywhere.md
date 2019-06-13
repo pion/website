@@ -8,7 +8,7 @@ authors:
 In this post we'll take a look at all the places you can run [pion/webrtc](https://github.com/pion/webrtc).
 
 ## Server
-The first use-case for a Go WebRTC library naturally is running WebRTC on the server. This enables you to connect to browsers and other WebRTC servers directly while punching through [NAT](../webrtc-intro#network-address-translation)s. Because the Pion WebRTC stack is written completely in Go, you can run it anywhere Go runs. And that's a lot of [places](https://golang.org/doc/install#requirements), including: Linux, MaxOS and Windows on both x86 and ARM.
+The first use-case for a Go WebRTC library naturally is running WebRTC on the server. This enables you to connect to browsers and other WebRTC servers directly while punching through [NAT](../webrtc-intro#network-address-translation)s. Because the Pion WebRTC stack is written completely in Go, you can run it anywhere Go runs. And that's a lot of [places](https://golang.org/doc/install#requirements), including: Linux, macOS and Windows on both x86 and ARM.
 <br><br>
 Please reach out to us if you run [pion/webrtc](https://github.com/pion/webrtc) on an unconventional platform. We'd love to hear about it and feature it here!
 
