@@ -41,6 +41,17 @@ Everyone has different time constraints and schedules Don&amp;rsquo;t take it pe
     </item>
     
     <item>
+      <title>FAQ</title>
+      <link>https://pion.ly/knowledge-base/pion-basics/faq/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://pion.ly/knowledge-base/pion-basics/faq/</guid>
+      <description>What is WebRTC WebRTC is a standardized protocol for P2P communication. It allows two peers to exchange media and data. It is encrypted by default, and handles connectivity establishment in many different network conditions. It is supported in browsers, and has multiple out of browser implementations.
+What is Pion WebRTC Pion WebRTC is pure Go implementation of WebRTC. It implements the W3C WebRTC RFC
+When running any Pion WebRTC code I get cannot find package &amp;quot;github.</description>
+    </item>
+    
+    <item>
       <title>Join us on Slack</title>
       <link>https://pion.ly/slack/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
