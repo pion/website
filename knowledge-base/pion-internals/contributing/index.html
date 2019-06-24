@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pion</title>
+
+    <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAC+lBMVEUAAADmOTblOTXmOjXlOjbmOjblOzXlOzbnOjbmOzbkOTTnOzjnOzfkODTnOTbvPjzpPDflOTbrQD/kODXsQDblODXmOzfmOjfWJiTiNzPmOTXfNjDvREHfMy7uQT7zRUToPjnlOjXcMy/iNjLnOjjgNTHqOzjeMzDpOjnlODPmPzroOzfjNzTjODTjODPjNTHpOzfsPzrmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOzblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjblOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjbmOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXmOTblOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXmOTblOTXlOTXlOTXmOTXnOzfmOjblOTXmOjblOTXlOTXlOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXnOzflOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTbmOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXmPDflOTX///+vM0BfAAAA/HRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEdW5zM5/TVKAcsG4TT+PlKWuXRgSYBEXTf/erI+k1i3XIPJ7D798BsLgr+TAlew60lM8vODlgQYdTHKqAfJKn8xSMTtI0NEZmnDXudDBKqaS3hHhk0CCJQGCCJwvBWo7tmvg6/U7cWFcoCiosIEH3xR+sw47UX2iE7g8Zq9ldd1+IEmgm97q8IAQPtBbPcCLyyYPNAbdaWL7FzCis88oa2fklwMnnbFIWe2JRv3gKuC83SdayXZKQDATZn2VF2pg7Q72sNBs+MTgFx1Y14AAAAAWJLR0T9SwmT6QAAAAd0SU1FB+MCDxQvITv9oyUAAANQSURBVDjLbZN5WJRVFMbv98JNhprSCixsUdsstWVEcgxjxkTCBsaFYWbED03DmITBBtAapVSgQiwTTR2pVCqh0txwQXNrQyxaLbXNbLHNbN/fP7rffI3a83T++e7znd9zzj3nvq8Q/4ZmG5A6MO36QfbBuCF9iC1O/DfibYNvzHBQhXMobhqWOTzrZnlK+jRkj7iFdOXkptE9EqOc5OgxeegSy0t48r30+ccWjEvV3YUYP+FWJ70TJyHBzFtwWxE5OfX2xNNRbABnWAN3TCFLCmAx8meiNI3eYBk0IUxA1bROvTPE8gqcpQBUTqN3+l0w4BgguuLusIszZqpzt7OrXLzn3mj+JKCOs2bTPeccKVBdw6JanGtJuu/+B0ygbm49krvDY6d9HsR5D9JXDCmR/tD8h6PA+QvYkAVNJi30cgREmZ2LHkkRGLKYviVmheE6l0YgsKyR5ZUi1cexSJCPPsbQ48tNYMVAXV/ZQ5OoYtMTIswnn1J06So2Z8ME0OLn08+on882cbVYw7RsdMdzXFuIeBOwYJ3btR4XoH4Dp4mNzG/V5IWbOKUFsTFRO5rTrVLbvIUZYiuDF0nZ2saGbSkxIGVmCRdsl/L5iawROxi8WMqdu7h4XPyJCnlFDPaUvRSwUdSwrTUK7C4zW4xUH88wrkZy/J4XaBflbAxA7nyR3pcgUeh8+RVYktp1h8HV7+VS0cGcfZCtr6oHrwDyXpvTCby+l43LFPDGm3xLFPvYroB8pba3sxLVk8ve1X46RqntJ77Dpv1iQAb9ASjAF6L93epI/XsHDtLV0Wl0mMzyQ+KS9+mcADVm2wdOpcoNH+7Q6ftoFpRoPnZxjLHkw8yc+skRhj9d+FlU177c9ZshLsW+3fy8VoGXfRHijENHGbZeHilc+WVH1f7KK6Tog5ZmOr5KUuJH4AhDmxoYvrLbSSNchcjXOoOdhrr6YlIJvQ6G+8UJ7RtP3be9hEjpX7pL56JaRA2WgII1qnX4ak3g2GF7OpKvqfzuOOn3mLI3jFMx280Oa1x01d8Hjv2Q66b7x3kx4whxLX5qb56rjKEA18+Zv+jUj//6G647xZ3S9rvNuPCSkDHooKIDdQma+J9A6R85B7f8+Vfk7xPe/gdCN2wvY+TSJAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOS0wMi0xNVQyMDo0NzozMyswMTowMOnp2+YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTktMDItMTVUMjA6NDc6MzMrMDE6MDCYtGNaAAAAV3pUWHRSYXcgcHJvZmlsZSB0eXBlIGlwdGMAAHic4/IMCHFWKCjKT8vMSeVSAAMjCy5jCxMjE0uTFAMTIESANMNkAyOzVCDL2NTIxMzEHMQHy4BIoEouAOoXEXTyQjWVAAAAAElFTkSuQmCC">
+
+    <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+    <link href="/css/main.css" rel="stylesheet">
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+
+    <script src="/js/bulma-menu.js"></script>
+    <script src="/js/knowledge-base-sidebar.js"></script>
+  </head>
+  <body>
+
+  <nav class="navbar is-black" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">
+        <img src="/img/pion-logo.svg" width="112" height="28">
+      </a>
+
+      <a class="navbar-item is-hidden-desktop" href="https://github.com/pion" target="_blank">
+        <span class="icon">
+          <i class="fab fa-github"></i>
+        </span>
+      </a>
+
+      <a class="navbar-item is-hidden-desktop" href="/slack/">
+        <span class="icon">
+          <i class="fab fa-slack"></i>
+        </span>
+      </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarMenuItems">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbarMenuItems" class="navbar-menu">
+      <div class="navbar-start">
+      
+        
+        <a class="navbar-item" href="/knowledge-base/">
+          Knowledge Base
+        </a>
+      
+        
+        <a class="navbar-item" href="/customers">
+          Customers
+        </a>
+      
+        
+        <a class="navbar-item" href="/open-source/">
+          Open Source
+        </a>
+      
+        
+        <a class="navbar-item" href="/blog/">
+          Blog
+        </a>
+      
+
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <div class="buttons is-hidden-touch">
+            <a class="navbar-item navbar-item-desktop" href="https://github.com/pion" target="_blank">
+              <span class="icon">
+                <i class="fab fa-github"></i>
+              </span>
+            </a>
+
+            <a class="navbar-item navbar-item-desktop" href="/slack/" >
+              <span class="icon">
+                <i class="fab fa-slack"></i>
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+  <section>
+    <div class="columns has-text-centered" style="padding-top: 3em;">
+      <div class="column">
+        <h1 class="title" style="font-size: 3rem">Contributing</h1>
+        <hr class="pion-hr">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="content" style="padding: 3em;">
+    
+
+<p>Thank you for contributing! Pion is a community project, and only exists because of the hard work of many different people. Contributing doesn&rsquo;t just involve code either, you can be involved in many different ways.
+Before starting here are some things to remember that will make the whole process a whole lot more fun and effective.</p>
+
+<h3 id="everyone-has-different-time-constraints-and-schedules">Everyone has different time constraints and schedules<a class="content-header-href" href="#everyone-has-different-time-constraints-and-schedules"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Don&rsquo;t take it personally when your work doesn&rsquo;t get reviewed or merged in a timely manner. Feel free to add other contributors, or send a message on Slack. People have busy schedules and it is easy to get pulled in lots of directions</p>
+
+<h3 id="start-with-small-tasks-don-t-burn-yourself-out">Start with small tasks/Don&rsquo;t burn yourself out<a class="content-header-href" href="#start-with-small-tasks-don-t-burn-yourself-out"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>It is better to get something done, then nothing at all. Try starting with a small task first, and grabbing larger things as time moves on</p>
+
+<h1 id="where-pion-needs-your-help">Where Pion needs your help<a class="content-header-href" href="#where-pion-needs-your-help"><i class="fas fa-paperclip"></i></a> </h1>
+
+<h3 id="supporting-users-on-slack-or-stackoverflow">Supporting users on Slack or Stackoverflow<a class="content-header-href" href="#supporting-users-on-slack-or-stackoverflow"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Answering questions and working with the community is really important. Most community members use <a href="/slack" target="_blank">Slack</a>, but it would also be helpful to work with people on Stackoverflow</p>
+
+<h3 id="triaging-user-issues">Triaging user issues<a class="content-header-href" href="#triaging-user-issues"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>We have lots of issues that have been filed, but not addressed yet.</p>
+
+<ul>
+<li>If it is a question, or a simple issue you might be able to fix yourself!</li>
+<li>If it is a bigger task add a difficulty label (&lsquo;easy&rsquo;, &lsquo;medium&rsquo; or &lsquo;hard&rsquo;) and the &lsquo;triaged&rsquo; label</li>
+</ul>
+
+<p>You can see all untriaged issues <a href="https://github.com/search?q=-label%3A%22triaged%22+is%3Aopen+type%3Aissue+org%3Apion" target="_blank">here</a></p>
+
+<h3 id="documentation">Documentation<a class="content-header-href" href="#documentation"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>We are working on building not just documentation about using Pion, but deep knowledge of WebRTC. Collecting up information (useful links, RFCs) and writing summations for technology would greatly enhance the Knowledge Base.</p>
+
+<h3 id="supporting-community-projects">Supporting Community Projects<a class="content-header-href" href="#supporting-community-projects"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Many Open Source projects use Pion. The following projects would love your help, and please add your project if you are interested in getting outside help!</p>
+
+<ul>
+<li><a href="https://github.com/libp2p/go-libp2p-webrtc-direct" target="_blank">IPFS</a></li>
+</ul>
+
+<h3 id="review-unmerged-prs">Review Unmerged PRs<a class="content-header-href" href="#review-unmerged-prs"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>A great way to learn/get involved would be to review existing PRs. You can see them <a href="https://github.com/search?q=is%3Aopen+type%3Apr+org%3Apion" target="_blank">here</a></p>
+
+<p>We should aim to have zero unmerged PRs, but sometimes they get stuck in review or the original author runs out of time.</p>
+
+<h3 id="writing-code">Writing Code<a class="content-header-href" href="#writing-code"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Contributing to Pion should be an easy and fun process! After you land your first PR you will become a Pion developer, and you will have the ability to review and merge others code.</p>
+
+<p>We try to have a high standard for quality, please review the <a href="#writing-a-good-pr">Writing a good PR</a> before selecting an issue</p>
+
+<p>Time to code! To find a good task here are our open issues in order of difficulty .</p>
+
+<ul>
+<li><p><a href='https://github.com/search?q=label%3A"good+first+issue"+is%3Aopen+type%3Aissue+org%3Apion' target='_blank'>good first issue</a> - Issues with zero ambiguity that can be easily merged</p></li>
+
+<li><p><a href='https://github.com/search?q=label%3A"difficulty%3Aeasy"+is%3Aopen+type%3Aissue+org%3Apion' target='_blank'>easy</a> - Issues that are technically challenging but no ambiguity</p></li>
+
+<li><p><a href='https://github.com/search?q=label%3A"difficulty%3Amedium"+is%3Aopen+type%3Aissue+org%3Apion' target='_blank'>medium</a> - Issues that are technically challenging and some ambiguity, a solution should be agreed on first</p></li>
+
+<li><p><a href='https://github.com/search?q=label%3A"difficulty%3Ahard"+is%3Aopen+type%3Aissue+org%3Apion' target='_blank'>hard</a> - Issues that are technically challenging and require a significant time investment</p></li>
+</ul>
+
+<h1 id="writing-a-good-pr">Writing a good PR<a class="content-header-href" href="#writing-a-good-pr"><i class="fas fa-paperclip"></i></a> </h1>
+
+<h3 id="find-a-reviewer">Find a reviewer<a class="content-header-href" href="#find-a-reviewer"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Talk to a developer on <a href="/slack" target="_blank">Slack</a> or Github before you start work. Things may have changed since the issue was reported, so don&rsquo;t start work until you are sure everything will work!</p>
+
+<p>The following developers are available for mentoring, and are happy to help you through the whole process.</p>
+
+<ul>
+<li>Sean DuBois <a href='https://github.com/Sean-Der' target='_blank'>Sean-Der</a></li>
+</ul>
+
+<h3 id="run-all-automated-tests-and-checks-before-submitting">Run all automated tests and checks before submitting.<a class="content-header-href" href="#run-all-automated-tests-and-checks-before-submitting"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Your code will likely not be reviewed if it fails the automated checks. The code may be high quality, but most developers assume it isn&rsquo;t ready until the build is green.</p>
+
+<p>In the root of each repo there is a <code>.travis.yml</code> file, this contains all the checks that are run. These checks are different for each repository. You can see the checks that run for Pion WebRTC <a href="https://github.com/pion/webrtc/blob/master/.travis.yml#L37" target="_blank">Here</a> as an example</p>
+
+<h3 id="write-a-good-commit-message">Write a good commit message<a class="content-header-href" href="#write-a-good-commit-message"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Each commit message is checked for the following rules</p>
+
+<pre><code>Subject line, capitalized, no period, max 50 chars
+
+Commit message body, describe the changes exactly here. Use full
+sentences. Wrap the commit message body at 72 characters.
+</code></pre>
+
+<h3 id="authors-must-be-added-to-the-readme-md">Authors must be added to the README.md<a class="content-header-href" href="#authors-must-be-added-to-the-readme-md"><i class="fas fa-paperclip"></i></a> </h3>
+
+<p>Add yourself to the README.md if this is your first time contributing.</p>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <hr class="footer-hr">
+    <div class="content has-text-right">
+      <p>
+        <a href="https://github.com/pion/website/blob/master/content/en/knowledge-base/pion-internals/contributing.md" target="_blank">Edit this page</a>
+      </p>
+    </div>
+  </footer>
+</main>
+
+  </body>
+  </html>

@@ -19,14 +19,6 @@
   </url>
   
   <url>
-    <loc>https://pion.ly/blog/</loc>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/customers/</loc>
-  </url>
-  
-  <url>
     <loc>https://pion.ly/knowledge-base/dtls/</loc>
   </url>
   
@@ -35,28 +27,7 @@
   </url>
   
   <url>
-    <loc>https://pion.ly/slack/</loc>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/</loc>
-  </url>
-  
-  <url>
     <loc>https://pion.ly/knowledge-base/media/</loc>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/open-source/</loc>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</loc>
   </url>
   
   <url>
@@ -81,6 +52,43 @@
   
   <url>
     <loc>https://pion.ly/knowledge-base/turn/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/pion-internals/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/blog/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/pion-internals/contributing/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/customers/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/slack/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/open-source/</loc>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://pion.ly/knowledge-base/release-notes/webrtc-v2.0.0/</loc>
   </url>
   
   <url>
