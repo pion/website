@@ -23,7 +23,12 @@ We have lots of issues that have been filed, but not addressed yet.
 * If it is a question, or a simple issue you might be able to fix yourself!
 * If it is a bigger task add a difficulty label ('easy', 'medium' or 'hard') and the 'triaged' label
 
-You can see all untriaged issues <a href="https://github.com/search?q=-label%3A%22triaged%22+is%3Aopen+type%3Aissue+org%3Apion" target="_blank">here</a>
+
+It also is helpful to review old triaged issues, they haven't got the attention they need
+
+* <a href="https://github.com/search?q=-label%3A%22triaged%22+is%3Aopen+type%3Aissue+org%3Apion" target="_blank">untriaged issues</a>
+* <a href="https://github.com/search?o=asc&q=label%3A%22triaged%22+is%3Aopen+type%3Aissue+org%3Apion&s=updated&type=Issues" target="_blank">stale triaged issues</a>
+
 
 ### Documentation
 We are working on building not just documentation about using Pion, but deep knowledge of WebRTC. Collecting up information (useful links, RFCs) and writing summations for technology would greatly enhance the Knowledge Base.
