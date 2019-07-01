@@ -22,12 +22,14 @@ We have lots of issues that have been filed, but not addressed yet.
 
 * If it is a question, or a simple issue you might be able to fix yourself!
 * If it is a bigger task add a difficulty label ('easy', 'medium' or 'hard') and the 'triaged' label
+* If feedback is requested add the 'question' label. If we haven't heard in 30 days resolve. Leave a comment telling the user to re-open if they are still interested though.
 
 
 It also is helpful to review old triaged issues, they haven't got the attention they need
 
 * <a href="https://github.com/search?q=-label%3A%22triaged%22+is%3Aopen+type%3Aissue+org%3Apion" target="_blank">untriaged issues</a>
 * <a href="https://github.com/search?o=asc&q=label%3A%22triaged%22+is%3Aopen+type%3Aissue+org%3Apion&s=updated&type=Issues" target="_blank">stale triaged issues</a>
+* <a href="https://github.com/search?o=asc&q=label%3A%22question%22+is%3Aopen+type%3Aissue+org%3Apion&s=updated&type=Issues" target="_blank">question issues</a>
 
 
 ### Documentation
