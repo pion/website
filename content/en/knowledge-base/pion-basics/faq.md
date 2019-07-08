@@ -18,3 +18,7 @@ Other dependency management tools are not actively supported, but we have some d
 
 ### Why should I use Pion WebRTC instead of $x
 We have a dedicated article written on this topic [Why Pion](/knowledge-base/pion-basics/why-pion/)
+
+### Any talks on Pion?
+* [CommCon 2019](https://youtu.be/iEYLvkaNTLc?t=447)
+* [Seattle Video Tech 2018](https://www.youtube.com/watch?v=ezZYd5NsxE4)
