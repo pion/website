@@ -19,6 +19,10 @@ a {
   height: 1.5;
 }
 
+.footer {
+  background-color: white;
+}
+
 .index-image {
   font-size: 55px;
 }
