@@ -20,7 +20,7 @@ cp -r .git public
 # Move to gh-pages branch and clean
 cd public
 git remote rm origin
-git remote add origin git@github.com:pions/website.git
+git remote add origin git@github.com:pion/website.git
 git fetch
 git checkout gh-pages
 git reset --hard origin/gh-pages
