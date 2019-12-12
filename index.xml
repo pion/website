@@ -31,15 +31,6 @@ Network Address Translation // TODO</description>
     </item>
     
     <item>
-      <title>Customers</title>
-      <link>https://pion.ly/customers/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/customers/</guid>
-      <description>Pion is changing how people build with WebRTC, be the next success story!</description>
-    </item>
-    
-    <item>
       <title>FAQ</title>
       <link>https://pion.ly/knowledge-base/pion-basics/faq/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -56,16 +47,6 @@ Network Address Translation // TODO</description>
       <guid>https://pion.ly/slack/</guid>
       <description> Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality.
 Join the Slack by following these two easy steps:  Invite yourself to the Golang Slack. Join the #pion channel.  </description>
-    </item>
-    
-    <item>
-      <title>Open Source</title>
-      <link>https://pion.ly/open-source/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://pion.ly/open-source/</guid>
-      <description>Developers are building lots of interesting things with Pion, here are the things we know about.
- https://github.com/Antonito/gfile https://github.com/pion/asciirtc https://github.com/maxmcd/webtty https://github.com/rtctunnel/rtctunnel https://github.com/nobonobo/ssh-p2p https://github.com/mxseba/rtc-ssh https://github.com/poi5305/go-yuv2webRTC https://github.com/rian-hotate/tetoris https://github.com/schollz/webrtc-transfer https://github.com/machinesworking/myhome https://github.com/wwl33695/myrtc https://github.com/takutakahashi/wg-connect https://github.com/open-domophone/soft-omega2 https://github.com/mtojek/filegate https://github.com/porjo/babelcast https://github.com/porjo/mumblet https://github.com/cretz/myscreen.live https://github.com/deepch/RTSPtoWebRTC https://github.com/hoernschen/goat https://github.com/discordianfish/infisk8-server https://github.com/edwintcloud/classmate https://github.com/nacgarg/stereo https://github.com/mtharp/gunk https://github.com/bashawhm/TheHarmonicInternetNoiseGiver https://github.com/s8sg/satellite  Reach out to us via Slack or Email, we would love to share your project here (of all types and sizes!)</description>
     </item>
     
     <item>
