@@ -6,4 +6,10 @@
 [[nav]]
     name = "Blog"
     url = "/blog/"
-    weight = 4
+    weight = 2
+
+[[nav]]
+    name = "awesome-pion"
+    url = "https://github.com/pion/awesome-pion"
+    weight = 3
+
