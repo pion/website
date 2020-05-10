@@ -63,23 +63,23 @@ peerConnection.OnDataChannel(func(dataChannel *webrtc.DataChannel) {
     fmt.Printf("New DataChannel %s %d\n", dataChannel.Label, dataChannel.ID)
 
     // Handle data channel
-}
+})
 {{< / highlight >}}
 
 Now we have a Data Channel configured. However, in order to use it we first have to wait for the Data Channel to be opened. To do this we register the `OnOpen` callback:
 {{< highlight go >}}
 dataChannel.OnOpen(func() {
-    fmt.Printf("Data channel '%s'-'%d' open.\n", dataChannel.Label, dataChannel.ID)
+    fmt.Printf("Data channel '%s'-'%d' open.\n", dataChannel.Label(), dataChannel.ID())
 
     // Now we can start sending data.
-}
+})
 {{< / highlight >}}
 
 We also need a way to receive messages from the Data Channel. This is done by registering the `OnMessage` callback:
 {{< highlight go >}}
 // Register text message handling
-d.OnMessage(func(msg webrtc.DataChannelMessage) {
-    fmt.Printf("Message from DataChannel '%s': '%s'\n", dataChannel.Label, string(msg.Data))
+dataChannel.OnMessage(func(msg webrtc.DataChannelMessage) {
+    fmt.Printf("Message from DataChannel '%s': '%s'\n", dataChannel.Label(), string(msg.Data))
 
     // Handle the message here
 })
