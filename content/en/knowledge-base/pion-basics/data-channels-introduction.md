@@ -104,7 +104,7 @@ As mentioned before there are two sides in a WebRTC connection. These sides are:
 - The offerer. This side creates an offer. The offer should be sent to the other side.
 - The answerer: This side receives the offer and uses it to create an answer. This answer is sent back to the offerer in order to conclude the signaling step.
 
-In our example the signaling data is exchanged by copy/pasting it to the other side. WebRTC deployments commonly use a [Signaling Server](/knowledge-base/webrtc/webrtc-architecture/#signaling-server) to accomplish this task.
+In our example the signaling data is exchanged by copy/pasting it to the other side. WebRTC deployments commonly use a [Signaling Server](/knowledge-base/webrtc-basics/architecture/#signaling-server) to accomplish this task.
 <br><br>
 Let's look at the offering side first:
 {{< highlight go >}}
