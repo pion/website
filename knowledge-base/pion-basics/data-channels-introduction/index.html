@@ -162,19 +162,19 @@
     <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;New DataChannel %s %d\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">ID</span>)
 
     <span style="color:#75715e">// Handle data channel
-</span><span style="color:#75715e"></span>}</code></pre></div></p>
+</span><span style="color:#75715e"></span>})</code></pre></div></p>
 
 <p>Now we have a Data Channel configured. However, in order to use it we first have to wait for the Data Channel to be opened. To do this we register the <code>OnOpen</code> callback:
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">OnOpen</span>(<span style="color:#66d9ef">func</span>() {
-    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Data channel &#39;%s&#39;-&#39;%d&#39; open.\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">ID</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Data channel &#39;%s&#39;-&#39;%d&#39; open.\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>(), <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">ID</span>())
 
     <span style="color:#75715e">// Now we can start sending data.
-</span><span style="color:#75715e"></span>}</code></pre></div></p>
+</span><span style="color:#75715e"></span>})</code></pre></div></p>
 
 <p>We also need a way to receive messages from the Data Channel. This is done by registering the <code>OnMessage</code> callback:
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Register text message handling
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">OnMessage</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">DataChannelMessage</span>) {
-    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Message from DataChannel &#39;%s&#39;: &#39;%s&#39;\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>, string(<span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">Data</span>))
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">OnMessage</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">msg</span> <span style="color:#a6e22e">webrtc</span>.<span style="color:#a6e22e">DataChannelMessage</span>) {
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Message from DataChannel &#39;%s&#39;: &#39;%s&#39;\n&#34;</span>, <span style="color:#a6e22e">dataChannel</span>.<span style="color:#a6e22e">Label</span>(), string(<span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">Data</span>))
 
     <span style="color:#75715e">// Handle the message here
 </span><span style="color:#75715e"></span>})</code></pre></div></p>
@@ -199,7 +199,7 @@
 <li>The answerer: This side receives the offer and uses it to create an answer. This answer is sent back to the offerer in order to conclude the signaling step.</li>
 </ul>
 
-<p>In our example the signaling data is exchanged by copy/pasting it to the other side. WebRTC deployments commonly use a <a href="/knowledge-base/webrtc/webrtc-architecture/#signaling-server">Signaling Server</a> to accomplish this task.
+<p>In our example the signaling data is exchanged by copy/pasting it to the other side. WebRTC deployments commonly use a <a href="/knowledge-base/webrtc-basics/architecture/#signaling-server">Signaling Server</a> to accomplish this task.
 <br><br>
 Let&rsquo;s look at the offering side first:
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Create an offer to send to the browser
