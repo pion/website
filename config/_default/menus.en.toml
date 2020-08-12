@@ -4,12 +4,12 @@
     weight = 1
 
 [[nav]]
-    name = "Blog"
-    url = "/blog/"
+    name = "awesome-pion"
+    url = "https://github.com/pion/awesome-pion"
     weight = 2
 
 [[nav]]
-    name = "awesome-pion"
-    url = "https://github.com/pion/awesome-pion"
+    name = "WebRTC for the Curious"
+    url = "https://webrtcforthecurious.com"
     weight = 3
 

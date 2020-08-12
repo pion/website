@@ -41,4 +41,4 @@ We try really hard to implement WebRTC correctly. Divergence causes lots of pain
 ## More Than Just Software
 Pion isn't just about building software, but also educating people and furthering what we can build with WebRTC. Someday better software may come, but hopefully our biggest impact will be creating innovation and fostering a great community.
 
-We have created a [Knowledge Base](../../knowledge-base/) and are documenting everything we learned from building a WebRTC implementation from scratch. We want to pass on everything we learned, our long term goal is to see a WebRTC implememntation in every language.
+We have created [WebRTC for the Curious](https://webrtcforthecurious.com) and are documenting everything we learned from building a WebRTC implementation from scratch. We want to pass on everything we learned, our long term goal is to see a WebRTC implememntation in every language.
