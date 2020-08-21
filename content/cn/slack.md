@@ -7,5 +7,5 @@ Pion在Slack上拥有一个有活力的社区。我们很乐意听你分享使�
 
 ## 加入Slack只需要两步：
 
-1. [邀请](https://invite.slack.golangbridge.org/) Slack。
+1. [邀请](http://invite.slack.golangbridge.org/) Slack。
 2. 进入[#pion](http://gophers.slack.com/messages/pion) 频道。
