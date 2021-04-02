@@ -13,3 +13,7 @@
     url = "https://webrtcforthecurious.com"
     weight = 3
 
+[[nav]]
+    name = "Office Hours"
+    url = "https://officehours.siobud.com"
+    weight = 4
