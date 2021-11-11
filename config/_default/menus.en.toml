@@ -17,3 +17,8 @@
     name = "Office Hours"
     url = "https://officehours.siobud.com"
     weight = 4
+
+[[nav]]
+    name = "Triage"
+    url = "/triage/"
+    weight = 5

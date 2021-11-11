@@ -2,6 +2,7 @@
 *.codekit3
 
 assets/scss/style.css
+.hugo_build.lock
 
 public
 resources
