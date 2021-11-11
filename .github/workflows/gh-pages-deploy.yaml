@@ -31,4 +31,5 @@ jobs:
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
           github_token: ${{ secrets.PIONBOT_PRIVATE_KEY }}
+          cname: pion.ly
           publish_dir: ./public
