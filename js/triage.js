@@ -40,6 +40,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return
   }
 
+  window.tinybind.binders.project = (el, value) => {
+    el.href = `https://github.com/pion/${value}`
+    el.target = '_blank'
+  }
+  window.tinybind.binders.pulls = (el, value) => {
+    el.href = `https://github.com/pion/${value}/pulls`
+    el.target = '_blank'
+  }
+  window.tinybind.binders.issues = (el, value) => {
+    el.href = `https://github.com/pion/${value}/issues`
+    el.target = '_blank'
+  }
+
   window.tinybind.bind(triageContainer, {pionProjectData, pionProjectSummary})
 
   issuesHeader.onclick = () => {
