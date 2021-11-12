@@ -19,14 +19,14 @@ title: "Triage"
   <table>
     <tr>
       <th>Project</th>
-      <th id="issues-header">Issues</th>
-      <th id="pull-requests-header">PRs</th>
+      <th id="issues-header"><a href="#"> Issues </a> </th>
+      <th id="pull-requests-header"><a href="#"> PRs </a> </th>
     </tr>
 
     <tr rv-each-project="pionProjectData">
-      <td>{ project.name }</td>
-      <td>{ project.issues.length }</td>
-      <td>{ project.pullRequests.length }</td>
+      <td><a rv-project="project.name">{ project.name }</a></td>
+      <td><a rv-issues="project.name">{ project.issues.length }</a></td>
+      <td><a rv-pulls="project.name">{ project.pullRequests.length }</a></td>
     </tr>
   </table>
 </div>
