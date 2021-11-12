@@ -72,10 +72,10 @@ function getAllPionRepos (httpOptions) {
 
 function fetchProjectData (httpOptions, projectName) {
   return new Promise((resolve, reject) => {
-    let issuesPromise = window.fetch(`https://api.github.com/repos/pion/${projectName}/issues?state=open`, httpOptions)
+    let issuesPromise = window.fetch(`https://api.github.com/repos/pion/${projectName}/issues?state=open&per_page=1000`, httpOptions)
       .then(response => response.json())
 
-    let pullRequestsPromise = window.fetch(`https://api.github.com/repos/pion/${projectName}/pulls?state=open`, httpOptions)
+    let pullRequestsPromise = window.fetch(`https://api.github.com/repos/pion/${projectName}/pulls?state=open&per_page=1000`, httpOptions)
       .then(response => response.json())
 
     Promise.all([issuesPromise, pullRequestsPromise]).then(values => {
