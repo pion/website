@@ -69,6 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
     pionProjectData.length = 0
     getAllPionRepos({headers}).then(repos => {
       for (const repo of repos) {
+        if (repo.archived) {
+          continue
+        }
+
         fetchProjectData({headers}, repo.name).then(data => {
           let objectStore = db.transaction([DB_NAME], 'readwrite').objectStore(DB_NAME)
           objectStore.add({key: data.name, project: data})
