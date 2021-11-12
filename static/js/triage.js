@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   triageButton.onclick = () => {
     let headers = new window.Headers()
     headers.append('Authorization', `Basic ${window.btoa(`${userNameInput.value}:${accessTokenInput.value}`)}`)
+    pionProjectData.length = 0
     getAllPionRepos({headers}).then(repos => {
       for (const repo of repos) {
         fetchProjectData({headers}, repo.name).then(data => {
