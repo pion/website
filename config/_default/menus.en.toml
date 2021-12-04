@@ -1,24 +1,29 @@
 [[nav]]
+    name = "Blog"
+    url = "/blog/"
+    weight = 1
+
+[[nav]]
     name = "Knowledge Base"
     url = "/knowledge-base/"
-    weight = 1
+    weight = 2
 
 [[nav]]
     name = "awesome-pion"
     url = "https://github.com/pion/awesome-pion"
-    weight = 2
+    weight = 3
 
 [[nav]]
     name = "WebRTC for the Curious"
     url = "https://webrtcforthecurious.com"
-    weight = 3
+    weight = 4
 
 [[nav]]
     name = "Office Hours"
     url = "https://officehours.siobud.com"
-    weight = 4
+    weight = 5
 
 [[nav]]
     name = "Triage"
     url = "/triage/"
-    weight = 5
+    weight = 6
