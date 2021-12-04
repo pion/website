@@ -38,29 +38,50 @@ time. As an individual you also have a chance to influence WebRTC.
 ### WebRTC has multiple implementations and is in the browser
 
 WebRTC is available in every major browser and most major languages. WebRTC isn't just a browser technology!
+
 * [C#](https://github.com/sipsorcery-org/sipsorcery)
+
 * [C++](https://github.com/paullouisageneau/libdatachannel)
+
 * [C++](https://github.com/rawrtc/rawrtc)
+
 * [C++](https://webrtc.googlesource.com/src/)
+
 * [C](https://github.com/awslabs/amazon-kinesis-video-streams-webrtc-sdk-c)
+
 * [Elixir](https://www.membraneframework.org/)
+
 * [GStreamer](https://gstreamer.freedesktop.org/documentation/webrtc/index.html)
+
 * [Go](https://github.com/pion/webrtc)
+
 * [Node.js](https://github.com/node-webrtc/node-webrtc)
+
 * [Python]( https://github.com/aiortc/aiortc)
+
 * [Rust](https://github.com/webrtc-rs/webrtc)
+
 * [Typescript](https://github.com/shinyoshiaki/werift-webrtc)
 
 You also have a wealth of servers to choose from
 * [ant media server](https://antmedia.io/)
+
 * [galène](https://github.com/jech/galene)
+
 * [ion-sfu](https://github.com/pion/ion-sfu)
+
 * [janus-gateway](https://github.com/meetecho/janus-gateway)
+
 * [jitsi](https://github.com/jitsi/jitsi-meet)
+
 * [kurento](https://github.com/kurento/)
+
 * [licode](https://github.com/lynckia/licode)
+
 * [livekit](https://livekit.io/)
+
 * [mediasoup](https://mediasoup.org/)
+
 * [medooze](https://github.com/medooze)
 
 WebRTC's wide availability makes it easy to build with. Developers can use the language, paradigm and tools they are most comfortable with.
