@@ -1,6 +1,6 @@
 ---
 title: Why WebRTC?
-Description: An implementer and user perspective on why WebRTC is the right choice.
+Description: An implementer and user perspective on WebRTC.
 date: 2021-12-05
 authors: ["Sean DuBois"]
 ---
