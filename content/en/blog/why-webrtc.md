@@ -1,5 +1,8 @@
 ---
 title: Why WebRTC?
+Description: Why WebRTC? An implementer and user perspective.
+date: 2021-12-05
+author: Sean DuBois
 ---
 
 This is a question I get in lots of different forms. Why should I use WebRTC instead of my
@@ -9,8 +12,7 @@ be so complicated? Why do you continue to work on WebRTC projects?
 These are my answers to the Why's of WebRTC. Lots of nuance exists, and these answers are heavily
 influenced by the work I do. I have been working with WebRTC since 2013. In that time I worked on two implementations [Pion](https://github.com/pion/webrtc)
 and [KVS WebRTC](https://github.com/awslabs/amazon-kinesis-video-streams-webrtc-sdk-c). I also co-authored a book [WebRTC for the Curious](https://webrtcforthecurious.com/).
-I have used WebRTC at [startups](https://golightstream.com/) and [corporate](https://9to5mac.com/2021/06/11/hands-on-heres-a-first-look-at-how-facetime-works-in-a-web-browser/) software
-projects.
+I have used WebRTC at [startups](https://golightstream.com/) and [corporate](https://9to5mac.com/2021/06/11/hands-on-heres-a-first-look-at-how-facetime-works-in-a-web-browser/) projects.
 
 ### WebRTC supports more then just your use case
 
@@ -18,7 +20,7 @@ WebRTC supports a diverse set of use cases. It is hard to appreciate all of them
 
 * Multiple tracks of bi-directional audio and video
 * Media negotiation, codecs and media events like adding and removing tracks
-* P2P connectivity with optimal path discovery, Client/Server supported as well
+* P2P connectivity with optimal path discovery, Client/Server can be built as well.
 * Binary and text communication, lossy and unordered data with flow control APIs
 * Mandatory encryption, secure by default and requires no developer configuration
 
@@ -33,7 +35,7 @@ WebRTC is a IETF/W3C standard. Multiple individuals have been involved since its
 standards. The majority of what WebRTC defines is how to combine these existing complicated subsystems.
 
 I use WebRTC because I know it has a safe future. Protocols that are owned by a single corporation or project can be changed at any
-time. As an individual you also have a chance to influence WebRTC.
+time. As an individual you also have a chance to influence WebRTC. You can get involved in the standards or write your own WebRTC software and tools.
 
 ### WebRTC has multiple implementations and is in the browser
 
@@ -96,4 +98,8 @@ WebRTC also allows a great degree of flexibility if you have more niche needs. Y
 You can choose your own algorithm for path selection when establishing the connection. Even if you make these changes you will still be standards compliant
 and can connect to existing WebRTC clients!
 
-WebRTC
+WebRTC's accessibility allows a wide range of applications to be built with it. You don't need to be a video and networking expert to build your
+cool idea. I continue to stay involved with WebRTC because it has a rich ecosystem of developers. Life becomes stale if you build the same thing
+over and over again. With WebRTC I have had a chance to interact with so many different projects. Remote surgery, drones, robotics, file sharing,
+one hundred thousand viewer events, sub-second bidding for cattle, game streaming, VPNs in the browser, real-time voice translation, and these are
+just the public projects! WebRTC lets beginners bring their interesting ideas to life.
