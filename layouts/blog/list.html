@@ -3,9 +3,19 @@
   <section>
     <div class="columns has-text-centered" style="padding-top: 3em;">
       <div class="column">
-        <h1 class="title" style="font-size: 3rem">Pion Blog</h1>
+        <h1 class="title" style="font-size: 5rem">Pion Blog</h1>
         <hr class="pion-hr">
       </div>
     </div>
+    {{ range .Pages }}
+      <div class="columns has-text-centered">
+        <div class="column">
+          <a href="{{.Permalink}}">
+          <h1 style="font-size: 3rem">{{.Title}}</h1></a>
+          <p>{{.Description }} </p>
+          <p>{{ range .Param "authors" }} {{ . }} {{ end }} -- {{.Date | time.Format ":date_short"}} </p>
+        </div>
+      </div>
+    {{ end }}
   </section>
 {{ end }}
