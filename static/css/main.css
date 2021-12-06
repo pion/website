@@ -13,6 +13,11 @@ a {
   margin-right: auto;
 }
 
+.content {
+    max-width: 1024px;
+    margin: auto;
+}
+
 .footer-hr {
   background-color: #BBBCBE;
   width: 100%;
