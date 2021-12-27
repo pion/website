@@ -13,7 +13,7 @@
           <a href="{{.Permalink}}">
           <h1 style="font-size: 3rem">{{.Title}}</h1></a>
           <p>{{.Description }} </p>
-          <p>{{ range .Param "authors" }} {{ . }} {{ end }} -- {{.Date | time.Format ":date_short"}} </p>
+          <p>{{ range .Param "authors" }} {{ . }} {{ end }} -- {{.Date.Format "2006-01-02"}} </p>
         </div>
       </div>
     {{ end }}
