@@ -1,5 +1,5 @@
 ---
-title: Pion is a nonprofit organization
+title: Pion is a nonprofit project
 Description: The reasons and benefits of keeping Pion nonprofit.
 date: 2021-12-27
 authors: ["Sean DuBois"]
