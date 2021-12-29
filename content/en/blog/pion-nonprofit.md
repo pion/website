@@ -6,21 +6,24 @@ authors: ["Sean DuBois"]
 ---
 
 Pion saw its first commit Wed Mar 7 2018. I didn't have grand aspirations
-for the project. It just felt important at the time to make WebRTC more
+for the project. It [felt important](../why-webrtc) at the time to make WebRTC more
 accessible. Proprietary alternatives were being proposed and they
 didn't have technical advantages, they were just easier to use.
 I enjoyed solving issues one at a time and helping users
-use the software.
+use Pion.
 
 Interest in WebRTC then exploded in 2020. Lots of new demand for WebRTC
 software popped up over night. New developers started learning it,
 companies were founded around it and lots of VC money started entering
 the space.
 
-I was approached by a few VCs about doing something commercial with Pion.
-It sounded exciting and I would have been fun to work on Pion full-time.
-In the end I decided that it would benefit me personally, but would be a
-net negative. These are the reasons I decided against it.
+I was approached by a few VCs who asked if I had any plans to do something
+commercial with Pion. It sounded exciting and I would have been fun to work
+on it full-time. In the end I decided that it may benefit me personally, but
+would be a net negative. These are the reasons I decided against it.
+
+I have seen many for profit projects not have these issues. I just don't
+believe I have the skills/enviroment/team to make it work.
 
 ### Reduce opportunities for individuals
 
@@ -30,8 +33,9 @@ mean a lot to me.
 
 * First job in video because of a project they built with Pion.
 * First speaking opportunity talking about a Pion contribution.
-* Company that uses Pion hiring multiple contributors and doubling their salaries.
+* Company that uses Pion hiring multiple contributors and offering much better salaries.
 * A contributor that is an expert in RTC returning to the field through Pion
+* Companies created by first time founders using Pion
 
 If Pion was for profit I don't think I could create an environment where this would
 all be happening. I can focus on giving individuals the best outcome and not worry about
@@ -61,10 +65,12 @@ much joy seeing all the different use cases.
 * [Application Streaming](https://neverinstall.com/) - Users who can't afford the latest hardware can still access everything.
 * [Collaborative Gaming](https://piepacker.com/) - Multiplayer NES in the browser, don't let distance stop you from spending time together.
 * [P2P CDN](https://strivecast.com/p2p-sdk/) - Reduce network strain by sharing what you have already downloaded. Bringing P2P to everyone!
+* [Digital Signal Processing](https://yous.ai/) - Real time translations. Allow users to communicate with no shared language.
+* [Computer Vision](https://goheadroom.com/) - Process gestures and expressions. Make video conferencing feel more natural.
 
-
-This is just the start of it. I have learned so much from watching the projects and companies [Using Pion](https://github.com/pion/awesome-pion) grow.
-If I started building competing software I would lose out on learning all these stories.
+All these projects have caused Pion to grow in different ways. They all have different needs and pushed Pion in lots of good ways. If I started
+building competing software I would lose out on learning all these stories. Also lots of great Open Source projects [Using Pion](https://github.com/pion/awesome-pion)
+that I have learned from.
 
 ### Less diverse contributions
 
