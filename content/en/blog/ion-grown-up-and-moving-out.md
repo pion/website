@@ -36,5 +36,5 @@ As time went on developers outside the Pion project built these new and interest
 * [LiveKit](https://livekit.io/) - Room based API that is horizontally-scalable out of the box.
 * [Plug-N-Meet](https://github.com/mynaparrot/plugNmeet-server) - Providers higher level WebRTC tools with plugins for Joomla, Moodle, Wordpress
 
-With ION existing under the Pion organization users will unfairly ignore these other projects. I want to celebrate and encourage everyone who
+With ION existing under the Pion organization users would unfairly ignore these other projects. I want to celebrate and encourage everyone who
 is building things with Pion.
