@@ -4,8 +4,8 @@
     weight = 1
 
 [[nav]]
-    name = "Knowledge Base"
-    url = "/knowledge-base/"
+    name = "Why Pion"
+    url = "/why-pion/"
     weight = 2
 
 [[nav]]
