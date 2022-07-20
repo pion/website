@@ -10,7 +10,7 @@ We are just making these changes to more clearly reflect the actual leadership a
 though. Users may have to change imports, tooling and other software. We apologize for that, but hope these benefits are worth it.
 
 
-### Support the actual leadership of ION
+### Recognize the actual leadership of ION
 
 The leadership and contributors of ION and Pion are often conflated. Often I will have users ask me questions or even thank me for ION.
 This confusion is demotivating for the people actually doing the hard work. I worry that long term it will hurt the project.
