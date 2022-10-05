@@ -67,8 +67,9 @@ A few implementations of Opus exist. [libopus](https://github.com/xiph/opus), [c
 and [FFMpeg](https://github.com/FFmpeg/FFmpeg/blob/master/libavcodec/opusdec.c). If you want to learn Opus I found the Rust implementation and FFmpeg the easiest to understand.
 It is surprising how most of these efforts were driven by a single person!
 
-The Opus community is very helpful. A special shout out to Luca Barbato who responded to many emails from me. Without his help I would have never made it this far. The developers
-in the #opus libera channel were very helpful also.
+The Opus community is very helpful. A special shout out to Luca Barbato who responded to many emails from me. Without his help I would have never made it this far.
+The developers in the #opus libera channel were very helpful also. Timothy Terriberry took a lot of time answering my questions on IRC. He also provided earlier/simpler
+implementations of Silk which helped me understand things a lot better.
 
 ### Future
 
