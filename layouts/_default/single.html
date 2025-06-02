@@ -5,7 +5,7 @@
         <h1 class="title" style="font-size: 3rem">{{.Title }}</h1>
         {{ if isset .Params "authors" }}
           <p>{{.Description }} </p>
-          <p>{{ range .Param "authors" }} {{ . }} {{ end }} -- {{.Date.Format "2006-01-02"}} </p>
+          <p>{{ delimit (.Param "authors") ", " }} -- {{.Date.Format "2006-01-02"}} </p>
         {{ end }}
         <hr class="pion-hr">
       </div>
