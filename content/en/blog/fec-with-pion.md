@@ -78,7 +78,29 @@ If you're curious, the [klauspost/reedsolomon Go library](https://github.com/kla
 
 ## FlexFEC in Pion
 
-We now have FlexFEC encoding support in Pion that can be used in pairs with chromium and safari, and it's easy to add to your project (register the codec in media engine and add an interceptor, then you are good to go)!
+Pion now supports basic FlexFEC encoding! You can pair it with Chromium and Safari (receive-only), and it's simple to integrate; just register the payload type in your media engine and add the interceptor. Then you're good to go!
+
+### What To look forward to in the final FlexFEC implementation
+
+If you worked with FlexFEC, you may come across multiple draft versions, **FlexFEC-03** and **FlexFEC-20**. The final standard is published as [RFC 8627](https://datatracker.ietf.org/doc/rfc8627/), and while it builds on ideas introduced in the -20 draft, it formalizes several features and adds important clarifications.
+
+Although Pion doesn't yet fully support RFC 8627, we're tracking it closely and excited about the improvements it will bring, here are some of the highlights:
+
+1. **Flexible Masking (Selective Protection)**:
+   RFC 8627 introduces a **flexible mask** mode, allowing senders to protect an arbitrary subset of source packets. Instead of a fixed pattern, it sends a bitmask indicating exactly which packets are covered. This can be used to implement smarter FEC strategies, such as protecting only keyframes or higher-priority codec configuration packets.
+   -> [RFC 8627, Section 1.1.4](https://datatracker.ietf.org/doc/rfc8627/#section-1.1.4)
+
+2. **Hybrid FEC and Retransmission Support**
+   The final spec explicitly supports both **proactive FEC** and **RTP retransmission**. It also requires that when FlexFEC is used alongside another retransmission mechanism, the answer in an SDP negotiation must use FlexFEC only, ensuring consistent protection handling.
+   -> [RFC 8627, Section 1.1.7](https://datatracker.ietf.org/doc/rfc8627/#section-1.1.7)
+
+3. **Improved Scalability and Consistency**
+   RFC 8627 addresses scalability limitations from earlier FEC mechanisms like [RFC 5109](https://datatracker.ietf.org/doc/html/rfc5109) and [RFC 2733](https://datatracker.ietf.org/doc/html/rfc2733). It also reuses the **RTP repair stream format** defined in [RFC 6363](https://datatracker.ietf.org/doc/html/rfc6363), making it more consistent with modern RTP practices and easier to interoperate with existing tooling.
+   -> [RFC 8627, Section 1.1.1](https://datatracker.ietf.org/doc/rfc8627/#section-1.1.1)
+
+4. **Packet and Header Format Clarifications**
+   The final spec clearly defines key header fields. For example, the **R bit** distinguishes retransmission (R=1) from FEC repair (R=0), while the **F bit** selects between flexible-mask mode (F=0) and fixed-offset mode (F=1). These explicit semantics simplify implementation logic and parsing.
+   -> [RFC 8627, Section 6.2](https://datatracker.ietf.org/doc/rfc8627/#section-6.2)
 
 ### Enable FlexFEC Encoding in Pion
 
