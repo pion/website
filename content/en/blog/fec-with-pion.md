@@ -70,9 +70,11 @@ FEC is a mechanism that can mitigate this. FEC stands for **Forward Error Correc
 
 In WebRTC, there are two types of FEC codecs, which have slightly different way in how they are transferred from sender to receiver. FlexFEC packets have distinct payload type and SSRC from the video track. During peer connection FlexFEC track is declared in SDP with SSRC group such as `a=ssrc-group:FEC-FR aaaaa bbbbb`, here `aaaaa` is video track SSRC, `bbbbb` is FEC track SSRC. On the other hand, UlpFEC packets are transferred under the same SSRC as the video track. This requires the ability to disinguish the packet's type from the paylod of RTP packets, which can only be done in VPX codecs since H.264 and H.265 doesn't have the entry to indicate this information. This means only FlexFEC can be used regardless of the codec. FEC works on RTP packet level, which means the unit of FEC encode/decode is RTP packet. NACK and FEC work independently, RTX packets are not included during FEC encoding/decoding, and FEC packets will not be retransmitted.
 
-## FEC Codecs in WebRTC
+## FEC Algorithms in WebRTC
 
-Many different algorithms have been designed to generate redundant data and recover lost packets. FlexFEC and UlpFEC are based on xor with different logic in deciding who xors with who. There is also an algorithm called Reed-Soloman that can offer better recovery ability mathematically. Due to it's high complexity both in understanding and in computing, Reed-Soloman based FEC in WebRTC have not yet made it's way into any web standard or opensource implementation. There is an [implementation](https://github.com/klauspost/reedsolomon) of the SIMD accelerated Reed-Soloman algorithm in go that's fun to play with if you are interested.
+FlexFEC and ULPFEC both use XOR-based recovery logic to generate packets. Another family of algorithms, like [Reed-Solomon](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction), can recover from more complex losses but are currently too computationally expensive for real-time use in WebRTC.
+
+If you're curious, the [klauspost/reedsolomon Go library](https://github.com/klauspost/reedsolomon) offers a SIMD-accelerated implementation that's fun to experiment with.
 
 ## FlexFEC in Pion
 
