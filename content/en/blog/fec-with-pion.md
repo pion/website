@@ -9,6 +9,12 @@ We are excited to have FEC encoding support available in the upcoming Pion v4.1.
 
 > If you already know FEC, feel free to skip to [FlexFEC in Pion](#flexfec-in-pion).
 
+## Quick background: What is FEC?
+
+Forward Error Correction (FEC) is a proactive loss-recovery mechanism that can be used to recover lost packets.
+
+Along with each block of media packets, You intentionally transmit extra mathematically derived parity packets (e.g. xor of the media packets). If the reciver later discovers that one or even more packets are lost, it can use the parity packets to recover the lost packets, All without waiting for the lost packets to be retransmitted.
+
 ## We Already Have NACK, Why FEC?
 
 Alice is sending a video stream to Bob with WebRTC. In an imaginary perfect network condition in which no packet loss happens and the network delay is 0 ms, all Alice needs to do is encode the video, pack RTP packets, and send them to Bob. What Bob needs to do is simply depacketize RTP packets and decode the payload into video frames. Everything is great except this imaginary perfect network condition doesn't exist.
