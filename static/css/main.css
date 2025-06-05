@@ -14,8 +14,8 @@ a {
 }
 
 .content {
-    max-width: 1024px;
-    margin: auto;
+  max-width: 1024px;
+  margin: auto;
 }
 
 .footer-hr {
@@ -57,4 +57,28 @@ h4:hover .content-header-href,
 h5:hover .content-header-href,
 h6:hover .content-header-href {
   visibility: visible;
+}
+
+@media screen and (max-width: 768px) {
+  .title[style*='font-size: 5rem'] {
+    font-size: 3rem !important;
+  }
+  h1[style*='font-size: 3rem'] {
+    font-size: 2rem !important;
+  }
+  section[style*='padding-top: 10em'] {
+    padding-top: 4em !important;
+  }
+  section[style*='padding-top: 3em'] {
+    padding-top: 2em !important;
+  }
+  .index-reason-padding {
+    padding: 1em 0.5em;
+  }
+  .columns {
+    margin: 0 !important;
+  }
+  .column {
+    padding: 0.75rem 0.5rem !important;
+  }
 }
