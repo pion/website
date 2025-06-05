@@ -1,9 +1,62 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Pion</title><link>https://pion.ly/</link><description>Recent content on Pion</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 02 Oct 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://pion.ly/index.xml" rel="self" type="application/rss+xml"/><item><title>Pion Opus</title><link>https://pion.ly/blog/pion-opus/</link><pubDate>Sun, 02 Oct 2022 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/pion-opus/</guid><description>I am so excited to announce that pion/opus is now available. It is a Pure Go implementation of the Opus Codec. pion/opus is far from done though. It is far enough along for others to start playing with and contributing too though. We still have a lot more work to do. If you are interested now is a great time to get involved!
-Now that the code is shared I wanted to share my goals, what I learned and hopes for the future.</description></item><item><title>ION, grown up and moving out.</title><link>https://pion.ly/blog/ion-grown-up-and-moving-out/</link><pubDate>Tue, 19 Jul 2022 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/ion-grown-up-and-moving-out/</guid><description>Going forward the ION project will now be hosted at ionorg/ion. ION itself is not changing in any other way. We are just making these changes to more clearly reflect the actual leadership and organization of the project. Changes like this aren&amp;rsquo;t free though. Users may have to change imports, tooling and other software. We apologize for that, but hope these benefits are worth it.
-Recognize the actual leadership of ION The leadership and contributors of ION and Pion are often conflated.</description></item><item><title>Pion is a nonprofit project</title><link>https://pion.ly/blog/pion-nonprofit/</link><pubDate>Mon, 27 Dec 2021 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/pion-nonprofit/</guid><description>Pion saw its first commit Wed Mar 7 2018. I didn&amp;rsquo;t have grand aspirations for the project. It felt important at the time to make WebRTC more accessible. Proprietary alternatives were being proposed and they didn&amp;rsquo;t have technical advantages, they were just easier to use. I enjoyed solving issues one at a time and helping users use Pion.
-Interest in WebRTC then exploded in 2020. Lots of new demand for WebRTC software popped up over night.</description></item><item><title>Why WebRTC?</title><link>https://pion.ly/blog/why-webrtc/</link><pubDate>Sun, 05 Dec 2021 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/why-webrtc/</guid><description>This is a question I get in lots of different forms. Why should I use WebRTC instead of my preferred video protocol? Why does WebRTC need to be in my browser? Why does WebRTC have to be so complicated? Why do you continue to work on WebRTC projects?
-These are my answers to the Why&amp;rsquo;s of WebRTC. Lots of nuance exists, and these answers are heavily influenced by the work I do.</description></item><item><title>Join us on Discord</title><link>https://pion.ly/discord/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/discord/</guid><description>Pion has a vibrant community on the Discord. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality.
-Join the Discord with following link Invite</description></item><item><title>Join us on Slack</title><link>https://pion.ly/slack/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/slack/</guid><description>Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality.
-Join the Slack by following these two easy steps: Invite yourself to the Golang Slack. Join the #pion channel.</description></item><item><title>Pion Office Hours</title><link>https://pion.ly/officehours/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/officehours/</guid><description/></item><item><title>Triage</title><link>https://pion.ly/triage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/triage/</guid><description> How to create an access token
-User Name: Access Token: Fetch Issue Count: {pionProjectSummary.issueCount} PR Count: {pionProjectSummary.pullRequestCount} Issue/PR Count by Project Project Issues PRs { project.name } { project.issues.length } { project.pullRequests.length }</description></item><item><title>Why Pion</title><link>https://pion.ly/why-pion/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/why-pion/</guid><description>&amp;lsquo;Why would I use Pion&amp;rsquo; this is the first question we get asked by potential users, and it is a great one. Learning new software is an investment, as developers we know how frustrating it can be when you make the wrong choice.
-The answer is different depending on your needs. However it seems to always come down to a few major reasons. Here is what drives Pion, and why we think you should give us a try.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Pion</title><link>https://pion.ly/</link><description>Recent content on Pion</description><generator>Hugo</generator><language>en</language><lastBuildDate>Sun, 02 Oct 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://pion.ly/index.xml" rel="self" type="application/rss+xml"/><item><title>Pion Opus</title><link>https://pion.ly/blog/pion-opus/</link><pubDate>Sun, 02 Oct 2022 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/pion-opus/</guid><description>&lt;p>I am so excited to announce that &lt;a href="https://github.com/pion/opus">pion/opus&lt;/a> is now available. It is a Pure Go implementation
+of the &lt;a href="https://opus-codec.org/">Opus Codec&lt;/a>. pion/opus is far from done though. It is far enough along for others to start playing
+with and contributing too though. We still have a lot more work to do. If you are interested now is a great time to get involved!&lt;/p>
+&lt;p>Now that the code is shared I wanted to share my goals, what I learned and hopes for the future.&lt;/p></description></item><item><title>ION, grown up and moving out.</title><link>https://pion.ly/blog/ion-grown-up-and-moving-out/</link><pubDate>Tue, 19 Jul 2022 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/ion-grown-up-and-moving-out/</guid><description>&lt;p>Going forward the ION project will now be hosted at &lt;a href="https://github.com/ionorg/ion">ionorg/ion&lt;/a>. ION itself is not changing in any other way.
+We are just making these changes to more clearly reflect the actual leadership and organization of the project. Changes like this aren&amp;rsquo;t free
+though. Users may have to change imports, tooling and other software. We apologize for that, but hope these benefits are worth it.&lt;/p>
+&lt;h3 id="recognize-the-actual-leadership-of-ion">Recognize the actual leadership of ION&lt;/h3>
+&lt;p>The leadership and contributors of ION and Pion are often conflated. Often I will have users ask me questions or even thank me for ION.
+This confusion is demotivating for the people actually doing the hard work. I worry that long term it will hurt the project.&lt;/p></description></item><item><title>Pion is a nonprofit project</title><link>https://pion.ly/blog/pion-nonprofit/</link><pubDate>Mon, 27 Dec 2021 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/pion-nonprofit/</guid><description>&lt;p>Pion saw its first commit Wed Mar 7 2018. I didn&amp;rsquo;t have grand aspirations
+for the project. It &lt;a href="../why-webrtc">felt important&lt;/a> at the time to make WebRTC more
+accessible. Proprietary alternatives were being proposed and they
+didn&amp;rsquo;t have technical advantages, they were just easier to use.
+I enjoyed solving issues one at a time and helping users
+use Pion.&lt;/p>
+&lt;p>Interest in WebRTC then exploded in 2020. Lots of new demand for WebRTC
+software popped up over night. New developers started learning it,
+companies were founded around it and lots of VC money started entering
+the space.&lt;/p></description></item><item><title>Why WebRTC?</title><link>https://pion.ly/blog/why-webrtc/</link><pubDate>Sun, 05 Dec 2021 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/why-webrtc/</guid><description>&lt;p>This is a question I get in lots of different forms. Why should I use WebRTC instead of my
+preferred video protocol? Why does WebRTC need to be in my browser? Why does WebRTC have to
+be so complicated? Why do you continue to work on WebRTC projects?&lt;/p>
+&lt;p>These are my answers to the Why&amp;rsquo;s of WebRTC. Lots of nuance exists, and these answers are heavily
+influenced by the work I do. I have been working with WebRTC since 2013. In that time I worked on two implementations &lt;a href="https://github.com/pion/webrtc">Pion&lt;/a>
+and &lt;a href="https://github.com/awslabs/amazon-kinesis-video-streams-webrtc-sdk-c">KVS WebRTC&lt;/a>. I also co-authored a book &lt;a href="https://webrtcforthecurious.com/">WebRTC for the Curious&lt;/a>.
+I have used WebRTC at &lt;a href="https://golightstream.com/">startups&lt;/a> and &lt;a href="https://9to5mac.com/2021/06/11/hands-on-heres-a-first-look-at-how-facetime-works-in-a-web-browser/">corporate&lt;/a> projects.&lt;/p></description></item><item><title>Join us on Discord</title><link>https://pion.ly/discord/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/discord/</guid><description>&lt;p>Pion has a vibrant community on the Discord. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality.&lt;/p>
+&lt;hr>
+&lt;h2 id="join-the-discord-with-following-link">Join the Discord with following link&lt;/h2>
+&lt;ol>
+&lt;li>&lt;a href="https://discord.gg/6EsQz85vPE">Invite&lt;/a>&lt;/li>
+&lt;/ol></description></item><item><title>Join us on Slack</title><link>https://pion.ly/slack/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/slack/</guid><description>&lt;p>Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You&amp;rsquo;re likely to find someone willing to assist in making your idea a reality.&lt;/p>
+&lt;hr>
+&lt;h2 id="join-the-slack-by-following-these-two-easy-steps">Join the Slack by following these two easy steps:&lt;/h2>
+&lt;ol>
+&lt;li>&lt;a href="http://invite.slack.golangbridge.org/">Invite&lt;/a> yourself to the Golang Slack.&lt;/li>
+&lt;li>Join the &lt;a href="http://gophers.slack.com/messages/pion">#pion&lt;/a> channel.&lt;/li>
+&lt;/ol></description></item><item><title>Pion Office Hours</title><link>https://pion.ly/officehours/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/officehours/</guid><description>&lt;meta http-equiv="refresh" content="0;URL=https://siobud.com/meeting"></description></item><item><title>Triage</title><link>https://pion.ly/triage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/triage/</guid><description>&lt;div id="triage-container">
+ &lt;a target="_blank" href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token"> How to create an access token &lt;/a>&lt;br>
+ &lt;label for="user-name">User Name:&lt;/label>
+ &lt;input type="text" id="user-name" name="user-name">&lt;br>
+ &lt;label for="access-token">Access Token:&lt;/label>
+ &lt;input type="text" id="access-token" name="access-token">&lt;br>
+ &lt;button id="access-token-button"> Fetch &lt;/button>
+
+
+ &lt;h2> Issue Count: {pionProjectSummary.issueCount} &lt;/h2>
+ &lt;h2> PR Count: {pionProjectSummary.pullRequestCount} &lt;/h2>
+
+ &lt;h2> Issue/PR Count by Project &lt;/h2>
+ &lt;table>
+ &lt;tr>
+ &lt;th>Project&lt;/th>
+ &lt;th id="issues-header">&lt;a href="#"> Issues &lt;/a> &lt;/th>
+ &lt;th id="pull-requests-header">&lt;a href="#"> PRs &lt;/a> &lt;/th>
+ &lt;/tr>
+
+ &lt;tr rv-each-project="pionProjectData">
+ &lt;td>&lt;a rv-project="project.name">{ project.name }&lt;/a>&lt;/td>
+ &lt;td>&lt;a rv-issues="project.name">{ project.issues.length }&lt;/a>&lt;/td>
+ &lt;td>&lt;a rv-pulls="project.name">{ project.pullRequests.length }&lt;/a>&lt;/td>
+ &lt;/tr>
+ &lt;/table>
+&lt;/div></description></item><item><title>Why Pion</title><link>https://pion.ly/why-pion/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pion.ly/why-pion/</guid><description>&lt;p>&amp;lsquo;Why would I use Pion&amp;rsquo; this is the first question we get asked by potential users, and it is a great one. Learning new software is an investment, as developers we know how frustrating it can be when you make the wrong choice.&lt;/p>
+&lt;p>The answer is different depending on your needs. However it seems to always come down to a few major reasons. Here is what drives Pion, and why we think you should give us a try.&lt;/p></description></item></channel></rss>
