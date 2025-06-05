@@ -66,9 +66,43 @@ sequenceDiagram
 
 FEC is a mechanism that can mitigate this. FEC stands for **Forward Error Correction**. Basically, it means that we can send more data to prevent possible future losses. With FEC enabled, Alice does not only send 10 video packets to Bob, but also a few redundant packets, containing data xored from video packets. When packets get lost during transmission, Bob can try to recover it with redundant data from FEC packets. In this case, no additional RTT is needed to recover packets lost, so video streaming is not affected.
 
-## FEC Protocols in WebRTC
+## FEC Mechanisms in WebRTC
 
-In WebRTC, there are two types of FEC codecs, which have slightly different way in how they are transferred from sender to receiver. FlexFEC packets have distinct payload type and SSRC from the video track. During peer connection FlexFEC track is declared in SDP with SSRC group such as `a=ssrc-group:FEC-FR aaaaa bbbbb`, here `aaaaa` is video track SSRC, `bbbbb` is FEC track SSRC. On the other hand, UlpFEC packets are transferred under the same SSRC as the video track. This requires the ability to disinguish the packet's type from the paylod of RTP packets, which can only be done in VPX codecs since H.264 and H.265 doesn't have the entry to indicate this information. This means only FlexFEC can be used regardless of the codec. FEC works on RTP packet level, which means the unit of FEC encode/decode is RTP packet. NACK and FEC work independently, RTX packets are not included during FEC encoding/decoding, and FEC packets will not be retransmitted.
+In WebRTC there are two main RTP based forward-error-correction (FEC) mechanisms. They both generate XOR parity packets, but the way they're signalled and routed is very different:
+
+| Feature | **FlexFEC ([RFC 8627](https://datatracker.ietf.org/doc/rfc8627/))** | **ULPFEC + RED ([RFC 5109](https://datatracker.ietf.org/doc/rfc5109/))** |
+| ---- | ---- | ---- |
+| **Transport** | Travels on its own SSRC and payload-type, SDP advertises an extra repair m-section and an `a=ssrc-group:FEC-FR <media-ssrc> <fec-ssrc>` line. | Parity bytes are wrapped inside a RED packet that uses the same SSRC as the media. No extra m-section needed; you just add a RED and a ULPFEC payload-type. |
+| **Codecs** | True **Codec-agnostic**, works with VP8/9, H.264, AV1 … anything that produces RTP packets. | While **codec-agnostic** in theory, Chromium limits full protection to VPx and AV1. With H264 and H265 the encoder can't flag per-partition loss importance in a way that is useful for FEC. ULPFEC + Nack for codecs without Picture-ID will have to retransmit FEC packets, So ULPFEC is not used for H264 and H265. |
+| **Loss patterns handled** | Two-dimensional (rows × columns) parity | Single-direction parity |
+| **Implementation status** | All Chromium-based browsers can *receive* FlexFEC; **send-side** support is still immature. Limited receive support in Safari and Firefox doesn't support it. | **Send + Receive** in Chrome, Firefox, Safari. |
+
+FlexFEC is the only option that remains fully codec-agnostic. ULPFEC does a fine job for VP8/VP9/AV1, but offers little benefit for H264 or H265.
+
+### Codec-integrated FEC 
+
+While FlexFEC and ULPFEC live at the RTP packet layer, some codecs integrate redundancy straight into the encoded payload itself.
+
+The only such codec you'll meet in browsers today is Opus, And the way it works is when you set `useinbandfec=1`, the Opus encoder embeds a low-bit-rate redundancy (LBRR) copy of frame N-1 inside the packet that carries frame N. If packet N-1 is lost, the decoder can reconstruct it from the tail of N.
+
+## FEC isn't magic: trade-offs to keep in mind
+
+1. **Bandwidth overhead**
+   Redundancy steals bandwidth from the link. If you add 20% FEC without raising the send cap, You must drop video resolution or audio quality to make room.
+
+2. **Congestion-control back-pressure**
+   GCC count FEC bytes as real media. If the connection is already near capacity, enabling FEC can trip congestion control and lower the overall bitrate.
+
+3. **Mismatch with loss pattern**
+   Random 1-2% loss is where light FEC shines. But for example, 10% bursts every few hundred ms requires high parity, which is often end up worse than just using RTX.
+
+4. **Sometimes it's silent failures**
+   It's hard for analytics to tell whether a recovered frame was actually recovered, you might assume FEC saved the day while users are actually seeing glitches or artifacts.
+
+5. **Redundancy is not reliability**
+   FEC only copes with *packet* loss. If the network pauses for 500 ms, every parity packet in that interval is lost too. For long drops you still need buffering, retransmission, or a fallback layer.
+
+> Tip: Enable the cheapest protection first (Opus in-band FEC for audio, RTX for video). Add ULPFEC or FlexFEC only when telemetry shows sustained loss or when you have bandwidth room. Treat FEC as a dynamic option, not a set-and-forget checkbox.
 
 ## FEC Algorithms in WebRTC
 
