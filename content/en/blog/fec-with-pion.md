@@ -2,7 +2,7 @@
 title: FEC with Pion
 Description: How to use FEC in Pion
 date: 2025-06-01
-authors: ["Jingyang Kang", "Joe Turki"]
+authors: ["Jingyang Kang", "Aleksandr Alekseev", "Joe Turki"]
 ---
 
 We are excited to have FEC encoding support available in the upcoming Pion v4.1.2 + pion/interceptor v0.1.38. In this blog post, you can learn about FEC and how to use it with Pion.
