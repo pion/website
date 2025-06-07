@@ -13,7 +13,7 @@ We are excited to have FEC encoding support available in the upcoming Pion v4.1.
 
 Forward Error Correction (FEC) is a proactive loss-recovery mechanism that can be used to recover lost packets.
 
-Along with each block of media packets, You intentionally transmit extra mathematically derived parity packets (e.g. xor of the media packets). If the reciver later discovers that one or even more packets are lost, it can use the parity packets to recover the lost packets, All without waiting for the lost packets to be retransmitted.
+Along with each block of media packets, You intentionally transmit extra mathematically derived parity packets (e.g. xor of the media packets). If the reciver later discovers that one or even more packets are lost, it can use the parity packets to recover the lost packets, all without waiting for the lost packets to be retransmitted.
 
 ## We Already Have NACK, Why FEC?
 
@@ -47,7 +47,7 @@ sequenceDiagram
     end
 ```
 
-Next, we are also adding delays to our imaginary network. At this point, it basically has all the characteristics of real world networks. Can our current mechanism tackle network delay + loss without hurting transportation quality? Sadly, no. If Alice packs a frame into 10 packets, Bob can't decode even with 1 packet being lost. And since NACK takes at least 1 additional RTT(more than 1 when retransmitted packets are lost too), this frame is delayed on Bob's side. To make things even worse, in modern video codecs, in order to increase compression ratio, encoders use a techology called **forward prediction** which means subsequent frames relies on the data of previous frame to decode. For any frame delayed due to network loss, all subsequent non-key frames will be delayed. This can cause noticeable jank for Bob, which is bad.
+Next, we are also adding delays to our imaginary network. At this point, it basically has all the characteristics of real world networks. Can our current mechanism tackle network delay + loss without hurting transportation quality? Sadly, no. If Alice packs a frame into 10 packets, Bob can't decode the frame even if only 1 packet is lost. And since NACK takes at least 1 additional RTT(more than 1 when retransmitted packets are lost too), this frame is delayed on Bob's side. To make things even worse, in modern video codecs, in order to increase compression ratio, encoders use a techology called **forward prediction** which means subsequent frames relies on the data of previous frame to decode. For any frame delayed due to network loss, all subsequent non-key frames will be delayed. This can cause noticeable jank for Bob, which is bad.
 
 ```mermaid
 sequenceDiagram
@@ -65,6 +65,30 @@ sequenceDiagram
 ```
 
 FEC is a mechanism that can mitigate this. FEC stands for **Forward Error Correction**. Basically, it means that we can send more data to prevent possible future losses. With FEC enabled, Alice does not only send 10 video packets to Bob, but also a few redundant packets, containing data xored from video packets. When packets get lost during transmission, Bob can try to recover it with redundant data from FEC packets. In this case, no additional RTT is needed to recover packets lost, so video streaming is not affected.
+
+## Recovery principle
+
+### Sender side
+
+The sender transmits both media packets (original data) and FEC packets (redundant data):
+
+![FEC Sender](/img/fec_sender.drawio.png)
+
+Media packets are grouped for protection:
+
+- Group 1: M1, M3, M5 protected by F1
+- Group 2: M2, M4 protected by F2
+
+### Receiver side
+
+During the transmission, some media packets are lost:
+
+![FEC Receiver](/img/fec_receiver.drawio.png)
+
+Received FEC packets are used to reconstruct missing data:
+
+- F1 recover any lost packet from Group 1
+- F2 recover any lost packet from Group 2
 
 ## FEC Mechanisms in WebRTC
 
@@ -91,7 +115,7 @@ The only such codec you'll meet in browsers today is Opus, And the way it works 
    Redundancy steals bandwidth from the link. If you add 20% FEC without raising the send cap, You must drop video resolution or audio quality to make room.
 
 2. **Congestion-control back-pressure**
-   GCC count FEC bytes as real media. If the connection is already near capacity, enabling FEC can trip congestion control and lower the overall bitrate.
+   Congestion control algorithms count FEC bytes as real media. If the connection is already near capacity, enabling FEC can trip congestion control and lower the overall bitrate.
 
 3. **Mismatch with loss pattern**
    Random 1-2% loss is where light FEC shines. But for example, 10% bursts every few hundred ms requires high parity, which is often end up worse than just using RTX.
@@ -113,6 +137,8 @@ If you're curious, the [klauspost/reedsolomon Go library](https://github.com/kla
 ## FlexFEC in Pion
 
 Pion now supports basic FlexFEC encoding! You can pair it with Chromium and Safari (receive-only), and it's simple to integrate; just register the payload type in your media engine and add the interceptor. Then you're good to go!
+
+For a quick demo, you can check out the [play-from-disk-fec](https://github.com/pion/webrtc/tree/master/examples/play-from-disk-fec) example.
 
 ### What To look forward to in the final FlexFEC implementation
 
@@ -138,7 +164,15 @@ Although Pion doesn't yet fully support RFC 8627, we're tracking it closely an
 
 ### Enable FlexFEC Encoding in Pion
 
-Register FlexFEC codec to MediaEngine:
+You can use the helper for quick setup:
+
+```go
+err = webrtc.ConfigureFlexFEC03(fecPayloadType, mediaEngine, interceptorRegistry)
+```
+
+Or setup codec and interceptor by hand:
+
+1. Register FlexFEC03 codec to MediaEngine
 
 ```go
 err = m.RegisterCodec(
@@ -156,7 +190,7 @@ err = m.RegisterCodec(
 )
 ```
 
-Register FlexFEC interceptor:
+2. Register FlexFEC interceptor
 
 ```go
 fecInterceptor, err := flexfec.NewFecInterceptor()
@@ -166,14 +200,21 @@ i.Add(fecInterceptor)
 
 That's it! But with a few catches:
 1. The order of the FlexFEC interceptor in the chain of interceptors matters. It should be registered before TWCC header extension interceptor and NACK responder interceptor if you are using these.
-2. If you are using congestion controller, be aware of the bandwidth FEC is taking, you should set your encoder's bitrate to `cc_estimated_bandwidth - fec_bitrate`. By default, out of 5 media packets, 2 FEC packets will be produced, so you can calculate how much data encoder should output accordingly.
+2. If you are using congestion controller, be aware of the bandwidth FEC is taking, you should set your encoder's bitrate to `cc_estimated_bandwidth - fec_bitrate`. By default, out of 5 media packets, 2 FEC packets will be produced, so expect roughly 40% bitrate overhead. You can tune FEC paramters to reduce or increase it.
+3. Enabling FlexFEC encoding may introduce significant CPU/RAM overhead.
+4. Current implementation does not protect media packet batch if it contains missing or reordered packets. So it works best with senders which packetize media themselves.
 
 ### Configuring FlexFEC Encoder Interceptor
 
-There are [a few options](https://github.com/pion/interceptor/blob/master/pkg/flexfec/option.go) that you can use to tweak the encoder interceptor.
+You can customize FEC protection by tweaking `NumMediaPackets` and `NumFECPacket` using the interceptor's [options](https://github.com/pion/interceptor/blob/master/pkg/flexfec/option.go).
+
+It will result in a protection profile which uses `NumFECPackets` FEC packets to protect each `NumMediaPackets` media packets. Interleaved protection will be used, which means that media packet `X` will be protected by FEC packet `(X mod NumFECPackets)`.
 
 ### Verify that FlexFEC is Enabled
 
-- On sender side, which is within Pion, you can log the packets.
-- On receiver side, for example in chromium, you can go to `chrome://webrtc-internals` and search for the stats graph of fecBytesReceived.
+- On sender side, which is within Pion, you can log the packets using the [packetdump interceptor](https://github.com/pion/interceptor/tree/master/pkg/packetdump).
+- On receiver side, for example, in Chromium, you can go to `chrome://webrtc-internals` and search for the stats graph of fecBytesReceived.
 
+## Credits
+
+Huge thanks to everyone who contributed to this project: [Aleksandr Alekseev](https://github.com/aalekseevx/), [Jingyang Kang](https://github.com/3DRX/), [Joe Turki](https://github.com/JoeTurki), [Sean DuBois](https://github.com/Sean-Der), [Thomas Pouget-Abadie](https://github.com/pougetat).
