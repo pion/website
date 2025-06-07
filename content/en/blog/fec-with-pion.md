@@ -1,7 +1,7 @@
 ---
 title: FEC with Pion
 Description: How to use FEC in Pion
-date: 2025-06-08
+date: 2025-06-07
 authors: ["Jingyang Kang", "Aleksandr Alekseev", "Joe Turki"]
 ---
 
@@ -130,13 +130,13 @@ The only such codec you'll meet in browsers today is Opus, And the way it works 
 
 ## FEC Algorithms in WebRTC
 
-FlexFEC and ULPFEC both use XOR-based recovery logic to generate packets. Another family of algorithms, like [Reed-Solomon](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction), can recover from more complex losses but are currently too computationally expensive for real-time use in WebRTC.
+FlexFEC and ULPFEC both use XOR-based recovery logic to generate packets. Another family of algorithms, like [Reed-Solomon](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction), can recover from more complex losses but are currently not standardized in WebRTC due to their higher computational cost and block-based design, which is not best suitable for real-time use in WebRTC.
 
 If you're curious, the [klauspost/reedsolomon Go library](https://github.com/klauspost/reedsolomon) offers a SIMD-accelerated implementation that's fun to experiment with.
 
 ## FlexFEC in Pion
 
-Pion now supports basic FlexFEC encoding! You can pair it with Chromium and Safari (receive-only), and it's simple to integrate; just register the payload type in your media engine and add the interceptor. Then you're good to go!
+Pion now supports basic FlexFEC encoding! You can pair it with Chromium and Safari (receive-only), and it's simple to integrate; just register the payload type in your media engine and add the interceptor, then you're good to go! More about it in [Enable FlexFEC Encoding in Pion](#enable-flexfec-encoding-in-pion).
 
 For a quick demo, you can check out the [play-from-disk-fec](https://github.com/pion/webrtc/tree/master/examples/play-from-disk-fec) example.
 
@@ -175,7 +175,7 @@ Or setup codec and interceptor by hand:
 1. Register FlexFEC03 codec to MediaEngine
 
 ```go
-err = m.RegisterCodec(
+err = mediaEngine.RegisterCodec(
     webrtc.RTPCodecParameters{
         RTPCodecCapability: webrtc.RTPCodecCapability{
             MimeType:     webrtc.MimeTypeFlexFEC03,
@@ -195,7 +195,7 @@ err = m.RegisterCodec(
 ```go
 fecInterceptor, err := flexfec.NewFecInterceptor()
 // handle error...
-i.Add(fecInterceptor)
+interceptorRegistry.Add(fecInterceptor)
 ```
 
 That's it! But with a few catches:
