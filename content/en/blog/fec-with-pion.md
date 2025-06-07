@@ -1,7 +1,7 @@
 ---
 title: FEC with Pion
 Description: How to use FEC in Pion
-date: 2025-06-01
+date: 2025-06-08
 authors: ["Jingyang Kang", "Aleksandr Alekseev", "Joe Turki"]
 ---
 
@@ -72,7 +72,7 @@ FEC is a mechanism that can mitigate this. FEC stands for **Forward Error Correc
 
 The sender transmits both media packets (original data) and FEC packets (redundant data):
 
-![FEC Sender](/img/fec_sender.drawio.png)
+![FEC Sender](/img/fec_sender.drawio.webp)
 
 Media packets are grouped for protection:
 
@@ -83,7 +83,7 @@ Media packets are grouped for protection:
 
 During the transmission, some media packets are lost:
 
-![FEC Receiver](/img/fec_receiver.drawio.png)
+![FEC Receiver](/img/fec_receiver.drawio.webp)
 
 Received FEC packets are used to reconstruct missing data:
 
