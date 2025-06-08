@@ -72,7 +72,7 @@ FEC is a mechanism that can mitigate this. FEC stands for **Forward Error Correc
 
 The sender transmits both media packets (original data) and FEC packets (redundant data):
 
-![FEC Sender](/img/fec_sender.drawio.webp)
+![FEC Sender](/img/fec_sender.drawio.png)
 
 Media packets are grouped for protection:
 
@@ -83,7 +83,7 @@ Media packets are grouped for protection:
 
 During the transmission, some media packets are lost:
 
-![FEC Receiver](/img/fec_receiver.drawio.webp)
+![FEC Receiver](/img/fec_receiver.drawio.png)
 
 Received FEC packets are used to reconstruct missing data:
 
