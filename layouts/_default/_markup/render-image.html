@@ -1,0 +1,31 @@
+{{- $imagePath := .Destination -}}
+{{- $image := false -}}
+
+{{/* Try to get image from page resources first */}}
+{{- $image = .Page.Resources.Get $imagePath -}}
+
+{{/* If not found, try global resources */}}
+{{- if not $image -}}
+  {{- $image = resources.Get $imagePath -}}
+{{- end -}}
+
+{{/* If still not found and path starts with /, try without leading slash */}}
+{{- if and (not $image) (hasPrefix $imagePath "/") -}}
+  {{- $cleanPath := strings.TrimPrefix $imagePath "/" -}}
+  {{- $image = resources.Get $cleanPath -}}
+{{- end -}}
+
+{{- if $image -}}
+  {{/* Process image to WebP format */}}
+  {{- $webp := $image.Process "webp" -}}
+  <img src="{{ $webp.RelPermalink }}" alt="{{ .Text }}" {{ with .Title }}title="{{ . }}"{{ end }} loading="lazy" />
+{{- else -}}
+  {{/* Fallback for external images or when image processing fails */}}
+  {{/* Check if it's an external URL */}}
+  {{- if or (hasPrefix $imagePath "http://") (hasPrefix $imagePath "https://") -}}
+    <img src="{{ $imagePath | safeURL }}" alt="{{ .Text }}" {{ with .Title }}title="{{ . }}"{{ end }} loading="lazy" />
+  {{- else -}}
+    {{/* For local images that couldn't be processed, still serve them */}}
+    <img src="{{ $imagePath | safeURL }}" alt="{{ .Text }}" {{ with .Title }}title="{{ . }}"{{ end }} loading="lazy" />
+  {{- end -}}
+{{- end -}}
