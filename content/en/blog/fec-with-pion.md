@@ -11,9 +11,17 @@ We are excited to have FEC encoding support available in the upcoming Pion v4.1.
 
 ## Quick background: What is FEC?
 
-Forward Error Correction (FEC) is a proactive loss-recovery mechanism that can be used to recover lost packets.
+Forward Error Correction (FEC) is a proactive loss-recovery mechanism:
 
-Along with each block of media packets, You intentionally transmit extra mathematically derived parity packets (e.g. xor of the media packets). If the reciver later discovers that one or even more packets are lost, it can use the parity packets to recover the lost packets, all without waiting for the lost packets to be retransmitted.
+The sender transmits extra mathematically derived parity packets (e.g. xor of the media packets) along with each block of media packets. If the reciver later discovers that one or even more packets are lost, it can use the parity packets to recover the lost packets, using the XOR result of the received packets and the parity (repair) packet, all without waiting for the lost packets to be retransmitted.
+
+A simple example:
+
+| Data packets | Parity packet   | Recovery logic                                    |
+| ------------ | --------------- | ------------------------------------------------- |
+| `A` `B` `C`  | `P = A ⊕ B ⊕ C` | If `B` is lost, receiver computes `B = A ⊕ C ⊕ P` |
+
+Because parity travels with the media, recovery happens locally and immediately. The trade‑off is more data on the link.
 
 ## We Already Have NACK, Why FEC?
 
@@ -112,23 +120,26 @@ The only such codec you'll meet in browsers today is Opus, And the way it works 
 ## FEC isn't magic: trade-offs to keep in mind
 
 1. **Bandwidth overhead**
-   Redundancy steals bandwidth from the link. If you add 20% FEC without raising the send cap, You must drop video resolution or audio quality to make room.
+   If you add 20% FEC without raising the send cap, You'll need to reduce the video resolution or quality to stay within the cap. In good network conditions where the packet loss is minimal, FEC steals bandwidth in exchange for redundancy you don't need.
 
-2. **Congestion-control back-pressure**
-   Congestion control algorithms count FEC bytes as real media. If the connection is already near capacity, enabling FEC can trip congestion control and lower the overall bitrate.
+2. **Extra load on a congested link**
+   When the loss is caused by congestion, adding more packets for FEC can deepen the problem, in congested networks, sometimes disabling FEC yields better results.
 
-3. **Mismatch with loss pattern**
+3. **Loss pattern missmatch**
    Random 1-2% loss is where light FEC shines. But for example, 10% bursts every few hundred ms requires high parity, which is often end up worse than just using RTX.
 
-4. **Sometimes it's silent failures**
-   It's hard for analytics to tell whether a recovered frame was actually recovered, you might assume FEC saved the day while users are actually seeing glitches or artifacts.
+4. **Silent failures**
+   Analytics may count frames as "recovered" even if the end user gets artifacts or glitches.
 
-5. **Redundancy is not reliability**
-   FEC only copes with *packet* loss. If the network pauses for 500 ms, every parity packet in that interval is lost too. For long drops you still need buffering, retransmission, or a fallback layer.
+5. **only packets, not outages**
+   A 100ms network stall drops all packets, media and parity alike; so buffering or retransmission is still needed.
 
-> Tip: Enable the cheapest protection first (Opus in-band FEC for audio, RTX for video). Add ULPFEC or FlexFEC only when telemetry shows sustained loss or when you have bandwidth room. Treat FEC as a dynamic option, not a set-and-forget checkbox.
+6. **FEC is best for high-latency networks**
+   FEC is designed to avoid the delay of waiting for retransmissions, but for example, if your round-trip time (RTT) is under 30-50ms, do you really need it? In low-latency networks, simply retransmitting lost packets might be more efficient and better overall than sending redundant data up front.
 
-## FEC Algorithms in WebRTC
+So, Start with the lowest cost protection first (Opus in-band FEC for audio, RTX for video). Add FEC only when telemetry shows sustained loss or when you have bandwidth room. FEC should be a dynamic option, not a set-and-forget checkbox that you enable for all users, and all network conditions..
+
+## FEC algorithms beyond XOR
 
 FlexFEC and ULPFEC both use XOR-based recovery logic to generate packets. Another family of algorithms, like [Reed-Solomon](https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction), can recover from more complex losses but are currently not standardized in WebRTC due to their higher computational cost and block-based design, which is not best suitable for real-time use in WebRTC.
 
