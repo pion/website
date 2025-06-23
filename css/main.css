@@ -81,4 +81,14 @@ h6:hover .content-header-href {
   .column {
     padding: 0.75rem 0.5rem !important;
   }
+  table {
+    margin-left: -2em;
+    margin-right: -3em;
+    width: auto !important;
+    display: block;
+    overflow-x: auto;
+  }
+  td, th {
+    min-width: 210px;
+  }
 }
