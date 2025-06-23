@@ -1,9 +1,7 @@
 ---
 title: "Join us on Slack"
 ---
-Pion has a vibrant community on the Golang Slack. We love hearing about what you are building using our tools. Need help? You're likely to find someone willing to assist in making your idea a reality.
-
-----
+The Slack community is no longer active and is available for historical reference only. Please use the [Discord](https://discord.gg/6EsQz85vPE) instead for all current discussions and support.
 
 ## Join the Slack by following these two easy steps:
 
