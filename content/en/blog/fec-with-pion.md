@@ -109,7 +109,7 @@ In WebRTC there are two main RTP based forward-error-correction (FEC) mechanisms
 
 FlexFEC is the only option that remains fully codec-agnostic. ULPFEC does a fine job for VP8/VP9/AV1, but offers little benefit for H264 or H265.
 
-### Codec-integrated FEC 
+### Codec-integrated FEC
 
 While FlexFEC and ULPFEC live at the RTP packet layer, some codecs integrate redundancy straight into the encoded payload itself.
 
@@ -226,4 +226,4 @@ It will result in a protection profile which uses `NumFECPackets` FEC packets to
 
 ## Credits
 
-Huge thanks to everyone who contributed to this project: [Aleksandr Alekseev](https://github.com/aalekseevx/), [Jingyang Kang](https://github.com/3DRX/), [Joe Turki](https://github.com/JoeTurki), [Sean DuBois](https://github.com/Sean-Der), [Thomas Pouget-Abadie](https://github.com/pougetat).
+Huge thanks to everyone who contributed to this project: [Aleksandr Alekseev](https://github.com/aalekseevx/), [Jingyang Kang](https://github.com/3DRX/), [Joe Turki](https://github.com/JoeTurki), [Thomas Pouget-Abadie](https://github.com/pougetat).
