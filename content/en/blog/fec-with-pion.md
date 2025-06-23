@@ -137,7 +137,7 @@ The only such codec you'll meet in browsers today is Opus, And the way it works 
 6. **FEC is best for high-latency networks**
    FEC is designed to avoid the delay of waiting for retransmissions, but for example, if your round-trip time (RTT) is under 30-50ms, do you really need it? In low-latency networks, simply retransmitting lost packets might be more efficient and better overall than sending redundant data up front.
 
-So, Start with the lowest cost protection first (Opus in-band FEC for audio, RTX for video). Add FEC only when telemetry shows sustained loss or when you have bandwidth room. FEC should be a dynamic option, not a set-and-forget checkbox that you enable for all users, and all network conditions..
+So, Start with the lowest cost protection first (Opus in-band FEC for audio, RTX for video). Add FEC only when telemetry shows sustained loss or when you have bandwidth room. FEC should be a dynamic option, not a set-and-forget checkbox that you enable for all users, and all network conditions.
 
 ## FEC algorithms beyond XOR
 
