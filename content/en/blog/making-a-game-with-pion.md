@@ -5,109 +5,120 @@ date: 2025-09-09
 authors: ["Srayan Jana"]
 ---
 
-First of all to get some stuff out of the way, instead of using the "super complicated" WebRTC datachannels, why don't we use something simpler?
+# Simplifying WebRTC Datachannels for Games
 
-Websockets?
-- Too slow (Most games use UDP + reliability layer on top)
-- Fine for games that are turn-based/slow-paced though
-- Runescape
+First of all, to get some stuff out of the way, instead of using the "super complicated" WebRTC datachannels, why don't we use something simpler?
+
+## Why Not Use Websockets?
+
+- **Too slow**: Most games use UDP with a reliability layer on top.
+- **Suitable for turn-based games**: Fine for games that are turn-based/slow-paced, like Runescape.
 - For more details, see:
-- https://gafferongames.com/post/udp_vs_tcp/
-- https://gafferongames.com/post/client_server_connection/
-Web Transport
-- Replacement for Websockets, uses QUIC instead of TCP
-- Has been in development for a long time, and I want to get started now
-- https://caniuse.com/webtransport
-- The official demos from https://github.com/w3c/webtransport do not work on Firefox on
-Windows!
-- https://github.com/w3c/webtransport/issues/675
-- https://bugzilla.mozilla.org/show_bug.cgi?id=1969090
-- Will probably solve most of my problems once its finished.
-Datachannels
-- A piece of the WebRTC api that's easy to miss
-- Killer feature: let’s us send unreliable packets over the web using SCTP
-- We don’t need WebTransport, we can use this today!
-Benefits of WebRTC
-● Do not need to host servers - Players can make their own
-○ No more need for port forwarding or Hamachi!
-● Only need one server for signaling
-● It’s a specification, not a library
-○ There are a lot of options out there for making your own WebRTC based thing
-Drawbacks
-● Setting up WebRTC is a paaaaaaaaaaaain
-● You do need to host or use two different servers instead of one (Signaling +
-STUN/TURN)
-● Can just use Google’s STUN, but would be nice to somehow combine
-signaling and STUN into one server.
-List of WebRTC implementations (that I know of)
-● https://github.com/webrtc-sdk/libwebrtc?tab=readme-ov-file
-○ this is (a fork of) the OG webrtc implementation
-● https://github.com/paullouisageneau/libdatachannel - C/C++
-● https://github.com/pion/webrtc - Go
-● https://github.com/webrtc-rs/webrtc - Rust (using Tokio Runtime)
-● https://github.com/algesten/str0m - Rust (sans-io)
-● https://github.com/sipsorcery-org/sipsorcery - C# (poor datachannels support)
-● https://github.com/ValveSoftware/GameNetworkingSockets
-○ Doesn’t actually implement WebRTC, but does use ICE and STUN/TURN for Peer to Peer
-● https://github.com/kyren/webrtc-unreliable - Rust, unreliable data channels
-Existing game networking libraries using WebRTC
-● https://github.com/geckosio/geckos.io
-○ A client-server abstraction for WebRTC Datachannels written in Node.js
-○ Have used this before, really nice, but a bit inefficient, see
-https://github.com/geckosio/geckos.io/issues/269
-● https://github.com/poki/netlib
-○ Peer-to-peer webrtc datachannel library for TypeScript
-● https://github.com/johanhelsing/matchbox
-○ Webrtc datachannel library for Rust, can compile to both native and WASM
-● https://github.com/peers/peerjs
-○ Not actually a game networking library, but great for browser-only apps/games
-● https://github.com/rameshvarun/netplayjs
-○ Haven’t tested this too much, but seems to work alright
-● https://github.com/godotengine/webrtc-native
-○ Official Godot bindings to libdatachannel for Godot’s own multiplayer API
-This was an intended use case
-https://news.ycombinator.com/item?id=13264952
-![WebRTC Team Comment](/img/comment_from_webrtc_team.png)
-Why Go?
-● It Just Gets The Job Done
-● Has a pure-Go implementation of WebRTC (Pion)
-● Don’t need any external dependencies (Like OpenSSL)
-Why not Rust?
-● I like Rust a lot!
-● Go has a much bigger scene/easier to get help when it comes to WebRTC
-● One of the few languages (besides C, C++, and C#) that can compile to game
-consoles
-● (Rust cannot yet)
-● It’s really fast to code in compared to Rust
-Why Ebitengine?
-● 2D game engine that works on a whole bunch of platforms
-● Potentially: Nintendo Switch + PC + Browser (!!!) crossplay
-Show off Pion PR here
-● https://github.com/pion/example-webrtc-applications/pull/351
-● (Also show version that works with the web if we have time)
-● github.com/ValorZard/gopher-combat
-●
-Games that use WebRTC
-● https://toughlovearena.com/
-● https://www.counterpicklabs.com/
-● https://2dsoccer.com/
-● https://github.com/TeamHypersomnia/Hypersomnia
-● Probably more!
-WebXash3D
-● https://github.com/yohimik/webxash3d-fwgs
-○ https://github.com/ololoken/xash3d-launcher -half life death match
-○ https://turch.in/cs/index.html - Counter Strike 1.6
-● Reimplementation of Half Life 1 + Counter Strike 1.6 using WebRTC for multiplayer
-![Counter Strike](/img/counter_strike_on_the_web.png)
-Possibilities
-- Host a minecraft style game without dedicated servers/port forwarding
-- Could have players host everything themselves, no need for VPN/Hamachi
-- Probably more!
-Questions?
-Thanks!
-This wouldn’t be possible without
-● The pion discord
-● The libdatachannel discord
-● The ebitengine discord
-● The rust gamedev discord
-And more! I stand on the shoulders of giants.
+  - [UDP vs TCP](https://gafferongames.com/post/udp_vs_tcp/)
+  - [Client-Server Connection](https://gafferongames.com/post/client_server_connection/)
+
+## The Case for Web Transport
+
+- Replacement for Websockets, uses QUIC instead of TCP.
+- Has been in development for a long time, and I want to get started now.
+- Current issues:
+  - [Caniuse WebTransport](https://caniuse.com/webtransport)
+  - Official demos on [GitHub](https://github.com/w3c/webtransport) do not work on Firefox on Windows.
+  - [GitHub Issue](https://github.com/w3c/webtransport/issues/675)
+  - [Firefox Bugzilla](https://bugzilla.mozilla.org/show_bug.cgi?id=1969090)
+- **Potential**: Will probably solve most problems once finished.
+
+## Datachannels: A Hidden Gem of WebRTC
+
+- **Feature**: Lets us send unreliable packets over the web using SCTP.
+- Advantage: We don’t need WebTransport; we can use this today.
+
+## Benefits and Drawbacks of WebRTC
+
+### Benefits
+
+- **Host flexibility**: Do not need to host servers - players can make their own.
+  - No more need for port forwarding or Hamachi!
+- **Minimal server requirements**: Only need one server for signaling.
+- **Community-supported specification**: There are many options for making your own WebRTC-based app.
+
+### Drawbacks
+
+- **Complex setup**: Setting up WebRTC is challenging.
+- **Server dependence**: You need to host or use two different servers (Signaling + STUN/TURN).
+  - Can use Google’s STUN, but combining signaling and STUN into one server would be nice.
+
+## WebRTC Implementations
+
+- [libwebrtc](https://github.com/webrtc-sdk/libwebrtc?tab=readme-ov-file) - (a fork of) the original WebRTC implementation.
+- [libdatachannel](https://github.com/paullouisageneau/libdatachannel) - C/C++.
+- [Pion WebRTC](https://github.com/pion/webrtc) - Go.
+- [webrtc-rs](https://github.com/webrtc-rs/webrtc) - Rust (using Tokio Runtime).
+- [str0m](https://github.com/algesten/str0m) - Rust (sans-io).
+- [sipsorcery](https://github.com/sipsorcery-org/sipsorcery) - C#
+- [GameNetworkingSockets](https://github.com/ValveSoftware/GameNetworkingSockets) - Uses ICE and STUN/TURN for Peer to Peer.
+
+### Existing Game Networking Libraries Using WebRTC
+
+- [Geckos.io](https://github.com/geckosio/geckos.io)
+  - A client-server abstraction for WebRTC Datachannels written in Node.js.
+  - Past experience: Really nice but a bit inefficient. See [GitHub Issue](https://github.com/geckosio/geckos.io/issues/269).
+- [Netlib](https://github.com/poki/netlib) - Peer-to-peer WebRTC datachannel library for TypeScript.
+- [Matchbox](https://github.com/johanhelsing/matchbox) - WebRTC datachannel library for Rust, compiles to both native and WASM.
+- [PeerJS](https://github.com/peers/peerjs) - Great for browser-only apps/games, not specifically for game networking.
+- [Netplayjs](https://github.com/rameshvarun/netplayjs) - Untested but seems to work well.
+- [Godot's WebRTC Native](https://github.com/godotengine/webrtc-native) - Official Godot bindings to libdatachannel for Godot’s multiplayer API.
+
+## Real-World Uses
+
+- **WebXash3D**: Reimplementation of Half-Life 1 + Counter-Strike 1.6 using WebRTC.
+  - [GitHub WebXash3D](https://github.com/yohimik/webxash3d-fwgs)
+  - [Xash3D Launcher](https://github.com/ololoken/xash3d-launcher)
+  - [Counter Strike 1.6 on the web](https://turch.in/cs/index.html)
+  - ![Counter Strike](/img/counter_strike_on_the_web.png)
+
+## Why Go for Development?
+
+- Efficient: It just gets the job done.
+- Pion: Has a pure-Go implementation of WebRTC.
+- Minimal dependencies: No need for external dependencies like OpenSSL.
+
+## Why Not Rust?
+
+- Preference: I like Rust, but Go has a more active scene/easier help for WebRTC.
+- Compilation: Big ecosystem, besides C, C++, and C#, that can compile to game consoles (Rust cannot yet).
+- Speed of development: It's faster to code in Go compared to Rust.
+
+## Why Ebitengine for Game Development?
+
+- **Versatile**: 2D game engine that works across various platforms.
+- **Potential Crossplay**: Nintendo Switch, PC, and browser.
+
+## Showcase
+
+- **Pion PR**: [Example WebRTC Applications](https://github.com/pion/example-webrtc-applications/pull/351)
+- If time permits: Show a version that works with the web at [ValorZard](https://github.com/ValorZard/gopher-combat)
+
+## Games That Use WebRTC
+
+- [Tough Love Arena](https://toughlovearena.com/)
+- [Counterpick Labs](https://www.counterpicklabs.com/)
+- [2D Soccer](https://2dsoccer.com/)
+- [Hypersomnia](https://github.com/TeamHypersomnia/Hypersomnia)
+
+## Possibilities with WebRTC
+
+- Hosting a Minecraft-style game without dedicated servers or port forwarding.
+- Players host everything themselves: no need for VPN/Hamachi.
+
+---
+
+## Community Acknowledgements
+
+- A big thanks to:
+  - [The Pion Discord](https://pion.ly/discord)
+  - [The libdatachannel Discord](https://discord.gg/jXAP8jp3Nn)
+  - [The Ebitengine Discord](https://discord.gg/3tVdM5H8cC)
+  - [The Rust gamedev Discord](https://discord.com/invite/game-development-in-rust-676678179678715904)
+- And many more who made this journey possible. I stand on the shoulders of giants.
+
