@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Pion</title><link>https://pion.ly/blog/</link><description>Recent content in Blogs on Pion</description><generator>Hugo</generator><language>en</language><lastBuildDate>Tue, 09 Sep 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://pion.ly/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>Making a game with Pion</title><link>https://pion.ly/blog/making-a-game-with-pion/</link><pubDate>Tue, 09 Sep 2025 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/making-a-game-with-pion/</guid><description>&lt;h1 id="simplifying-webrtc-datachannels-for-games">Simplifying WebRTC Datachannels for Games&lt;/h1>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Pion</title><link>https://pion.ly/blog/</link><description>Recent content in Blogs on Pion</description><generator>Hugo</generator><language>en</language><lastBuildDate>Tue, 09 Sep 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://pion.ly/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>Making a game with Pion</title><link>https://pion.ly/blog/making-a-game-with-pion/</link><pubDate>Tue, 09 Sep 2025 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/making-a-game-with-pion/</guid><description>&lt;p>(The following was adapted from a talk I gave at &lt;a href="https://dwebseminar.org/weekend/">DWeb Weekend 2025&lt;/a> at the Internet Archive in San Francisco on August 17, 2025)&lt;/p>
+&lt;h1 id="simplifying-webrtc-datachannels-for-games">Simplifying WebRTC Datachannels for Games&lt;/h1>
 &lt;p>First of all, to get some stuff out of the way, instead of using the &amp;ldquo;super complicated&amp;rdquo; WebRTC datachannels, why don&amp;rsquo;t we use something simpler?&lt;/p>
 &lt;h2 id="why-not-use-websockets">Why Not Use Websockets?&lt;/h2>
 &lt;ul>
@@ -14,7 +15,7 @@
 &lt;h2 id="the-case-for-web-transport">The Case for Web Transport&lt;/h2>
 &lt;ul>
 &lt;li>Replacement for Websockets, uses QUIC instead of TCP.&lt;/li>
-&lt;li>Has been in development for a long time, and I want to get started now.&lt;/li>
+&lt;li>However, it has been in development for a long time, and I want to get started on making games now.&lt;/li>
 &lt;li>Current issues:
 &lt;ul>
 &lt;li>&lt;a href="https://caniuse.com/webtransport">Caniuse WebTransport&lt;/a>&lt;/li>
@@ -23,12 +24,19 @@
 &lt;li>&lt;a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1969090">Firefox Bugzilla&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;/li>
-&lt;li>&lt;strong>Potential&lt;/strong>: Will probably solve most problems once finished.&lt;/li>
+&lt;li>&lt;strong>Potential&lt;/strong>: Will probably solve most problems once finished and would be the best choice for making a multiplayer game on the web.&lt;/li>
 &lt;/ul>
 &lt;h2 id="datachannels-a-hidden-gem-of-webrtc">Datachannels: A Hidden Gem of WebRTC&lt;/h2>
 &lt;ul>
 &lt;li>&lt;strong>Feature&lt;/strong>: Lets us send unreliable packets over the web using SCTP.&lt;/li>
 &lt;li>Advantage: We don’t need WebTransport; we can use this today.&lt;/li>
+&lt;li>They were created in part for exactly this use case
+&lt;ul>
+&lt;li>&lt;a href="https://datatracker.ietf.org/doc/html/rfc8831#name-use-cases-for-unreliable-da">See the reasoning for unreliable datachannels in the official specification itself&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://news.ycombinator.com/item?id=13264952">Not to mention that one of the original implementers of WebRTC wanted to enable this usecase&lt;/a>
+&lt;img src="https://pion.ly/img/comment_from_webrtc_team.png" alt="Comment from original WebRTC team member">&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ul>
 &lt;h2 id="benefits-and-drawbacks-of-webrtc">Benefits and Drawbacks of WebRTC&lt;/h2>
 &lt;h3 id="benefits">Benefits&lt;/h3>
@@ -58,7 +66,12 @@
 &lt;li>&lt;a href="https://github.com/webrtc-rs/webrtc">webrtc-rs&lt;/a> - Rust (using Tokio Runtime).&lt;/li>
 &lt;li>&lt;a href="https://github.com/algesten/str0m">str0m&lt;/a> - Rust (sans-io).&lt;/li>
 &lt;li>&lt;a href="https://github.com/sipsorcery-org/sipsorcery">sipsorcery&lt;/a> - C#&lt;/li>
-&lt;li>&lt;a href="https://github.com/ValveSoftware/GameNetworkingSockets">GameNetworkingSockets&lt;/a> - Uses ICE and STUN/TURN for Peer to Peer.&lt;/li>
+&lt;li>&lt;a href="https://github.com/ValveSoftware/GameNetworkingSockets">GameNetworkingSockets&lt;/a>
+&lt;ul>
+&lt;li>Uses ICE and STUN/TURN for Peer to Peer.&lt;/li>
+&lt;li>Created by Valve and made for Steam, which means if you&amp;rsquo;ve ever played a game like Counter Strike or Deadlock, you&amp;rsquo;ve already seen this library in action!&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ul>
 &lt;h3 id="existing-game-networking-libraries-using-webrtc">Existing Game Networking Libraries Using WebRTC&lt;/h3>
 &lt;ul>
@@ -72,7 +85,7 @@
 &lt;li>&lt;a href="https://github.com/johanhelsing/matchbox">Matchbox&lt;/a> - WebRTC datachannel library for Rust, compiles to both native and WASM.&lt;/li>
 &lt;li>&lt;a href="https://github.com/peers/peerjs">PeerJS&lt;/a> - Great for browser-only apps/games, not specifically for game networking.&lt;/li>
 &lt;li>&lt;a href="https://github.com/rameshvarun/netplayjs">Netplayjs&lt;/a> - Untested but seems to work well.&lt;/li>
-&lt;li>&lt;a href="https://github.com/godotengine/webrtc-native">Godot&amp;rsquo;s WebRTC Native&lt;/a> - Official Godot bindings to libdatachannel for Godot’s multiplayer API.&lt;/li>
+&lt;li>&lt;a href="https://github.com/godotengine/webrtc-native">Godot Engine&amp;rsquo;s WebRTC Native&lt;/a> - Official Godot bindings to libdatachannel for Godot’s multiplayer API.&lt;/li>
 &lt;/ul>
 &lt;h2 id="real-world-uses">Real-World Uses&lt;/h2>
 &lt;ul>
@@ -82,6 +95,17 @@
 &lt;li>&lt;a href="https://github.com/ololoken/xash3d-launcher">Xash3D Launcher&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://turch.in/cs/index.html">Counter Strike 1.6 on the web&lt;/a>&lt;/li>
 &lt;li>&lt;img src="https://pion.ly/img/counter_strike_on_the_web.png" alt="Counter Strike">&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Hypersomnia&lt;/strong> - Open source 2D shooter made with C++ and libdatachannel
+&lt;ul>
+&lt;li>Has cross platform capabilities between both
+&lt;ul>
+&lt;li>The &lt;a href="https://store.steampowered.com/app/2660970/Hypersomnia/">native Steam port&lt;/a>&lt;/li>
+&lt;li>And in the browser (On &lt;a href="https://www.crazygames.com/game/hypersomnia">CrazyGames&lt;/a> and &lt;a href="https://hypersomnia.io/">the official website&lt;/a>)&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;a href="https://github.com/TeamHypersomnia/Hypersomnia">Github Link&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -94,25 +118,63 @@
 &lt;h2 id="why-not-rust">Why Not Rust?&lt;/h2>
 &lt;ul>
 &lt;li>Preference: I like Rust, but Go has a more active scene/easier help for WebRTC.&lt;/li>
-&lt;li>Compilation: Big ecosystem, besides C, C++, and C#, that can compile to game consoles (Rust cannot yet).&lt;/li>
 &lt;li>Speed of development: It&amp;rsquo;s faster to code in Go compared to Rust.&lt;/li>
 &lt;/ul>
 &lt;h2 id="why-ebitengine-for-game-development">Why Ebitengine for Game Development?&lt;/h2>
 &lt;ul>
-&lt;li>&lt;strong>Versatile&lt;/strong>: 2D game engine that works across various platforms.&lt;/li>
-&lt;li>&lt;strong>Potential Crossplay&lt;/strong>: Nintendo Switch, PC, and browser.&lt;/li>
-&lt;/ul>
-&lt;h2 id="showcase">Showcase&lt;/h2>
+&lt;li>&lt;a href="https://ebitengine.org/">Website Link&lt;/a>&lt;/li>
+&lt;li>&lt;strong>Versatile&lt;/strong>: 2D game engine that works across various platforms.
 &lt;ul>
-&lt;li>&lt;strong>Pion PR&lt;/strong>: &lt;a href="https://github.com/pion/example-webrtc-applications/pull/351">Example WebRTC Applications&lt;/a>&lt;/li>
-&lt;li>If time permits: Show a version that works with the web at &lt;a href="https://github.com/ValorZard/gopher-combat">ValorZard&lt;/a>&lt;/li>
+&lt;li>The creator, &lt;a href="https://hajimehoshi.com/">Hajime Hoshi&lt;/a>, has ported the engine (and the Go language!) to &lt;a href="https://ebitengine.org/en/blog/native_compiling_for_nintendo_switch.html">the Nintendo Switch&lt;/a> and other game consoles&lt;/li>
 &lt;/ul>
-&lt;h2 id="games-that-use-webrtc">Games That Use WebRTC&lt;/h2>
+&lt;/li>
+&lt;li>&lt;strong>Battle Tested&lt;/strong>: Has been used for actual games like
+&lt;ul>
+&lt;li>&lt;a href="https://playism.com/en/game/frommadness-withlove/">From Madness with Love&lt;/a>
+&lt;ul>
+&lt;li>&lt;a href="https://store.steampowered.com/app/2101130/From_Madness_with_Love/">Steam Link&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Coral &amp;amp; The Abyss
+&lt;ul>
+&lt;li>&lt;a href="https://store.steampowered.com/app/3123920/Coral__The_Abyss/">Steam Link&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.nintendo.com/us/store/products/coral-and-the-abyss-switch/">Nintendo eShop Link&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Rakuen
+&lt;ul>
+&lt;li>&lt;a href="https://store.steampowered.com/app/559210/Rakuen/">Steam Link&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.nintendo.com/us/store/products/rakuen-deluxe-edition-switch/">Nintendo eShop Link&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>And more on the &lt;a href="https://ebitengine.org/en/showcase.html">Ebitengine Showcase Page&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Potential Crossplay&lt;/strong>: You could make a cross platform multiplayer game in pure Go that works between the Nintendo Switch, PC, and the browser!&lt;/li>
+&lt;/ul>
+&lt;h2 id="official-pion-example">Official Pion Example&lt;/h2>
+&lt;ul>
+&lt;li>We now have an official example using Ebitengine in the Pion &lt;a href="https://github.com/pion/example-webrtc-applications">example-webrtc-applications&lt;/a> repository&lt;/li>
+&lt;li>This includes an bundled in signaling server so you can host your own lobby, and connect with another player.&lt;/li>
+&lt;li>&lt;a href="https://github.com/pion/example-webrtc-applications/tree/master/ebiten-game">&lt;strong>Github Link to Game&lt;/strong>&lt;/a>&lt;/li>
+&lt;li>&lt;strong>PR where it was merged in&lt;/strong>: &lt;a href="https://github.com/pion/example-webrtc-applications/pull/351">Example WebRTC Applications&lt;/a>&lt;/li>
+&lt;li>&lt;strong>Limitations&lt;/strong>
+&lt;ul>
+&lt;li>Right now, this can only support two players on the same computer
+&lt;ul>
+&lt;li>Could probably work between two different computers, but we would need to figure out how to setup CORS properly for the signaling server&lt;/li>
+&lt;li>The machinery is there to support more than two players in a lobby, but as of writing this article it is &lt;a href="https://github.com/pion/example-webrtc-applications/blob/5c7005933879d34fa19b4d0c744bb884a247f5dc/ebiten-game/game/main.go#L154">currently hardcoded&lt;/a> to just two
+&lt;img src="https://pion.ly/img/game_on_web_and_desktop.png" alt="Picture of game">&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="other-games-that-use-webrtc">Other Games That Use WebRTC&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://toughlovearena.com/">Tough Love Arena&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://www.counterpicklabs.com/">Counterpick Labs&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://2dsoccer.com/">2D Soccer&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://github.com/TeamHypersomnia/Hypersomnia">Hypersomnia&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="possibilities-with-webrtc">Possibilities with WebRTC&lt;/h2>
 &lt;ul>
