@@ -1,5 +1,5 @@
 ---
-title: You do not need ICE for WebRTC
+title: You do not need STUN or TURN for WebRTC
 Description: How to direct connect to a public server or someone on the same local network!
 date: 2025-09-11
 authors: ["Srayan Jana"]
