@@ -51,6 +51,8 @@ So why would you even want to direct connect to an IP? Well, the example off the
 
 ![Connect to Minecraft Server (Image taken from Apex Hosting)](/img/connect_to_minecraft_server.png)
 
+Also, this exact technique of direct connecting to a server is apparently how [Revolt](https://revolt.chat/) does their WebRTC voice call implementation.
+
 ## Acknowledgements
 
 A big thanks to Paul Lous and [Nemirtingas
