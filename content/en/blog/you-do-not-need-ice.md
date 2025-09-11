@@ -39,7 +39,7 @@ Message from DataChannel 'data': 'lNvvvVoiaJovwvc'
 Sending 'LyNhyhMxmQinOsq'
 ```
 
-So why is that? I thought that you *needed* ICE for WebRTC to function? Not so!
+So why is that? I thought that you *needed* STUN or TURN for WebRTC to function? Not so!
 
 In the following blog post, I hope to explain why it's not necessary, and dig into the specifics of how ICE, STUN, TURN, and SDP all work.
 
