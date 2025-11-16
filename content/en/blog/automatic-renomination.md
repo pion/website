@@ -29,10 +29,14 @@ The details of the various types of candidates are better explained in
 but the relevant detail is that for each candidate, both peers open up
 ports to communicate.
 
+![Candidates](/img/candidates-1.drawio.png)
+
 Eventually, the **controlling** peer picks a candidate and tells the
 **controlled** peer to use it in a Binding request. This candidate becomes
 the selected candidate that media flows over. After this point, the unused
 ports are closed.
+
+![Candidates](/img/candidates-2.drawio.png)
 
 But wait! This handshake is pretty slow. To speed things up and get media
 flowing faster, WebRTC allows media to flow over _any_ candidate before one
@@ -52,6 +56,8 @@ receives a binding request, instead of closing the ports, it leaves them
 open. This allows the controlling peer to elect a new candidate at will,
 which the controlled peer will accept media over, effectively enabling us
 to switch candidates mid-stream.
+
+![Candidates](/img/candidates-3.drawio.png)
 
 That can sound complex to negotiate but it amounts to a flag in the
 connection handshakes that ensures that both parties are aware of the desire
