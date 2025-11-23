@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>How automatic renomination keeps your WebRTC calls connected | Pion</title><meta name=description content="An overview of automatic renomination in Pion"><link rel="shortcut icon" type=image/png href=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAC+lBMVEUAAADmOTblOTXmOjXlOjbmOjblOzXlOzbnOjbmOzbkOTTnOzjnOzfkODTnOTbvPjzpPDflOTbrQD/kODXsQDblODXmOzfmOjfWJiTiNzPmOTXfNjDvREHfMy7uQT7zRUToPjnlOjXcMy/iNjLnOjjgNTHqOzjeMzDpOjnlODPmPzroOzfjNzTjODTjODPjNTHpOzfsPzrmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOzblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjblOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOjbmOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXmOTblOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXmOTblOTXlOTXlOTXmOTXnOzfmOjblOTXmOjblOTXlOTXlOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXnOzflOTXmOjblOTXlOTXlOTXlOTXlOTXlOTXlOTXmOTbmOjXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXlOTXmOjblOTXlOTXlOTXmPDflOTX///+vM0BfAAAA/HRSTlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEdW5zM5/TVKAcsG4TT+PlKWuXRgSYBEXTf/erI+k1i3XIPJ7D798BsLgr+TAlew60lM8vODlgQYdTHKqAfJKn8xSMTtI0NEZmnDXudDBKqaS3hHhk0CCJQGCCJwvBWo7tmvg6/U7cWFcoCiosIEH3xR+sw47UX2iE7g8Zq9ldd1+IEmgm97q8IAQPtBbPcCLyyYPNAbdaWL7FzCis88oa2fklwMnnbFIWe2JRv3gKuC83SdayXZKQDATZn2VF2pg7Q72sNBs+MTgFx1Y14AAAAAWJLR0T9SwmT6QAAAAd0SU1FB+MCDxQvITv9oyUAAANQSURBVDjLbZN5WJRVFMbv98JNhprSCixsUdsstWVEcgxjxkTCBsaFYWbED03DmITBBtAapVSgQiwTTR2pVCqh0txwQXNrQyxaLbXNbLHNbN/fP7rffI3a83T++e7znd9zzj3nvq8Q/4ZmG5A6MO36QfbBuCF9iC1O/DfibYNvzHBQhXMobhqWOTzrZnlK+jRkj7iFdOXkptE9EqOc5OgxeegSy0t48r30+ccWjEvV3YUYP+FWJ70TJyHBzFtwWxE5OfX2xNNRbABnWAN3TCFLCmAx8meiNI3eYBk0IUxA1bROvTPE8gqcpQBUTqN3+l0w4BgguuLusIszZqpzt7OrXLzn3mj+JKCOs2bTPeccKVBdw6JanGtJuu/+B0ygbm49krvDY6d9HsR5D9JXDCmR/tD8h6PA+QvYkAVNJi30cgREmZ2LHkkRGLKYviVmheE6l0YgsKyR5ZUi1cexSJCPPsbQ48tNYMVAXV/ZQ5OoYtMTIswnn1J06So2Z8ME0OLn08+on882cbVYw7RsdMdzXFuIeBOwYJ3btR4XoH4Dp4mNzG/V5IWbOKUFsTFRO5rTrVLbvIUZYiuDF0nZ2saGbSkxIGVmCRdsl/L5iawROxi8WMqdu7h4XPyJCnlFDPaUvRSwUdSwrTUK7C4zW4xUH88wrkZy/J4XaBflbAxA7nyR3pcgUeh8+RVYktp1h8HV7+VS0cGcfZCtr6oHrwDyXpvTCby+l43LFPDGm3xLFPvYroB8pba3sxLVk8ve1X46RqntJ77Dpv1iQAb9ASjAF6L93epI/XsHDtLV0Wl0mMzyQ+KS9+mcADVm2wdOpcoNH+7Q6ftoFpRoPnZxjLHkw8yc+skRhj9d+FlU177c9ZshLsW+3fy8VoGXfRHijENHGbZeHilc+WVH1f7KK6Tog5ZmOr5KUuJH4AhDmxoYvrLbSSNchcjXOoOdhrr6YlIJvQ6G+8UJ7RtP3be9hEjpX7pL56JaRA2WgII1qnX4ak3g2GF7OpKvqfzuOOn3mLI3jFMx280Oa1x01d8Hjv2Q66b7x3kx4whxLX5qb56rjKEA18+Zv+jUj//6G647xZ3S9rvNuPCSkDHooKIDdQma+J9A6R85B7f8+Vfk7xPe/gdCN2wvY+TSJAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOS0wMi0xNVQyMDo0NzozMyswMTowMOnp2+YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTktMDItMTVUMjA6NDc6MzMrMDE6MDCYtGNaAAAAV3pUWHRSYXcgcHJvZmlsZSB0eXBlIGlwdGMAAHic4/IMCHFWKCjKT8vMSeVSAAMjCy5jCxMjE0uTFAMTIESANMNkAyOzVCDL2NTIxMzEHMQHy4BIoEouAOoXEXTyQjWVAAAAAElFTkSuQmCC><link href="https://fonts.googleapis.com/css?family=Quicksand" rel=stylesheet><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css><link href=/css/main.css rel=stylesheet><script async defer src=https://buttons.github.io/buttons.js></script><script defer src=https://use.fontawesome.com/releases/v6.7.2/js/all.js></script><script src=/js/bulma-menu.js></script><script src=/js/knowledge-base-sidebar.js></script><script src=/js/triage.js></script><script src=/js/tinybind.js></script></head><body><nav class="navbar is-black" role=navigation aria-label="main navigation"><div class=navbar-brand><a class=navbar-item href=/><img src=/img/pion-logo.svg width=112 height=28>
+</a><a class="navbar-item is-hidden-desktop" href=https://github.com/pion target=_blank><span class=icon><i class="fab fa-github"></i>
+</span></a><a class="navbar-item is-hidden-desktop" href=https://x.com/_pion target=_blank><span class=icon><i class="fab fa-x-twitter"></i>
+</span></a><a class="navbar-item is-hidden-desktop" href=https://bsky.app/profile/pion.ly target=_blank><span class=icon><i class="fab fa-bluesky"></i>
+</span></a><a class="navbar-item is-hidden-desktop" href=https://discord.gg/6EsQz85vPE target=_blank><span class=icon><i class="fab fa-discord"></i>
+</span></a><a role=button class="navbar-burger burger" aria-label=menu aria-expanded=false data-target=navbarMenuItems><span aria-hidden=true></span>
+<span aria-hidden=true></span>
+<span aria-hidden=true></span></a></div><div id=navbarMenuItems class=navbar-menu><div class=navbar-start><a class=navbar-item href=/blog/>Blog
+</a><a class=navbar-item href=/why-pion/>Why Pion
+</a><a class=navbar-item href=https://github.com/pion/awesome-pion>awesome-pion
+</a><a class=navbar-item href=https://webrtcforthecurious.com>WebRTC for the Curious
+</a><a class=navbar-item href=https://siobud.com/meeting>Office Hours
+</a><a class=navbar-item href=/triage/>Triage</a></div><div class=navbar-end><div class=navbar-item><div class="buttons is-hidden-touch"><a class="navbar-item navbar-item-desktop" href=https://github.com/pion target=_blank><span class=icon><i class="fab fa-github"></i>
+</span></a><a class="navbar-item navbar-item-desktop" href=https://x.com/_pion target=_blank><span class=icon><i class="fab fa-x-twitter"></i>
+</span></a><a class="navbar-item navbar-item-desktop" href=https://bsky.app/profile/pion.ly target=_blank><span class=icon><i class="fab fa-bluesky"></i>
+</span></a><a class="navbar-item navbar-item-desktop" href=https://discord.gg/6EsQz85vPE target=_blank><span class=icon><i class="fab fa-discord"></i></span></a></div></div></div></div></nav><main><section><div class="columns has-text-centered" style=padding-top:3em><div class=column><h1 class=title style=font-size:3rem>How automatic renomination keeps your WebRTC calls connected</h1><p>An overview of automatic renomination in Pion</p><p>Kevin Wang -- 2025-10-17</p><hr class=pion-hr></div></div></section><section><div class=content style=padding:3em><p>WebRTC, like many protocols, works by first establishing a connection
+between two peers and then sending media over that connection. What happens
+when the quality of that connection changes? For example, if you&rsquo;re calling
+from a cell phone and you leave your home wifi, you might want to switch to 5G.</p><p>With <a href=https://github.com/pion/ice/pull/822>automatic renomination</a>, Pion
+will now handle that completely seamlessly, allowing your media to flow
+without skipping a beat. It works by periodically detecting when new
+connection candidates are available and automatically switching to the
+highest quality candidate, taking advantage of a feature in WebRTC called
+<em>renomination</em>.</p><p>Let&rsquo;s dive into how that works.</p><h2 id=how-does-webrtc-establish-connections>How does WebRTC establish connections?<a class=content-header-href href=#how-does-webrtc-establish-connections><i class="fas fa-paperclip"></i></a></h2><p>Connections between two peers in WebRTC are established by exchanging
+<strong>candidates</strong> between the two peers in a signaling phase. These candidates
+can be host, mDNS, server reflexive, peer reflexive, or relay candidates.
+The details of the various types of candidates are better explained in
+<a href=https://webrtcforthecurious.com/docs/03-connecting/#candidate-gathering>WebRTC for the Curious</a>,
+but the relevant detail is that for each candidate, both peers open up
+ports to communicate.</p><p><img src=/img/candidates-1.drawio.png alt=Candidates></p><p>Eventually, the <strong>controlling</strong> peer picks a candidate and tells the
+<strong>controlled</strong> peer to use it in a Binding request. This candidate becomes
+the selected candidate that media flows over. After this point, the unused
+ports are closed.</p><p><img src=/img/candidates-2.drawio.png alt=Candidates></p><p>But wait! This handshake is pretty slow. To speed things up and get media
+flowing faster, WebRTC allows media to flow over <em>any</em> candidate before one
+is formally nominated. This shaves off a few round trips between the peers,
+reducing connection latency, in a process called
+<a href=https://datatracker.ietf.org/doc/html/rfc5245#section-8.1.1.2>aggressive nomination</a>.</p><h2 id=changing-candidates-with-renomination>Changing candidates with renomination<a class=content-header-href href=#changing-candidates-with-renomination><i class="fas fa-paperclip"></i></a></h2><p>Now, what if we <em>never</em> commit a candidate? The ability to send media over
+any valid candidate is curious, and in fact quite useful because it means
+we have multiple paths to take advantage of. This is called <strong>renomination</strong>.</p><p>Under renomination, the controlling peer tells the controlled peer that it
+wants to be able to renominate candidates. When the controlled peer
+receives a binding request, instead of closing the ports, it leaves them
+open. This allows the controlling peer to elect a new candidate at will,
+which the controlled peer will accept media over, effectively enabling us
+to switch candidates mid-stream.</p><p><img src=/img/candidates-3.drawio.png alt=Candidates></p><p>That can sound complex to negotiate but it amounts to a flag in the
+connection handshakes that ensures that both parties are aware of the desire
+to renominate, meaning the implementation of this feature in pion amounts to
+<a href=https://github.com/pion/ice/pull/799/files#diff-7099be149fabcd94ee9bab48ac30474180ef5c9ce65922291d181e0349aab230>keeping track of a counter</a>.</p><p>Now pion is taking advantage of WebRTC&rsquo;s aggressive nomination state,
+keeping candidates open, and has the ability to pick a new candidate.</p><h2 id=making-it-automatic>Making it automatic<a class=content-header-href href=#making-it-automatic><i class="fas fa-paperclip"></i></a></h2><p>Ideally, the WebRTC connection can do this automatically so the
+user doesn&rsquo;t have to pick. After all, manually renominating candidates seems
+useful but is a tedious user experience. Let&rsquo;s do it automatically!</p><p>To make this work, we need to solve two problems: knowing when the current
+candidate gets worse, and discovering when completely new candidates appear.</p><p><strong>Detecting when candidates get worse:</strong> Turns out, this is already built
+into WebRTC. During the first connection establishment phase, candidates are
+pinged, evaluated, and ranked based on round trip time, packet loss, and
+type of candidate. This same ranking can be performed periodically instead
+of only at initialization. So, the connection can run this on a loop and
+automatically renominate candidates when the state of the network changes.</p><p><strong>Discovering new candidates:</strong> What happens when a completely new candidate
+comes online? For example, if I connect to a wifi network mid-call, the
+phone receives a completely new IP address.</p><p>This, too, is built into WebRTC, in the form of trickle ICE! If trickle
+ICE is enabled, candidate exchange can continue after the initial
+connection handshake until the two sides declare that they&rsquo;ve exhausted the
+candidate search. Under automatic renomination, we go one step further and
+<strong>disable the exhaustion declaration</strong>, periodically checking for new
+candidates instead. When a new candidate arrives, we use the normal trickle
+ICE mechanism to exchange it between the two peers.</p><h2 id=putting-it-all-together>Putting it all together<a class=content-header-href href=#putting-it-all-together><i class="fas fa-paperclip"></i></a></h2><p>And that ends up being enough! In summary, automatic renomination makes the
+following tweaks:</p><ul><li>Signal renomination between the peers</li><li>Keep all candidate ports open instead of closing them</li><li>Disable trickle ICE termination</li><li>Periodically ping all candidates and rerank them</li><li>Renominate when a better candidate arises</li></ul><p>With these pieces in place, pion can seamlessly transition between different
+network links.</p><p>One really nice thing that I personally liked about this feature when
+implementing it is that it felt like automatic renomination is a
+clever reading of the specification: it doesn&rsquo;t need to reinvent a whole
+new mechanism and RFC.</p><p>In fact, one can go one step further and send media over <em>all</em> candidates,
+because under aggressive nomination they are all valid. This, actually, is
+connection bonding for free! There are some practical considerations to
+getting this working well though, but that&rsquo;s another blog post.</p></div></section><footer class=footer><hr class=footer-hr><div class="content has-text-right"><p><a href=https://github.com/pion/website/blob/master/content/en/blog/automatic-renomination.md target=_blank>Edit this page</a></p></div></footer></main></body></html>
