@@ -1,5 +1,5 @@
 ---
-title: How automatic renomination keeps your WebRTC calls connected
+title: Why WebRTC Survives When You Walk Out
 Description: An overview of automatic renomination in Pion
 date: 2025-10-17
 authors: ["Kevin Wang"]
