@@ -109,7 +109,8 @@ following tweaks:
 * Renominate when a better candidate arises
 
 With these pieces in place, Pion can seamlessly transition between different
-network links.
+network links. If you want to see it in action, check out
+[this example](https://github.com/pion/ice/tree/master/examples/automatic-renomination)!
 
 One really nice thing that I personally liked about this feature when
 implementing it is that it felt like automatic renomination is a
