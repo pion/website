@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Pion</title><link>https://pion.ly/blog/</link><description>Recent content in Blogs on Pion</description><generator>Hugo</generator><language>en</language><lastBuildDate>Fri, 17 Oct 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://pion.ly/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>Why WebRTC Survives When You Walk Out</title><link>https://pion.ly/blog/automatic-renomination/</link><pubDate>Fri, 17 Oct 2025 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/automatic-renomination/</guid><description>&lt;p>WebRTC, like many protocols, works by first establishing a connection
-between two peers and then sending media over that connection. What happens
-when the quality of that connection changes? For example, if you&amp;rsquo;re calling
-from a cell phone and you leave your home wifi, you might want to switch to 5G.&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Pion</title><link>https://pion.ly/blog/</link><description>Recent content in Blogs on Pion</description><generator>Hugo</generator><language>en</language><lastBuildDate>Fri, 17 Oct 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://pion.ly/blog/index.xml" rel="self" type="application/rss+xml"/><item><title>Why WebRTC Survives When You Walk Out</title><link>https://pion.ly/blog/automatic-renomination/</link><pubDate>Fri, 17 Oct 2025 00:00:00 +0000</pubDate><guid>https://pion.ly/blog/automatic-renomination/</guid><description>&lt;p>Networking for a video call sounds simple. You send your video to the
+server and server sends video back. But that mental model breaks down in
+the real world. A connection that starts on stable home Wi-Fi may
+suddenly need to continue over cellular as someone walks out the door.
+The real challenge isn’t just connecting two points! It’s staying
+connected as the network beneath you changes.&lt;/p>
 &lt;p>With &lt;a href="https://github.com/pion/ice/pull/822">automatic renomination&lt;/a>, Pion
 will now handle that completely seamlessly, allowing your media to flow
 without skipping a beat. It works by periodically detecting when new
