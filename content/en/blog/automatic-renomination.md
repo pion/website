@@ -5,10 +5,12 @@ date: 2025-10-17
 authors: ["Kevin Wang"]
 ---
 
-WebRTC, like many protocols, works by first establishing a connection
-between two peers and then sending media over that connection. What happens
-when the quality of that connection changes? For example, if you're calling
-from a cell phone and you leave your home wifi, you might want to switch to 5G.
+Networking for a video call sounds simple. You send your video to the
+server and server sends video back. But that mental model breaks down in
+the real world. A connection that starts on stable home Wi-Fi may
+suddenly need to continue over cellular as someone walks out the door.
+The real challenge isn’t just connecting two points! It’s staying
+connected as the network beneath you changes.
 
 With [automatic renomination](https://github.com/pion/ice/pull/822), Pion
 will now handle that completely seamlessly, allowing your media to flow
@@ -23,7 +25,7 @@ Let's dive into how that works.
 
 Connections between two peers in WebRTC are established by exchanging
 **candidates** between the two peers in a signaling phase. These candidates
-can be host, mDNS, server reflexive, peer reflexive, or relay candidates.
+can be host, server reflexive, peer reflexive, or relay candidates.
 The details of the various types of candidates are better explained in
 [WebRTC for the Curious](https://webrtcforthecurious.com/docs/03-connecting/#candidate-gathering),
 but the relevant detail is that for each candidate, both peers open up
@@ -61,10 +63,10 @@ to switch candidates mid-stream.
 
 That can sound complex to negotiate but it amounts to a flag in the
 connection handshakes that ensures that both parties are aware of the desire
-to renominate, meaning the implementation of this feature in pion amounts to
+to renominate, meaning the implementation of this feature in Pion amounts to
 [keeping track of a counter](https://github.com/pion/ice/pull/799/files#diff-7099be149fabcd94ee9bab48ac30474180ef5c9ce65922291d181e0349aab230).
 
-Now pion is taking advantage of WebRTC's aggressive nomination state,
+Now Pion is taking advantage of WebRTC's aggressive nomination state,
 keeping candidates open, and has the ability to pick a new candidate.
 
 ## Making it automatic
@@ -106,7 +108,7 @@ following tweaks:
 * Periodically ping all candidates and rerank them
 * Renominate when a better candidate arises
 
-With these pieces in place, pion can seamlessly transition between different
+With these pieces in place, Pion can seamlessly transition between different
 network links.
 
 One really nice thing that I personally liked about this feature when
