@@ -65,7 +65,8 @@ candidate search. Under automatic renomination, we go one step further and
 candidates instead. When a new candidate arrives, we use the normal trickle
 ICE mechanism to exchange it between the two peers.</p><h2 id=putting-it-all-together>Putting it all together<a class=content-header-href href=#putting-it-all-together><i class="fas fa-paperclip"></i></a></h2><p>And that ends up being enough! In summary, automatic renomination makes the
 following tweaks:</p><ul><li>Signal renomination between the peers</li><li>Keep all candidate ports open instead of closing them</li><li>Disable trickle ICE termination</li><li>Periodically ping all candidates and rerank them</li><li>Renominate when a better candidate arises</li></ul><p>With these pieces in place, Pion can seamlessly transition between different
-network links.</p><p>One really nice thing that I personally liked about this feature when
+network links. If you want to see it in action, check out
+<a href=https://github.com/pion/ice/tree/master/examples/automatic-renomination>this example</a>!</p><p>One really nice thing that I personally liked about this feature when
 implementing it is that it felt like automatic renomination is a
 clever reading of the specification: it doesn&rsquo;t need to reinvent a whole
 new mechanism and RFC.</p><p>In fact, one can go one step further and send media over <em>all</em> candidates,
