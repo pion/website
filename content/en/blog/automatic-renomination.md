@@ -59,7 +59,7 @@ open. This allows the controlling peer to elect a new candidate at will,
 which the controlled peer will accept media over, effectively enabling us
 to switch candidates mid-stream.
 
-![Candidates](/img/candidates-3.drawio.png)
+![Candidates](/img/candidates-1.drawio.png)
 
 That can sound complex to negotiate but it amounts to a flag in the
 connection handshakes that ensures that both parties are aware of the desire
