@@ -1,6 +1,6 @@
 ---
-title: Improving SCTP by xxx% with RACK
-Description: Adding RACK for Pion's SCTP implementation for a nice performance boost!
+title: RACK Made Pion SCTP 71% Faster (and Cut Latency 27%)
+Description: In the RACK profile, SCP sustained 316 Mbps using ~0.044 CPU seconds, compared to 234 Mbps at ~0.056 CPU seconds before RACK. When normalized for CPU usage, this corresponds to a ~71% improvement in throughput per CPU, while max-burst CPU profiles remain comparable.
 date: 2025-12-21
 authors: ["R Chiu", "Joe Turki"]
 ---
@@ -196,35 +196,101 @@ In summary, RACK's strategy generally has two main parts:
 
 The combination of these two strategies allows it to quickly determine issues and properly rectify them once identified. It also provides better resilience for some tricky edge cases! If you're interested in seeing how RACK could perform in SCTP and other SCTP-specific improvements, check out [chapter 7 of Felix Weinrank's thesis](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00073893/Diss_Weinrank.pdf#chapter.192).
 
-## A quick look at the results
+## A quick look at the results (why this matters if you don't live in SCTP land)
 
-As fun as it is to learn about what RACK does, it's also a lot of fun to see how it performs in the real world with actual applications.
+[SCP](https://github.com/pion/scp) is a Go test harness that runs two Pion SCTP stacks against each other inside a deterministic, in-process "virtual network" (from Pion/transport). It pins exact commits on each side, replays scenarios with a fixed seed, validates packet on the wire (CRC32c + basic SCTP parsing), and writes artifacts (`results.json`, packet logs, and pprof) so you can reproduce the numbers.
 
-Fortunately for us, we received [explain the data] that lets us test and benchmark how SCTP performs before and after RACK! We were even able to capture performance from an SCTP connection *without* RACK against one *with* RACK.
+### The headline (max-burst): more throughput, less CPU, lower latency
 
-[M-M]
+This is the cleanest microbench in the suite: no loss, no delay, no jitter. just a burst of messages in both directions. Comparing **non-rack<->non-rack** vs **rack<->rack** (There is similar improvments when comparing rack side with non rack side):
 
-We can see our control case of two SCTP connections from our main branch which doesn't have RACK implemented yet. Next up, we can introduce a connection that *has* RACK implemented.
+| metric | main (baseline) | RACK | delta |
+| --- | --- | --- | --- |
+| goodput | 234.55 Mbps | 316.42 Mbps | **+34.9%** |
+| CPU time (`cpu_seconds`) | 0.0560 s | 0.0441 s | **−21.3%** |
+| goodput / CPU-second | 4,189 | 7,177 | **+71.3%** |
+| latency p50 | 16.37 ms | 11.86 ms | **−27.5%** |
+| latency p99 | 36.95 ms | 27.84 ms | **−24.6%** |
 
-[M-R]
+That **+71% throughput-per-CPU**  is simply the goodput measured (Mbps) divided by the run's `cpu_seconds`. non-rack cruised at ~234 Mbps using ~0.056 CPU seconds (~4,189 Mbps/CPU-s), while RACK sustained 316 Mbps with ~0.044 CPU seconds (~7,177 Mbps/CPU-s). That gap is the proof that rack delivers ~71% more work per unit of CPU.
 
-Here we have one side that's our implementation from the main branch, and the other side which uses RACK. The side with RACK has sees a benefit of x% in most cases without any network anomalies, and y% with z loss. With [packet stuff] we see [blah blah blah].
+### Test setup
 
-[R-R]
+To test RACK we run these test profiles:
 
-Finally we get the improvement that everyone who uses the newest version will see just by updating their Pion libraries! Between two connections that have RACK, we see an average performance increase of x% in the above tests, with the largest gain being y% in [testcase name goes here]. If we take a look at the memory and cpu tradeoff, we can see that [abcdefg]: a slightly higher CPU cost that's well worth the uplift in performance.
+- **max-burst** - "how fast can we go" with no delay, loss, or reordering; it targets the raw transport path:
 
-### A sneak peek into the new year
+Goodput jumps +34.9% (234 ->316 Mbps) while CPU seconds drop 21% (0.056 ->0.044 s) and p50/p99 both fall ~25%; RACK now delivers ~71% more Mbps per CPU-second.
+- **handshake** - same burst pattern but includes the COOKIE/SHUTDOWN handshake, so we exercise setup timers:
 
-As we move into the new year, we're grateful for everyone who has helped to contribute to Pion's 4.2 WebRTC release as countless folks fixed things across all the different libraries that make WebRTC possible in the first place.
+Goodput climbs +15% (237 ->272 Mbps); latency stays basically flat (15.65 ->15.99 ms for p50, 35.27 ->33.25 ms for p99), so the faster throughput comes without slower ACK paths.
+- **unordered-late-low-rtt** - minor delay/jitter (10 ms) but unordered delivery-simulates packet trains with mild disorder:
 
-The new year holds new improvements, features, and of course more bugs! Nothing could be a better present than a sneak peek into even some improvements that have been in the works ever since RACK was added:
+ Minor latency/throughput noise; both forks still pass but RACK keeps the steady delivery despite small unordered bursts.
+- **unordered-late-high-rtt** - large RTT/jitter (180 ms / 60 ms) plus unordered, so we watch how the stack copes with latency spikes:
 
-[M-A]
-[R-A]
-[A-A]
+Still very high latency due to the profile, but RACK keeps throughput comparable while avoiding regressions; no regressions were flagged.
+- **unordered-late-dynamic-rtt** - fluctuating RTT (40 ms base ±180 ms jitter) with unordered delivery, mimicking bursty network dynamics:
 
-The gains from [A-A] are live in Pion's 4.2 WebRTC release! The other benchmarks are not final and are subject to change.
+Still passes; no noticeable regressions were reported, showing the branch handles jitter swings fine.
+- **congestion** - ordered delivery with 2% loss and modest delay/jitter. stress-tests congestion control and SACK-driven recovery:
+
+The loss-handling path stays green; RACK won't burn extra CPU compared to master, showing the +35% clean-case gain doesn't cost the loss profile.
+- **retransmission** - ordered with 5% loss and 20 ms jitter to force fast-retransmit/TLP scenarios:
+
+The fault case still hits retries; RACK's CPU profile actually shows more JSON/packet-logging work but that's what we expect during retransmit storms.
+- **reorder-low** - unordered with 1.5% loss plus deliberate reordering; exercises scheduler/queue behavior under loss＋reorder:
+
+Goodput improves +44% (1.79 ->2.58 Mbps) and the run finishes faster (≈3.70 s vs 5.34 s), so RACK now owns the low-rate reordering scenario instead of languishing behind master.
+
+- **burst-loss** - unordered with 4% loss and 50 ms jitter to push retransmit/recovery under heavy loss bursts.
+- **fragmentation** - oversized payloads require chunk fragmentation/reassembly to verify large-message handling:
+
+nothing improved or got worse.
+- **media-hevc** - real-world video pattern: one-way stream, paced HEVC frames (~25 fps), 3% loss, ~1200-byte max payload (taken from DRM media over WebRTC datachannels scenarios) to ensure sustained media delivery works.
+With the new 13 Mbps, RACK now hits 12.90 Mbps goodput in 2.14 s (100% delivery) while master→RACK sits at 11.34 Mbps in 4.66 s. That's a 2× faster finish and the old 12 s cliff is gone.
+
+- **fault-checksum** - corrupts every 7th DATA chunk's checksum so receivers must drop it and log the error.
+- **fault-bad-chunk-len** - mangles the chunk length field every 7th chunk to validate length checks/parsing.
+- **fault-nonzero-padding** - corrupts padding bytes every 7th chunk so padding validation and chunk isolation logic are exercised:
+
+These negative cases still fail (they are supposed to). the branch and master both detect the corruption, so no regression.
+
+
+### CPU flamegraphs
+
+The flamegraphs below show the CPU profiles for max-burst runs. You can see in the metadata that the RACK profile captured **20ms of samples** (9.95% of 201.08ms duration) versus the master profile's **40ms of samples** (19.86% of 201.45ms duration) – exactly half the sample count for a similar duration, which directly supports the efficiency claims.
+
+![CPU Profile - Master](/img/rack-cpu-master.svg)
+
+![CPU Profile - Rack](/img/rack-cpu-active.svg)
+
+### Why RACK behaves better (not just "goes faster")
+
+RACK changes *how* SCTP decides that something is lost and when it sends probes, so it wastes less work fixing problems that never really happened:
+
+- Instead of keying almost everything off **"three missing reports or an RTO fired"**, RACK uses **time-based loss detection**: it looks at when chunks were last SACKed/ACKed and infers loss from elapsed time and the pattern of tail acknowledgments.
+- **Tail Loss Probes (TLP)** send a cheap "sample" chunk at the end of a burst to flush out late ACKs. If the receiver really did get the data, it answers and the sender avoids a full retransmission storm; if it didn't, the probe doubles as the retransmission you needed anyway.
+
+In practical terms that's what the profiles and metrics are showing:
+
+- We still see the same hot stack (`vnet.(*chunkUDP).UserData`, `runtime.memmove`, a thin layer of runtime/type helpers) in both master and RACK  it's the normal packet I/O path.
+- With RACK, that stack is exercised **fewer times per unit of useful data** because there are fewer spurious retransmits and fewer "just in case" timer expirations.
+- That's why we get **more goodput, lower latency, and smaller CPU profiles at the same time**: RACK spends less CPU "arguing with the network" and more CPU pushing real user data through SCTP.
+
+### Spec-aligned ACK behavior and testing
+
+Using SCP testing tool we were able to find some issues includes:
+
+- In the initial RACK implementation, handling of transitions from high to low RTT was suboptimal; this issue was quickly identified and resolved.
+
+- The earlier version of RACK implementation also handled packet reordering poorly and consumed more CPU than non-RACK. This was corrected by implementing improved active RTT measurement, following the approach described in Weinrank's work (see p. 113): https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00073893/Diss_Weinrank.pdf#page=113
+
+- A minor bug was discovered in that implementation where the latest RTT was not measured for every packet.
+
+- We also found that pion/sctp did not send a SACK immediately after a TSN gap, causing RACK to perform worse under moderate reordering. After fixing this behavior to align with RFC 4960 $6.7, reordering test cases showed a ~30% improvement.
+
+## Looking forward
 
 Keep an eye out for even more improvements and benchmarks from our improved SCTP implementation using real-world data, as well as how we're doing it in an upcoming blog post!
 
