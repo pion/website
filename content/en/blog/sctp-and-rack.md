@@ -2,7 +2,7 @@
 title: RACK makes Pion SCTP 71% faster with 27% less latency
 Description: In the RACK profile, SCP sustained 316 Mbps using ~0.044 CPU seconds, compared to 234 Mbps at ~0.056 CPU seconds before RACK. When normalized for CPU usage, this corresponds to a ~71% improvement in throughput per CPU, while max-burst CPU profiles remain comparable.
 date: 2025-12-21
-authors: ["R Chiu", "Joe Turki"]
+authors: ["R Chiu", "Jo Turk"]
 ---
 
 ## What is SCTP?
@@ -309,7 +309,7 @@ Thanks for reading!
 ## Credits
 
 Huge thanks to the following for making this possible:
-- [Joe Turki](https://github.com/JoeTurki) for introducing me to Pion, making SCP, answering countless questions, and so much more.
+- [Jo Turk](https://github.com/JoTurk) for introducing me to Pion, making SCP, answering countless questions, and so much more.
 - [Sean DuBois](https://github.com/Sean-Der) for making Pion, finding [Felix Weinrank's thesis](https://duepublico2.uni-due.de/servlets/MCRFileNodeServlet/duepublico_derivate_00073893/Diss_Weinrank.pdf), and endless encouragement.
 - [Srayan Jana](https://github.com/ValorZard) for helping to bounce around many ideas.
 - [Atsushi Watanabe](https://github.com/at-wat) for reviewing and catching the global minimum vs windowed minimum issue in the RACK PR.

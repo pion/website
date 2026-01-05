@@ -2,7 +2,7 @@
 title: FEC with Pion
 Description: How to use FEC in Pion
 date: 2025-06-23
-authors: ["Jingyang Kang", "Aleksandr Alekseev", "Joe Turki"]
+authors: ["Jingyang Kang", "Aleksandr Alekseev", "Jo Turk"]
 ---
 
 We are excited to have FEC encoding support available in the pion/webrtc v4.1.2 + pion/interceptor v0.1.38. In this blog post, we'll explain what FEC is and how to implement it with Pion.
@@ -226,4 +226,4 @@ It will result in a protection profile which uses `NumFECPackets` FEC packets to
 
 ## Credits
 
-Huge thanks to everyone who contributed to this project: [Aleksandr Alekseev](https://github.com/aalekseevx/), [Jingyang Kang](https://github.com/3DRX/), [Joe Turki](https://github.com/JoeTurki), [Thomas Pouget-Abadie](https://github.com/pougetat).
+Huge thanks to everyone who contributed to this project: [Aleksandr Alekseev](https://github.com/aalekseevx/), [Jingyang Kang](https://github.com/3DRX/), [Jo Turk](https://github.com/JoTurk), [Thomas Pouget-Abadie](https://github.com/pougetat).
