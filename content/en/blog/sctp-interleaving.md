@@ -1,5 +1,5 @@
 ---
-title: Fixing SCTP / data-channels sender-side head-of-line blocking with RFC-8260
+title: Fixing WebRTC data-channels head-of-line blocking with RFC-8260
 Description: Pion adds support for RFC-8260 (Stream Schedulers and User Message Interleaving) which fixes the sender-side head-of-line blocking
 date: 2026-05-17
 authors: ["Jo Turk"]
