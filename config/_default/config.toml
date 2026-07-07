@@ -3,3 +3,7 @@ defaultContentLanguage = "en"
 languageCode = "en-us"
 title = "Pion"
 disableKinds = ["taxonomy", "taxonomyTerm"]
+
+[outputs]
+  section = ["HTML", "RSS"]
+  home = ["HTML"]
