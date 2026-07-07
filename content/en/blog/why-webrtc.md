@@ -87,6 +87,8 @@ You also have a wealth of servers to choose from
 
 * [medooze](https://github.com/medooze)
 
+* [Red5 Media Server](https://www.red5.net/red5-media-server/)
+
 WebRTC's wide availability makes it easy to build with. Developers can use the language, paradigm and tools they are most comfortable with.
 Just worry about learning WebRTC and not a new language. WebRTC also has a high bus factor. If a single developer or company stops supporting
 their software you have lots of alternatives.
