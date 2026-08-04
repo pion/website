@@ -326,6 +326,7 @@ table {
         display: none !important;
     }
 
+
     .intro {
         width: initial;
     }
@@ -350,5 +351,9 @@ table {
 
     .description {
         width: 85% !important;
+    }
+
+    .optional-link {
+        display: none !important;
     }
 }
