@@ -7,4 +7,4 @@ Pion has a vibrant community on the Discord. We love hearing about what you are 
 
 ## Join the Discord with following link
 
-1. [Invite](https://discord.gg/6EsQz85vPE)
+[Invite](https://discord.gg/6EsQz85vPE)

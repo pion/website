@@ -23,7 +23,7 @@ Pion is a community-owned project, there is no corporation behind it, no BDFL an
 
 The only thing required to land in master is an approval from another developer. We move fast, and you are never blocked waiting for someone who is on vacation.
 
-We make it a priority to be welcoming to newcomers, and some of our best improvements have been from fresh eyes. We have an active [Slack](../../slack), and try our best to help everyone.
+We make it a priority to be welcoming to newcomers, and some of our best improvements have been from fresh eyes. We have an active [Discord](@/discord.md), and try our best to help everyone.
 
 ## Diverse Userbase
 Our users include large companies, startups and hobbyists who are just building interesting hacks. Pion is a great tool to build mobile applications, WebRTC servers, and everything in between.
