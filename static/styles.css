@@ -159,6 +159,12 @@ ul {
     margin-left: 1.5rem;
 }
 
+hr {
+    border: solid 1px var(--subtle-outline-color);
+    margin-top: 0.65rem;
+    margin-bottom: 0.65rem;
+}
+
 .article-list {
     display: flex;
     flex-direction: column;
