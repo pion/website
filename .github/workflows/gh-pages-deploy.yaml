@@ -6,34 +6,29 @@ on:
       - main
   pull_request:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
     steps:
-      - name: checkout
-        uses: actions/checkout@v6.0.1
+      - name: Checkout main
+        uses: actions/checkout@v4
+      - name: Build only
+        uses: shalzz/zola-deploy-action@v0.22.1
+        env:
+          BUILD_ONLY: true
+          BUILD_FLAGS: --drafts
+          # A GitHub token is not necessary when BUILD_ONLY is true
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Zola + upload Pages artifact
-        uses: getzola/github-pages@066755243e69f508fd1a74739fbf1a65f656c790
-        with:
-          zola_version: v0.22.1
-
-  deploy:
+  build_and_deploy:
     runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Checkout main
+        uses: actions/checkout@v4
+      - name: Build and deploy
+        uses: shalzz/zola-deploy-action@v0.22.1
+        env:
+          PAGES_BRANCH: gh-pages
+          GITHUB_TOKEN: ${{ secrets.PIONBOT_PRIVATE_KEY }}
