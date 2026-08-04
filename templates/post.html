@@ -36,11 +36,13 @@
 <article class="post-article">
     <div class="article-header">
         <h1>{{page.title}}</h1>
+        {% if page.authors and page.date %}
         <p class="details">
             <span class="authors">{{ page.authors | join(sep=", ")}}</span> — <time datetime="{{ page.date }}">{{
                 page.date
                 }}</time>
         </p>
+        {% endif %}
     </div>
 
     <div class="article-content">
