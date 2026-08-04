@@ -1,0 +1,23 @@
+# The URL the site will be built for
+base_url = "https://pion.ly"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = false
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = false
+
+default_language = "en"
+
+generate_feeds = true
+feed_filenames = ["atom.xml", "rss.xml"]
+
+[markdown]
+insert_anchor_links = "heading"
+
+[markdown.highlighting]
+light_theme = "light-plus"
+dark_theme = "catppuccin-mocha"
+
+[extra]
+# Put all your custom variables here

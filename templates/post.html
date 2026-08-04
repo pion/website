@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{page.title}} - Pion
+{% endblock title %}
+
+{% block head_stuff %}
+
+<link rel="canonical" href="{{ page.permalink | default(value=config.base_url) }}">
+
+{% if page.description %}
+<meta name="description" content="{{ page.description | striptags }}" />
+<meta property="og:description" content="{{ page.description | striptags }}" />
+{% endif %}
+
+<meta property="og:title" content="{{page.title}}" />
+<meta property="og:url" content="{{page.permalink}}" />
+<meta property="og:type" content="article" />
+
+{% if page.authors %}
+<meta name="article:author" content="{{page.authors | join(sep=', ')}}" />
+{% endif %}
+
+{% if page.date %}
+<meta name="article:published_time" content='{{page.date | date(format="%Y-%m-%dT%H:%M:%S%z")}}' />
+{% endif %}
+
+{% if page.content and 'data-lang="mermaid"' in page.content %}
+<script src="/js/vendor/mermaid.min.js"></script>
+<script src="/js/mermaid-render.js"></script>
+{% endif %}
+
+{% endblock head_stuff %}
+
+{% block content %}
+<article class="post-article">
+    <div class="article-header">
+        <h1>{{page.title}}</h1>
+        {% if page.authors and page.date %}
+        <p class="details">
+            <span class="authors">{{ page.authors | join(sep=", ")}}</span> — <time datetime="{{ page.date }}">{{
+                page.date
+                }}</time>
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="article-content">
+        {{ page.content | safe }}
+    </div>
+</article>
+
+{% endblock content %}

@@ -29,6 +29,7 @@ Check out the **[contributing wiki](https://github.com/pion/webrtc/wiki/Contribu
 * [Sean DuBois](https://github.com/Sean-Der) - *Original Author*
 * [Noah Shrader](https://github.com/noahshrader) - *Designer*
 * [Michiel De Backker](https://github.com/backkem) - *Blog & Knowledge base*
+* [Jade](https://github.com/treejadey) - *Author and Designer of the website redesign*
 
 ### License
 MIT License - see [LICENSE](LICENSE) for full text

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}
+Triage - Pion
+{% endblock title %}
+
+{% block head_stuff %}
+
+<script type="module">
+    import { createApp, reactive } from '/js/vendor/petite-vue.min.mjs'
+
+    const DB_NAME = 'pionProjectData'
+
+    async function fetchAllPages(url, httpOptions) {
+        const perPage = 100;
+        const results = [];
+
+        for (let page = 1; ; page++) {
+            const sep = url.includes('?') ? '&' : '?';
+
+            const response = await window.fetch(`${url}${sep}per_page=${perPage}&page=${page}`, httpOptions);
+
+            const data = await response.json();
+
+            if (!Array.isArray(data) || data.length === 0) break;
+            results.push(...data);
+
+            if (data.length < perPage) break;
+        }
+        return results;
+    }
+
+    async function getAllPionRepos(httpOptions) {
+        return fetchAllPages('https://api.github.com/users/pion/repos', httpOptions)
+    }
+
+    async function fetchProjectData(httpOptions, projectName) {
+        const result = await fetchAllPages(`https://api.github.com/repos/pion/${projectName}/issues?state=open`, httpOptions)
+        return { issues: result.filter(r => !r.pull_request), pullRequests: result.filter(r => r.pull_request), name: projectName }
+    }
+
+
+
+    const store = reactive({
+        username: "",
+        token: "",
+
+        projectData: [],
+
+        sortByHighest: false,
+
+        get issueCount() {
+            if (this.projectData.length < 1) {
+                return 0;
+            }
+
+            const count = this.projectData.reduce((accumulator, currentValue) => {
+                const issues = currentValue.issues.length;
+
+                return accumulator + issues
+            }, 0)
+
+            return count
+        },
+
+        get pullRequestCount() {
+            if (this.projectData.length < 1) {
+                return 0;
+            }
+
+            const count = this.projectData.reduce((accumulator, currentValue) => {
+                const prs = currentValue.pullRequests.length;
+
+                return accumulator + prs
+            }, 0)
+
+            return count
+        },
+
+        async getData() {
+            this.save()
+
+            if (this.projectData.length != 0) { this.projectData.length = 0 }
+
+            const headers = new window.Headers();
+            headers.append("Authorization", `Basic ${window.btoa(`${this.username}:${this.token}`)}`);
+
+            const allRepos = await getAllPionRepos({ headers });
+
+            for (const repo of allRepos) {
+                if (repo.archived) {
+                    continue;
+                }
+
+                const projectData = await fetchProjectData({ headers }, repo.name);
+
+                this.projectData.push(projectData)
+            }
+            this.save()
+        },
+
+        sortByIssues() {
+            let sortedData;
+
+            if (this.sortByHighest === true) {
+                sortedData = this.projectData.sort((a, b) => b.issues.length - a.issues.length);
+            } else {
+                sortedData = this.projectData.sort((a, b) => a.issues.length - b.issues.length);
+            }
+
+
+            this.projectData = sortedData;
+            this.sortByHighest = !this.sortByHighest
+        },
+
+        sortByPrs() {
+            let sortedData;
+
+            if (this.sortByHighest === true) {
+                sortedData = this.projectData.sort((a, b) => b.pullRequests.length - a.pullRequests.length);
+            } else {
+                sortedData = this.projectData.sort((a, b) => a.pullRequests.length - b.pullRequests.length);
+            }
+
+            this.projectData = sortedData;
+            this.sortByHighest = !this.sortByHighest
+        },
+
+        save() {
+            localStorage.setItem(DB_NAME, JSON.stringify(
+                { username: this.username, projectData: this.projectData }
+            ))
+        },
+    })
+
+    const data = JSON.parse(localStorage.getItem(DB_NAME) || '{}')
+
+    store.username = data.username ?? "";
+
+    store.projectData = data.projectData ?? [];
+
+    createApp({
+        store
+    }).mount()
+</script>
+{% endblock head_stuff %}
+
+{% block content %}
+
+<div id="triage-container" v-scope>
+    {% raw %}
+
+    <noscript style="padding: 1.5rem; outline: 3px dashed var(--link-color); margin-bottom: 2rem;">
+        <h2>Please enable JavaScript if you want to use this tool.</h2>
+    </noscript>
+
+    <h2>What is this?</h2>
+    <p>This is a tool that fetches the counts of issues and PRs across all Pion repositories.</p>
+
+
+    <br />
+
+    <section class="triage-form">
+        <a target="_blank" rel="noopener noreferrer"
+            href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">
+            How to create an access token </a>
+        <div>
+            <label for="user-name">Username:</label>
+            <input type="text" id="user-name" v-model="store.username"><br />
+        </div>
+        <div>
+            <label for="access-token">Access Token:</label>
+            <input type="password" id="access-token" v-model="store.token"><br />
+        </div>
+        <button id="access-token-button" @click="store.getData"> Fetch </button>
+        <br /><br />
+    </section>
+
+    <h2>Issue count: {{store.issueCount}}</h2>
+    <h2>PR count: {{store.pullRequestCount}}</h2>
+
+
+    <br /><br />
+
+    <h2>Issue/PR Count by Project</h2>
+
+    <br />
+
+    <table class="project-table">
+        <tr>
+            <th>Project</th>
+            <th><a href="#" @click.stop.prevent="store.sortByIssues">Issues</a></th>
+            <th><a href="#" @click.stop.prevent="store.sortByPrs">PRs</a></th>
+        </tr>
+
+        <tr v-for="project in store.projectData" :key="project.name">
+            <td><a :href="`https://github.com/pion/${project.name}`">{{project.name}}</a></td>
+            <td><a :href="`https://github.com/pion/${project.name}/issues`">{{project.issues.length}}</a></td>
+            <td><a :href="`https://github.com/pion/${project.name}/pulls`">{{project.pullRequests.length}}</a></td>
+        </tr>
+    </table>
+    {% endraw %}
+</div>
+
+<style>
+    #triage-container {
+        margin: auto;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+    .project-table {
+        width: 50em;
+    }
+
+    @media screen and (max-width: 52em) {
+        #triage-container {
+            max-width: 93svw;
+        }
+
+        .project-table {
+            width: 100%;
+        }
+
+        .triage-form div {
+            flex-direction: column;
+            gap: 0 !important;
+
+            & input {
+                width: 100%;
+            }
+        }
+
+        .triage-form {
+            width: 98%;
+        }
+    }
+
+    .triage-form {
+        display: flex;
+        flex-direction: column;
+
+        gap: 0.4rem;
+        max-width: 40em;
+        margin: auto;
+
+        & div {
+            display: flex;
+            align-items: baseline;
+
+            gap: 0.5rem;
+
+            & label {
+                margin-right: auto;
+            }
+
+        }
+    }
+</style>
+
+{% endblock content %}

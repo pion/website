@@ -1,0 +1,359 @@
+@font-face {
+    font-family: "Quicksand Variable";
+    src: url(/Quicksand-Variable.woff2) format("woff2");
+
+    font-weight: 300 700;
+}
+
+:root {
+    --brand-font: "Quicksand Variable";
+
+    --main-font:
+        Inter,
+        Roboto,
+        "Helvetica Neue",
+        "Arial Nova",
+        "Nimbus Sans",
+        Arial,
+        sans-serif;
+
+    --mono-font:
+        ui-monospace,
+        "Cascadia Code",
+        "Source Code Pro",
+        Menlo,
+        Consolas,
+        "DejaVu Sans Mono",
+        monospace;
+
+    --heading-color: light-dark(#0f2142, #f0f0f0);
+    --text-color: light-dark(#444f69, #bababa);
+    --link-color: light-dark(#d3322e, #ff726e);
+
+    --background-color: light-dark(#f0f0f0, #17152e);
+    --subtle-outline-color: light-dark(#bfbfbf, #383454);
+
+
+    font-family: var(--main-font);
+    color-scheme: light dark;
+    font-size: 18px;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+main {
+    display: grid;
+    min-height: 100svh;
+
+    grid-template-rows: auto 1fr auto;
+
+    width: 92%;
+    margin: auto;
+
+    gap: 0.7rem;
+}
+
+header nav {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    padding: 2.5rem 0rem;
+
+    & .pion-logo {
+        height: 60px;
+        width: auto;
+        margin-right: 2rem;
+
+        color: var(--heading-color);
+    }
+
+    & a {
+        font-family: var(--brand-font);
+        font-size: 24px;
+        font-weight: 500;
+    }
+
+    & .brand-links {
+        display: flex;
+
+        margin-left: auto;
+
+        align-items: center;
+        gap: 1rem;
+
+        & img {
+            opacity: 0.94;
+        }
+
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .brand-icon {
+        filter: invert(1.0);
+    }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    color: var(--heading-color);
+    font-family: var(--brand-font);
+}
+
+h1,
+h2 {
+    font-weight: 400;
+}
+
+h3 {
+    font-weight: 400;
+}
+
+h4 {
+    font-weight: 470;
+}
+
+p {
+    color: var(--text-color)
+}
+
+footer {
+    height: 60px;
+    width: 100%;
+
+    & a {
+        display: none;
+    }
+}
+
+.intro {
+    width: 50%;
+}
+
+a {
+    color: var(--link-color);
+}
+
+.recent-posts {
+    & ul {
+        & li {
+            color: var(--text-color);
+
+            & span time {
+                font-family: var(--mono-font);
+                font-size: 16px;
+            }
+        }
+    }
+}
+
+ul {
+    padding: 0;
+    margin-left: 1.5rem;
+}
+
+hr {
+    border: solid 1px var(--subtle-outline-color);
+    margin-top: 0.65rem;
+    margin-bottom: 0.65rem;
+}
+
+.article-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+
+    list-style: none;
+    margin: 0;
+
+    & .title {
+        font-family: var(--brand-font);
+        font-size: 26px;
+    }
+
+    & .description {
+        font-size: 16px;
+        width: 50%;
+    }
+
+}
+
+.authors {
+    color: var(--heading-color);
+}
+
+.article-header {
+    display: flex;
+    flex-direction: column;
+
+    text-align: center;
+
+    & h1 {
+        font-size: 28px;
+        color: var(--heading-color);
+    }
+
+    margin-bottom: 2rem;
+
+    flex-wrap: wrap;
+}
+
+
+.article-content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.65rem;
+
+    max-width: 64svw;
+    margin: auto;
+
+    line-height: 1.7;
+
+    & pre {
+        overflow: auto;
+        padding: 0.5rem 0.75rem;
+
+        border: 1px solid light-dark(#00000023, #ffffff18);
+        border-radius: 5px;
+
+        font-size: 16px;
+        font-family: var(--mono-font);
+
+        & code {
+            font-size: 16px;
+            font-family: var(--mono-font);
+        }
+    }
+
+    & p:has(img) {
+        display: flex;
+        justify-content: center;
+
+        & img {
+            border-radius: 5px;
+        }
+    }
+
+    & p code {
+        background-color: light-dark(#ffffff, #ffffff0a);
+        padding: 0.25rem 0.4rem;
+
+        font-size: 14px;
+        font-family: var(--mono-font);
+
+        border-radius: 5px;
+        margin: 2px;
+    }
+}
+
+.zola-anchor {
+    color: var(--heading-color);
+    text-decoration: none;
+    position: relative;
+
+    &::before {
+        content: "🔗 ";
+        position: absolute;
+        right: 100%;
+        padding-right: 6px;
+        opacity: 0;
+        transition: opacity 0.1s ease-in-out;
+    }
+
+    &:hover {
+        text-decoration: underline;
+
+        &::before {
+            opacity: 1;
+        }
+    }
+
+}
+
+table {
+    font-size: 15px;
+    border-collapse: collapse;
+
+    & td,
+    th {
+        border: 2px solid var(--subtle-outline-color);
+        padding: 0.4rem 0.65rem;
+    }
+}
+
+@media screen and (max-width: 35em) {
+    main {
+        font-size: 17px;
+        width: 93%;
+    }
+
+    header nav {
+        justify-content: space-around;
+    }
+
+    footer {
+        display: flex;
+        height: 85px;
+        align-items: center;
+
+        justify-content: left;
+        padding: 1rem;
+
+        & a {
+            display: block !important;
+        }
+
+        & .icons {
+            display: flex;
+            gap: 2rem;
+        }
+    }
+
+    .pion-logo {
+        height: 36px !important;
+        margin-right: auto !important;
+    }
+
+    .brand-links {
+        display: none !important;
+    }
+
+
+    .intro {
+        width: initial;
+    }
+
+    .article-content {
+        max-width: 92svw !important;
+    }
+
+    .zola-anchor::before {
+        opacity: 0 !important;
+    }
+}
+
+@media screen and (max-width: 55em) {
+    .article-content {
+        max-width: 80svw;
+    }
+
+    .intro {
+        width: 80%;
+    }
+
+    .description {
+        width: 85% !important;
+    }
+
+    .optional-link {
+        display: none !important;
+    }
+}

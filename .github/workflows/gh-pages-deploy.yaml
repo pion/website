@@ -7,29 +7,28 @@ on:
   pull_request:
 
 jobs:
-  deploy:
-    runs-on: ubuntu-24.04
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+  build:
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-          fetch-depth: 0
+      - name: Checkout main
+        uses: actions/checkout@v4
+      - name: Build only
+        uses: shalzz/zola-deploy-action@v0.22.1
+        env:
+          BUILD_ONLY: true
+          BUILD_FLAGS: --drafts
+          # A GitHub token is not necessary when BUILD_ONLY is true
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
-        with:
-          hugo-version: '0.147.7'
-          extended: true
-
-      - name: Build
-        run: hugo --minify
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.PIONBOT_PRIVATE_KEY }}
-          cname: pion.ly
-          publish_dir: ./public
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+      - name: Build and deploy
+        uses: shalzz/zola-deploy-action@v0.22.1
+        env:
+          PAGES_BRANCH: gh-pages
+          GITHUB_TOKEN: ${{ secrets.PIONBOT_PRIVATE_KEY }}
