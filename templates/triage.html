@@ -11,20 +11,35 @@ Triage - Pion
 
     const DB_NAME = 'pionProjectData'
 
+    async function fetchAllPages(url, httpOptions) {
+        const perPage = 100;
+        const results = [];
+
+        for (let page = 1; ; page++) {
+            const sep = url.includes('?') ? '&' : '?';
+
+            const response = await window.fetch(`${url}${sep}per_page=${perPage}&page=${page}`, httpOptions);
+
+            const data = await response.json();
+
+            if (!Array.isArray(data) || data.length === 0) break;
+            results.push(...data);
+
+            if (data.length < perPage) break;
+        }
+        return results;
+    }
+
     async function getAllPionRepos(httpOptions) {
-        return window.fetch('https://api.github.com/users/pion/repos?per_page=1000', httpOptions)
-            .then(response => response.json())
+        return fetchAllPages('https://api.github.com/users/pion/repos', httpOptions)
     }
 
     async function fetchProjectData(httpOptions, projectName) {
-        return new Promise((resolve, reject) => {
-            window.fetch(`https://api.github.com/repos/pion/${projectName}/issues?state=open&per_page=1000`, httpOptions)
-                .then(response => response.json())
-                .then(result => {
-                    resolve({ issues: result.filter(r => !r.pull_request), pullRequests: result.filter(r => r.pull_request), name: projectName })
-                })
-        })
+        const result = await fetchAllPages(`https://api.github.com/repos/pion/${projectName}/issues?state=open`, httpOptions)
+        return { issues: result.filter(r => !r.pull_request), pullRequests: result.filter(r => r.pull_request), name: projectName }
     }
+
+
 
     const store = reactive({
         username: "",
