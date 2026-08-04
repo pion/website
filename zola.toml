@@ -8,7 +8,9 @@ compile_sass = false
 build_search_index = false
 
 default_language = "en"
-feed_filenames = ["atom.xml"]
+
+generate_feeds = true
+feed_filenames = ["atom.xml", "rss.xml"]
 
 [markdown]
 insert_anchor_links = "heading"
