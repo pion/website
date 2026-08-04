@@ -136,22 +136,27 @@ Triage - Pion
 <div id="triage-container" v-scope>
     {% raw %}
 
+    <noscript style="padding: 1.5rem; outline: 3px dashed var(--link-color); margin-bottom: 2rem;">
+        <h2>Please enable JavaScript if you want to use this tool.</h2>
+    </noscript>
+
     <h2>What is this?</h2>
     <p>This is a tool that fetches the counts of issues and PRs across all Pion repositories.</p>
+
 
     <br />
 
     <section class="triage-form">
-        <a target="_blank"
+        <a target="_blank" rel="noopener noreferrer"
             href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">
             How to create an access token </a>
         <div>
             <label for="user-name">Username:</label>
-            <input type="text" name="user-name" v-model="store.username"><br />
+            <input type="text" id="user-name" v-model="store.username"><br />
         </div>
         <div>
             <label for="access-token">Access Token:</label>
-            <input type="password" name="access-token" v-model="store.token"><br />
+            <input type="password" id="access-token" v-model="store.token"><br />
         </div>
         <button id="access-token-button" @click="store.getData"> Fetch </button>
         <br /><br />

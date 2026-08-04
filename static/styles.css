@@ -299,7 +299,7 @@ table {
         justify-content: space-around;
     }
 
-    & footer {
+    footer {
         display: flex;
         height: 85px;
         align-items: center;
