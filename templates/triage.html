@@ -113,7 +113,7 @@ Triage - Pion
 
         save() {
             localStorage.setItem(DB_NAME, JSON.stringify(
-                { username: this.username, token: this.token, projectData: this.projectData }
+                { username: this.username, projectData: this.projectData }
             ))
         },
     })
@@ -121,7 +121,6 @@ Triage - Pion
     const data = JSON.parse(localStorage.getItem(DB_NAME) || '{}')
 
     store.username = data.username ?? "";
-    store.token = data.token ?? "";
 
     store.projectData = data.projectData ?? [];
 
