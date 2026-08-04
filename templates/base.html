@@ -1,0 +1,53 @@
+{% import "macros/socials.html" as socials %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {% endblock title %}</title>
+
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/styles.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="theme-color" content="#e53935">
+    <meta name="og:site_name" content="Pion" />
+
+    {% block head_stuff %} {% endblock head_stuff %}
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav class="links">
+                <a href="/">
+                    <svg class="pion-logo" viewBox="0 0 423 125" preserveAspectRatio="xMidYMid meet" width="100%"
+                        height="100%">
+                        <use href="/img/pion-logo.svg#Page-1"></use>
+                    </svg>
+                </a>
+                <a href="/blog">Blog</a>
+                <a href="/why-pion">Why Pion?</a>
+
+                <div class="brand-links">
+                    {{ socials::links() }}
+                </div>
+            </nav>
+        </header>
+
+        {% block content %} {% endblock content %}
+
+        <footer>
+            <div class="icons">
+                {{ socials::links() }}
+            </div>
+        </footer>
+
+    </main>
+</body>
+
+</html>

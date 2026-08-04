@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{page.title}} - Pion
+{% endblock title %}
+
+{% block head_stuff %}
+
+<link rel="canonical" href="{{ page.permalink | default(value=config.base_url) }}">
+
+{% if page.description %}
+<meta name="description" content="{{ page.description | striptags }}" />
+<meta property="og:description" content="{{ page.description | striptags }}" />
+{% endif %}
+
+<meta property="og:title" content="{{page.title}}" />
+<meta property="og:url" content={{page.permalink}} />
+<meta property="og:type" content="article" />
+
+{% if page.authors %}
+<meta name="article:author" content="{{page.authors | join(sep=', ')}}" />
+{% endif %}
+
+{% if page.date %}
+<meta name="article:published_time" content='{{page.date | date(format="%Y-%m-%dT%H:%M:%S%z")}}' />
+{% endif %}
+
+<script src="/vendor/mermaid.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const getPreferredScheme = () => mediaQuery.matches ? 'dark' : 'default';
+
+        const mermaidBlocks = document.querySelectorAll(`code[data-lang="mermaid"]`);
+        const mermaidDivs = [];
+
+        mermaidBlocks.forEach(block => {
+            const div = document.createElement("div");
+            div.className = "mermaid";
+
+            div.dataset.originalText = block.textContent;
+
+            block.replaceWith(div);
+            mermaidDivs.push(div);
+        });
+
+        const renderDiagrams = async (theme) => {
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+
+            mermaidDivs.forEach(div => {
+                div.textContent = div.dataset.originalText;
+
+
+                div.removeAttribute('data-processed');
+            });
+
+            if (mermaid.run) {
+                await mermaid.run({ nodes: mermaidDivs });
+            } else {
+                mermaid.init(undefined, mermaidDivs);
+            }
+        };
+
+        await renderDiagrams(getPreferredScheme());
+
+        mediaQuery.addEventListener('change', async (e) => {
+            const newTheme = e.matches ? 'dark' : 'default';
+            await renderDiagrams(newTheme);
+        });
+    });
+</script>
+
+{% endblock head_stuff %}
+
+{% block content %}
+<article class="post-article">
+    <div class="article-header">
+        <h1>{{page.title}}</h1>
+        <p class="details">
+            <span class="authors">{{ page.authors | join(sep=", ")}}</span> — <time datetime="{{ page.date }}">{{
+                page.date
+                }}</time>
+        </p>
+    </div>
+
+    <div class="article-content">
+        {{ page.content | safe }}
+    </div>
+</article>
+
+{% endblock content %}

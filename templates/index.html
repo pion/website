@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}
+Pion
+{% endblock title %}
+
+{% block head_stuff %}
+{% endblock head_stuff %}
+
+{% block content %}
+<div>
+    <h1>Welcome!</h1>
+    <p class="intro">Pion is an <a href="https://github.com/pion">open source</a>, industry proven cross platform
+        stack for real-time media and data
+        communication that you
+        have
+        already used. <br /><br /> Feel free to join in on the development on <a href="https://github.com/pion">
+            GitHub</a>, or have a chat with the lovely members of the <a href="https://discord.gg/6EsQz85vPE">Discord
+            server</a>
+    </p>
+    <br />
+
+    {% set blog_section = get_section(path="blog/_index.md") %}
+
+    <section class="recent-posts">
+        <h1>Recent blog posts</h1>
+        <ul>
+            {% for page in blog_section.pages | slice(end=5) %}
+            <li>
+                <span>
+                    <time datetime="{{page.date}}">{{ page.date }}</time>
+                    -
+                    <a href="{{page.permalink}}">{{page.title}}</a>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        <p style="font-size: 14px; margin-top: 0.7rem;">Read more on <a href="/blog">the blog</a></p>
+    </section>
+
+    <br />
+
+    <h1>Links</h1>
+    <ul>
+        <li><a href="https://webrtcforthecurious.com">WebRTC for the curious</a></li>
+        <li><a href="https://github.com/pion/awesome-pion">Awesome pion</a></li>
+    </ul>
+</div>
+{% endblock content %}

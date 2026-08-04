@@ -1,5 +1,0 @@
-baseURL = "https://pion.ly"
-defaultContentLanguage = "en"
-languageCode = "en-us"
-title = "Pion"
-disableKinds = ["taxonomy", "taxonomyTerm"]

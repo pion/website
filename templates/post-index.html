@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}
+Blog - Pion
+{% endblock title %}
+
+{% block head_stuff %}
+<meta name="description" content="Blog posts" />
+{% endblock head_stuff %}
+
+{% block content %}
+
+<div>
+    <h1>Posts</h1>
+    <ul class="article-list">
+        {% for page in section.pages %}
+        <li>
+            <article>
+                <a href="{{ page.permalink | safe }}" class="title">{{ page.title }}</a>
+                {% if page.description %}
+                <p class="description">{{ page.description }}</p>
+                {% endif %}
+                <p class="details">
+                    <span class="authors">{{ page.authors | join(sep=", ")}}</span> — <time
+                        datetime="{{ page.date }}">{{ page.date }}</time>
+                </p>
+            </article>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock content %}
