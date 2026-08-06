@@ -137,6 +137,10 @@ footer {
     width: 50%;
 }
 
+.intro + .intro {
+    margin-top: 1.5rem;
+}
+
 a {
     color: var(--link-color);
 }
