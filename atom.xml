@@ -1,0 +1,1305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+    <title></title>
+    <link rel="self" type="application/atom+xml" href="https://pion.ly/atom.xml"/>
+    <link rel="alternate" type="text/html" href="https://pion.ly"/>
+    <generator uri="https://www.getzola.org/">Zola</generator>
+    <updated>2026-05-17T00:00:00+00:00</updated>
+    <id>https://pion.ly/atom.xml</id>
+    <entry xml:lang="en">
+        <title>Fixing WebRTC data-channels head-of-line blocking with RFC-8260</title>
+        <published>2026-05-17T00:00:00+00:00</published>
+        <updated>2026-05-17T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Jo Turk
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/sctp-interleaving/"/>
+        <id>https://pion.ly/blog/sctp-interleaving/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/sctp-interleaving/">&lt;h2 id=&quot;what-is-head-of-line-blocking-and-why-it-s-an-issue-with-webrtc-datachannels&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#what-is-head-of-line-blocking-and-why-it-s-an-issue-with-webrtc-datachannels&quot; aria-label=&quot;Anchor link for: what-is-head-of-line-blocking-and-why-it-s-an-issue-with-webrtc-datachannels&quot;&gt;What is head-of-line blocking and why it&#x27;s an issue with WebRTC datachannels&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;SCTP (the protocol used by WebRTC data channels) looks like it should be perfect for multiplexed application data. It is message-based, it supports multiple streams inside one association, and WebRTC data channels are built on top of it for non-media data.&lt;&#x2F;p&gt;
+&lt;p&gt;To understand sender-side head-of-line blocking, we first need to understand how SCTP sends messages. Messages are scheduled based on their send order. SCTP fragments messages according to the path MTU (Maximum Transmission Unit), which is usually around 1200 bytes for WebRTC. A 256 KB message would therefore be split into roughly 218 smaller fragments (chunks).&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;flowchart LR&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    AppBulk[&amp;quot;App sends large message&amp;quot;] --&amp;gt; SCTP[&amp;quot;Classic SCTP sender&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    AppControl[&amp;quot;App sends tiny small message&amp;quot;] --&amp;gt; SCTP&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    SCTP --&amp;gt; Frag[&amp;quot;Fragment large message&amp;lt;br&#x2F;&amp;gt;into DATA chunks&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Frag --&amp;gt; Queue[&amp;quot;large fragments stay together&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Queue --&amp;gt; Wire[&amp;quot;Wire order&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Wire --&amp;gt; F0[&amp;quot;large frag 0&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    F0 --&amp;gt; F1[&amp;quot;large frag 1&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    F1 --&amp;gt; F2[&amp;quot;large frag 2&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    F2 --&amp;gt; FMore[&amp;quot;... many more fragments ...&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    FMore --&amp;gt; tiny[&amp;quot;tiny small message&amp;quot;]&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;so-what-is-the-actual-problem&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#so-what-is-the-actual-problem&quot; aria-label=&quot;Anchor link for: so-what-is-the-actual-problem&quot;&gt;So what is the actual problem?&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;Imagine you&#x27;re streaming media over SCTP for some special use case, maybe DRM protected-content or codecs that aren&#x27;t normally supported by WebRTC media tracks (RTP), such as AAC audio or VVC video. At the same time you have control, telemetry or chat streams sharing the same SCTP association.&lt;&#x2F;p&gt;
+&lt;p&gt;If a media stream starts sending large reliable messages, SCTP will fragment them into smaller chunks, and those fragments can monopolize the send queue. In other words, small chat or control messages may end up waiting behind the large transfer.&lt;&#x2F;p&gt;
+&lt;p&gt;If the stream is reliable and packets are lost, retransmissions of those large fragments can delay smaller streams even further. Chat messages will look delayed, and control traffic will feel laggy.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;large video fragment 0&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;large video fragment 1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;large video fragment 2&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;large video fragment 3&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;large video fragment 200&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;tiny control message finally sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;chat messages finally sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;audio-like frame finally sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;so-why-can-t-i-just-fragment-the-messages-myself-and-have-my-own-queue&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#so-why-can-t-i-just-fragment-the-messages-myself-and-have-my-own-queue&quot; aria-label=&quot;Anchor link for: so-why-can-t-i-just-fragment-the-messages-myself-and-have-my-own-queue&quot;&gt;So why can&#x27;t I just fragment the messages myself and have my own queue?&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;Many applications do exactly that to avoid large SCTP messages, instead of sending one huge message, the application splits it into smaller chunks (just like SCTP itself), and schedules those chunks itself.&lt;&#x2F;p&gt;
+&lt;p&gt;But the tradeoff is that you&#x27;re now effectively building another protocol on top of SCTP.&lt;&#x2F;p&gt;
+&lt;p&gt;And you need to handle things like chunk numbering, reassembly, flow control, backpressure handling, retransmission semantics, fair scheduling, and message boundaries.&lt;&#x2F;p&gt;
+&lt;p&gt;This gets trickier depending on the stream mode (pick your poison).&lt;&#x2F;p&gt;
+&lt;p&gt;If you use partially reliable streams or unreliable streams (SCTP won&#x27;t retransmit lost packets), you need to decide what happens when fragments are dropped, should it be discarded, partially decoded, retransmitted, some sort of &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;fec-with-pion&#x2F;&quot;&gt;FEC&lt;&#x2F;a&gt;?&lt;&#x2F;p&gt;
+&lt;p&gt;But if you decide you&#x27;re not going to deal with a complex unreliable handling, and you use reliable streams, then you&#x27;re back dealing with delayed delivery on other streams under packet loss and retransmissions on bad networks.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.rfc-editor.org&#x2F;rfc&#x2F;rfc8260.html&quot;&gt;RFC 8260&lt;&#x2F;a&gt; was written to fix exactly this class of problem. The issue was that TSN (Transmission Sequence Number), was doing too many jobs at once: reliability, fragment reassembly, and sequencing. fragmented messages also had to use consecutive TSNs.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-i-data-changes&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#what-i-data-changes&quot; aria-label=&quot;Anchor link for: what-i-data-changes&quot;&gt;What I-DATA changes&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;SCTP message interleaving uses the &lt;strong&gt;I-DATA&lt;&#x2F;strong&gt; chunk. The important change is that TSN is no longer used to order fragments inside a user message. I-DATA adds:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;MID = Message Identifier&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;FSN = Fragment Sequence Number&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;em&gt;TSN still exists&lt;&#x2F;em&gt;, though. It is still used for reliability, SACKs (Selective Acknowledgment), loss detection, and retransmission. But fragment reassembly now uses &lt;strong&gt;MID + FSN&lt;&#x2F;strong&gt;, not &quot;all fragments must be adjacent in TSN space.&quot; RFC 8260 says I-DATA adds MID and FSN, removes SSN, uses MID to identify the message, and uses FSN to enumerate fragments of that message.&lt;&#x2F;p&gt;
+&lt;p&gt;So the identity becomes:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;TSN = reliability &#x2F; SACK &#x2F; retransmission&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID = SCTP stream&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;MID = user message inside that stream&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;FSN = fragment number inside that message&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Example:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID=4 MID=90 FSN=0 TSN=100  video fragment&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID=2 MID=301 FSN=0 TSN=101 chat message&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID=0 MID=12 FSN=0 TSN=102 control message&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID=4 MID=90 FSN=1 TSN=103 video fragment&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID=1 MID=44 FSN=0 TSN=104 chat message&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID=4 MID=90 FSN=2 TSN=105 video&#x2F; fragment&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The video fragments still reassemble correctly because the fragments are identified by:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;SID=4 + MID=90 + FSN=0,1,2,...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;They no longer need to occupy one contiguous TSN range :)&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;interleaving-under-loss&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#interleaving-under-loss&quot; aria-label=&quot;Anchor link for: interleaving-under-loss&quot;&gt;Interleaving under loss&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Interleaving does not make packet loss disappear. It does not give every stream its own congestion window. It does not magically create bandwidth, It just lets other streams compete for send opportunities between fragments of a large message.&lt;&#x2F;p&gt;
+&lt;p&gt;With interleaving, a bad network can still look like this:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;audio-like frame sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;control message sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;telemetry sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment lost&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;audio-like frame sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;retransmit lost bulk fragment&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;control message sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;That is much better than:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment lost&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;bulk fragment sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;retransmit lost bulk fragment&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;control finally sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;audio-like frame finally sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;telemetry finally sent&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The retransmission still costs capacity, but it no longer has to trap every other stream behind the large message’s original serialization.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;where-stream-schedulers-fit-in-the-title&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#where-stream-schedulers-fit-in-the-title&quot; aria-label=&quot;Anchor link for: where-stream-schedulers-fit-in-the-title&quot;&gt;Where &quot;Stream Schedulers&quot; fit in the title&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Interleaving gives SCTP the ability to pick chunks from different streams. But it still needs a policy for deciding which stream goes next.&lt;&#x2F;p&gt;
+&lt;p&gt;Common policies are:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;round-robin:&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  each non-empty stream gets turns&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;priority:&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  high-priority streams are served before lower-priority streams&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;WFQ:&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;  weighted fair queuing; streams receive capacity according to weights&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;RFC 8260 defines SCTP stream schedulers, including round-robin, priority, and weighted fair queuing. It says WFQ uses configurable per-stream weights and that, if one stream has n times another stream&#x27;s weight, it should receive n times the capacity. It also says WFQ with user-message interleaving is used for WebRTC data channels.&lt;&#x2F;p&gt;
+&lt;p&gt;For HOL-sensitive apps, this is the powerful combination:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;plain&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;I-DATA interleaving + WFQ or priority scheduling&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Interleaving breaks the large-message wall. WFQ or priority decides who gets protected.&lt;&#x2F;p&gt;
+&lt;p&gt;Pion&#x2F;SCTP implementation for RFC 8260 comes with WFQ scheduler (default), WFQ with custom weight so you can prioritize a specific stream (&lt;code&gt;func WithInterleavingWeightedFairqueuingWeight(streamID uint16, weight uint16)&lt;&#x2F;code&gt;), and round robin scheduler (enabled via &lt;code&gt;WithInterleavingRoundRobinScheduler()&lt;&#x2F;code&gt;).&lt;&#x2F;p&gt;
+&lt;p&gt;and if you feel like it you can even define your own custom scheduler :)&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;go&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#0000FF, #CBA6F7);&quot;&gt;type&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt; InterleavingStreamScheduler&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0000FF, #CBA6F7);&quot;&gt; interface&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;	Reset&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;	Push&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt;StreamSchedulerChunk&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;	Peek&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt; StreamSchedulerChunk&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;	Pop&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt;StreamSchedulerChunk&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #CBA6F7);&quot;&gt; error&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#0000FF, #CBA6F7);&quot;&gt;func&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt; WithInterleavingStreamSchedulerFactory&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #EBA0AC);&quot;&gt;newScheduler&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt; InterleavingStreamSchedulerFactory&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h2 id=&quot;the-interleaving-inspection-example&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#the-interleaving-inspection-example&quot; aria-label=&quot;Anchor link for: the-interleaving-inspection-example&quot;&gt;The interleaving-inspection example&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;I added &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;webrtc&#x2F;tree&#x2F;main&#x2F;examples&#x2F;sctp-interleaving-inspect&quot;&gt;an example&lt;&#x2F;a&gt; to pion that lets you inspect and play with interleaving, it has a basic pressure test, if you have interleaving enabled, you&#x27;ll see something like this (notice all control messages arrive before bulk chunks complete)&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;interleaving-enabled.png&quot; alt=&quot;interleaving-enabled&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;if you don&#x27;t have interleaving enabled, you&#x27;ll see something like this (notice how control messages had to wait for bulk chunks to complete):&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;interleaving-disabled.png&quot; alt=&quot;interleaving-disabled&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;so-how-can-i-enable-and-use-interleaving&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#so-how-can-i-enable-and-use-interleaving&quot; aria-label=&quot;Anchor link for: so-how-can-i-enable-and-use-interleaving&quot;&gt;So how can I enable and use interleaving?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Interleaving should be enabled by default in Pion 4.2.13 and above, and there is nothing you need to do.&lt;&#x2F;p&gt;
+&lt;p&gt;As I wrote this, interleaving is enabled by default in Firefox, and is behind a flag in Chrome, and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;sctp&#x2F;pull&#x2F;443&quot;&gt;merged to Pion&#x2F;sctp&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Interleaving isn&#x27;t actually used unless it&#x27;s supported by the other side, and negotiated during the handshake. To know if a current stream has interleaving or not, we expose it through Pion&#x27;s GetStats()&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;go&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;report&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; :=&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; pc&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;GetStats&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#AF00DB, #CBA6F7);&quot;&gt;for&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; _&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; stat&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; :=&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#AF00DB, #CBA6F7);&quot;&gt; range&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; report&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;    sctpStats&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; ok&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; :=&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; stat&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt;webrtc&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt;SCTPTransportStats&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#AF00DB, #CBA6F7);&quot;&gt;    if&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; !&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;ok&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; ||&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; sctpStats&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;Metadata&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; ==&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0000FF, #F38BA8);&quot;&gt; nil&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#AF00DB, #CBA6F7);&quot;&gt;        continue&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;    }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;    fmt&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;Println&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;SCTP interleaving:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; sctpStats&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;Metadata&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;MessageInterleavingEnabled&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;    fmt&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;Println&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;Partial reliability:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; sctpStats&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;Metadata&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;PartialReliabilityMode&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The stats metadata includes:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;json&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;{&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;  &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #89B4FA);&quot;&gt;metadata&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt; {&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #89B4FA);&quot;&gt;messageInterleavingEnabled&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0000FF, #FAB387);&quot;&gt; true&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #89B4FA);&quot;&gt;partialReliabilityMode&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;i-forward-tsn&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #89B4FA);&quot;&gt;zeroChecksumSendingEnabled&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0000FF, #FAB387);&quot;&gt; true&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #89B4FA);&quot;&gt;zeroChecksumReceivingEnabled&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0451A5, #9399B2);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0000FF, #FAB387);&quot;&gt; true&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;  }&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;}&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We might have similar stats in the browser API if W3C accepts &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;w3c&#x2F;webrtc-stats&#x2F;issues&#x2F;821&quot;&gt;my issue&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;thanks&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#thanks&quot; aria-label=&quot;Anchor link for: thanks&quot;&gt;Thanks&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Huge thanks to:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;Sean-Der&quot;&gt;Sean DuBois&lt;&#x2F;a&gt; For introducing me to this spec, I saw him talking about it a few years ago, and for making and inviting me to Pion :)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;philipch07&#x2F;&quot;&gt;R Chiu&lt;&#x2F;a&gt; For making pion&#x2F;sctp fun again. We hope to see her again in Pion.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;nils-ohlmeier&quot;&gt;Nils Ohlmeier&lt;&#x2F;a&gt; For helping me navigate I-DATA support in Firefox, even tho I ghosted him for a bit after I got a new job :)&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ValorZard&quot;&gt;Valor Zard&lt;&#x2F;a&gt; For making a list of all the libraries that supports RFC-8260 while I was doing interop tests, and for consistently and inderiectly reminding me to finish Pion&#x27;s RFC-8260 implementation.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;fippo&quot;&gt;Philipp Hancke&lt;&#x2F;a&gt; for helping me trying to get &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;w3c&#x2F;webrtc-stats&#x2F;issues&#x2F;821&quot;&gt;interleaving as a transport stats to w3c&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;juliapixel&#x2F;&quot;&gt;Júlia Paschoalinoto&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;frantabot&quot;&gt;Franta&lt;&#x2F;a&gt; for all the manual testing and feedback.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>RACK makes Pion SCTP 71% faster with 27% less latency</title>
+        <published>2025-12-21T00:00:00+00:00</published>
+        <updated>2025-12-21T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            R Chiu
+          </name>
+        </author>
+        
+        <author>
+          <name>
+            Jo Turk
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/sctp-and-rack/"/>
+        <id>https://pion.ly/blog/sctp-and-rack/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/sctp-and-rack/">&lt;h2 id=&quot;what-is-sctp&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#what-is-sctp&quot; aria-label=&quot;Anchor link for: what-is-sctp&quot;&gt;What is SCTP?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;SCTP stands for Stream Control Transmission Protocol. At a basic level, SCTP is designed to be reliable, handle de-duplication of packets, and support packets that may be delivered in order or out of order. Beyond transporting messages, SCTP can also set up a connection between users. On a deeper level, SCTP includes native support for multiplexing: multiple applications can take advantage of a single transport connection. SCTP also supports multi-homing, which enables automatic failover from a primary connection to a secondary one.&lt;&#x2F;p&gt;
+&lt;p&gt;At the most basic level, it lets you reliably send information from one computer to another without any complications.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;what-is-sctp-used-for&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#what-is-sctp-used-for&quot; aria-label=&quot;Anchor link for: what-is-sctp-used-for&quot;&gt;What is SCTP used for?&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;SCTP&#x27;s uses can generally fit into two cases:&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;1-sending-some-amount-of-data&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#1-sending-some-amount-of-data&quot; aria-label=&quot;Anchor link for: 1-sending-some-amount-of-data&quot;&gt;1. Sending some amount of data.&lt;&#x2F;a&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;Imagine a scenario where two people are texting when one person remembers a picture that they want to send. As they text back and forth, an image gets uploaded, which takes some time to get sent. SCTP can handle multiple things going on at the same time and doesn&#x27;t delay any messages from being sent just because an image is being uploaded! Thanks to SCTP, text messages can be safely delivered to each person and nothing in their conversation is lost in transit or delayed just because something else is being transferred at the same time as their messages.&lt;&#x2F;p&gt;
+&lt;p&gt;Building on this idea, users can share larger files with each other. This includes anything: birthday videos, audio recordings, even boring paperwork; anything that&#x27;s a file can be sent!&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;2-sending-small-amounts-of-data-with-a-purpose&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#2-sending-small-amounts-of-data-with-a-purpose&quot; aria-label=&quot;Anchor link for: 2-sending-small-amounts-of-data-with-a-purpose&quot;&gt;2. Sending small amounts of data with a purpose.&lt;&#x2F;a&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;In a new scenario, imagine two people who are texting back and forth when one person gets hungry. They send a message saying, &quot;I want a pizza!&quot; When the other person receives the text, they think, &quot;Maybe I should do something about that!&quot; The recipient can choose to do something useful for the sender with that information.&lt;&#x2F;p&gt;
+&lt;p&gt;This is the blueprint for many awesome technologies today, as it opens up the possibility of controlling one computer from a different computer. Consider a surgeon who performs an operation involving a remote-controlled device that needs to respond with as little latency as possible. Similarly, real-time navigation systems also need to respond to changes in traffic conditions quickly in order to avoid congested or unsafe areas due to accidents or weather conditions.&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;other-uses&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#other-uses&quot; aria-label=&quot;Anchor link for: other-uses&quot;&gt;Other uses:&lt;&#x2F;a&gt;&lt;&#x2F;h4&gt;
+&lt;p&gt;SCTP can be used for online multiplayer games where every frame counts, including first-person shooters and fighting games. Taking the remote surgery example in this direction leads to the idea of cloud gaming, as players can have their inputs sent to a different device than the one that they&#x27;re using while still being able to play the game!&lt;&#x2F;p&gt;
+&lt;p&gt;SCTP is also used inside web browsers via WebRTC and has found use in AI applications and cryptocurrency-related technologies. Additionally, payment verification can similarly benefit from secure and fast communication.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-sctp-for-webrtc&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#why-sctp-for-webrtc&quot; aria-label=&quot;Anchor link for: why-sctp-for-webrtc&quot;&gt;Why SCTP for WebRTC?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;SCTP is used for WebRTC because of its ability to send information via reliable and unreliable datachannels. For example, you can send messages or files in a chat with SCTP. Other uses include being able to know when users toggle their microphone or video in a video call. In some special cases, SCTP can even be used to transmit video between users, but that&#x27;s significantly less common.&lt;&#x2F;p&gt;
+&lt;p&gt;In WebRTC, the ICE protocol connects users and the DTLS protocol establishes a secure connection, at which point SCTP is then used to securely transfer data. In an ideal setup, data that&#x27;s sent should &quot;just work&quot;. Unfortunately, that isn&#x27;t how things tend to pan out, as issues eventually crop up. Packets get dropped, the network jitters, the computer stutters, or the coffee machine doesn&#x27;t start when you thought it had. That&#x27;s why it&#x27;s important to have a backup plan for when things go wrong.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;how-sctp-deals-with-loss&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#how-sctp-deals-with-loss&quot; aria-label=&quot;Anchor link for: how-sctp-deals-with-loss&quot;&gt;How SCTP Deals With Loss&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;SCTP was designed with this in mind and has two built-in recovery strategies for when networking goes wrong.&lt;&#x2F;p&gt;
+&lt;p&gt;The first is called &quot;fast retransmission.&quot; The receiver detects if a chunk of data is missing in the transmission. If so, the receiver notifies the sender that a specific chunk ID is missing. If the sender receives three reports of a missing chunk where all three reports are referring to the same chunk ID, then the sender will assume that the chunk has been lost and resend it.&lt;&#x2F;p&gt;
+&lt;p&gt;The second is a timer-based retransmission. This happens if the receiver doesn&#x27;t acknowledge that it has received all the packets within a specific window of time. If the receiver doesn&#x27;t acknowledge that all the packets have been received, then the sender is prompted to retransmit the unacknowledged data.&lt;&#x2F;p&gt;
+&lt;p&gt;Both of these loss recovery strategies are used by SCTP to try to ensure that any lost data is detected and retransmitted as quickly as possible. At the time of writing, Pion&#x27;s implementation of &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;sctp&#x2F;tree&#x2F;b1a66a4&quot;&gt;Pion&#x27;s implementation of SCTP&lt;&#x2F;a&gt; uses these two mechanisms for loss recovery.&lt;&#x2F;p&gt;
+&lt;p&gt;These strategies are also used by TCP, which has prompted engineers to see if there&#x27;s an even better strategy to detect and mitigate lost data.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;introducing-rack&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#introducing-rack&quot; aria-label=&quot;Anchor link for: introducing-rack&quot;&gt;Introducing RACK&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;In February 2021, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.rfc-editor.org&#x2F;rfc&#x2F;rfc8985.html&quot;&gt;RFC 8985: The RACK-TLP Loss Detection Algorithm for TCP&lt;&#x2F;a&gt; was published. This was a completely new loss detection algorithm that focused on actively keeping track of network statistics and using timer-based signals in order to remain adaptive to ever-changing network conditions. RACK&#x27;s improvements over SACK and fast retransmission in TCP were enticing enough for Linux, Windows, and FreeBSD to all implement it in TCP.&lt;&#x2F;p&gt;
+&lt;p&gt;While RACK was originally intended to be implemented for TCP, it is &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.rfc-editor.org&#x2F;rfc&#x2F;rfc8985.html#section-9.5&quot;&gt;noted in the RFC that it can be implemented in other transport protocols&lt;&#x2F;a&gt;, including SCTP.&lt;&#x2F;p&gt;
+&lt;p&gt;The implementation for SCTP was formally analyzed in &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;duepublico2.uni-due.de&#x2F;servlets&#x2F;MCRFileNodeServlet&#x2F;duepublico_derivate_00073893&#x2F;Diss_Weinrank.pdf&quot;&gt;Felix Weinrank&#x27;s Dissertation&lt;&#x2F;a&gt; and other publications. Weinrank&#x27;s deep dive provides an extremely comprehensive review of SCTP and improvements regarding usage in various scenarios, including WebRTC. At the moment, we&#x27;re more concerned with Weinrank&#x27;s analysis and implementation notes regarding RACK in SCTP. In &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;duepublico2.uni-due.de&#x2F;servlets&#x2F;MCRFileNodeServlet&#x2F;duepublico_derivate_00073893&#x2F;Diss_Weinrank.pdf#chapter.192&quot;&gt;Chapter 7 of the dissertation&lt;&#x2F;a&gt;, Weinrank goes over how SCTP handles loss and how RACK can be implemented for SCTP, including extra details regarding how the implementation interacts with various SCTP extensions.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rack-s-motivations&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#rack-s-motivations&quot; aria-label=&quot;Anchor link for: rack-s-motivations&quot;&gt;RACK&#x27;s motivations:&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;The authors of RACK in &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.rfc-editor.org&#x2F;rfc&#x2F;rfc8985.html&quot;&gt;RFC 8985&lt;&#x2F;a&gt; provides examples of situations where RACK improves SCTP and TCP during loss recovery.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;how-rack-s-tail-loss-probing-tlp-works&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#how-rack-s-tail-loss-probing-tlp-works&quot; aria-label=&quot;Anchor link for: how-rack-s-tail-loss-probing-tlp-works&quot;&gt;How RACK&#x27;s Tail Loss Probing (TLP) Works&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sequenceDiagram&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant S as Sender&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant R as Receiver&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: The two sends are normally&amp;lt;br&amp;gt;combined but are separated&amp;lt;br&amp;gt;here for visual clarity.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Send 🍎&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S--&amp;gt;&amp;gt;R: Send 🍌, 🥕, 🥔&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: Only 🍎 arrived, so it&amp;#39;s ACK&amp;#39;d.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    R-&amp;gt;&amp;gt;S: ACK 🍎&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: 2 RTTs later, TLP fires&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: TLP triggers a retransmit 🥔&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: 🥔 arrived, so it&amp;#39;s SACK&amp;#39;d.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    R-&amp;gt;&amp;gt;S: SACK 🥔&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note left of S: Mark 🍌 and 🥕 as lost&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: The two sends are normally&amp;lt;br&amp;gt;combined but are separated&amp;lt;br&amp;gt;here for visual clarity.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S--&amp;gt;&amp;gt;R: Retransmit 🍌&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Retransmit 🥕&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: Only 🥕 arrived, so it&amp;#39;s SACK&amp;#39;d&amp;lt;br&amp;gt;alongside 🥔.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    R--&amp;gt;&amp;gt;S: SACK 🥕 and 🥔&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note left of S: 🍌 retransmission marked as lost.&amp;lt;br&amp;gt;Note that this is the second time&amp;lt;br&#x2F;&amp;gt;that 🍌 has been marked as lost.&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Retransmit 🍌 again&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: 🍌 finally arrived!&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    R--&amp;gt;&amp;gt;S: ACK 🥔&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: The ACK 🥔 is a cumulative ACK&amp;lt;br&amp;gt;for the 🍎🍌🥕🥔 sequence&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In the above scenario, Tail Loss Probing enables the sender to quickly know if 🍎🍌🥕🥔 were successfully received. Since the sender only receives an acknowledgment (ACK) for 🍎 from the receiver, the TLP timer eventually triggers because it didn&#x27;t receive an ACK for 🍌, 🥕, and 🥔. The TLP can then resend the last packet in the segment as an efficient way to:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Retransmit data that the receiver would have to receive down the line anyway. The alternative would be to send an empty packet, receive an ACK, then send a missing packet. This handles both at once and can potentially save an RTT if &lt;em&gt;only&lt;&#x2F;em&gt; the last packet is missing in a segment.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Allow the receiver to ACK any earlier missing packets in the sequence if there were other issues due to networking, temporary stutters or freezes, etc.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Check receiver responsiveness and detect if there&#x27;s a network issue. Note that this is different from (2), as the receiver could potentially never respond with an ACK.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The receiver then confirms that it has 🥔 by sending a selective acknowledgment (SACK) to the sender, which tells the sender that it&#x27;s received one of the packets from the segment but not all of them. At this point, the sender has an ACK for 🍎 and a SACK for 🥔, which means that it can determine that 🍌 and 🥕 must be missing. The sender then notes that 🍌 and 🥕 have been lost once. It then retransmits 🍌 and 🥕. In the example, 🍌 happens to get dropped by the network whereas 🥕 is sent and received successfully. The receiver then replies with a SACK for 🥕 and 🥔, at which point the sender can determine that 🍌 was lost a second time. Finally, the sender retransmits 🍌, which fortunately doesn&#x27;t get dropped, and the receiver sends an ACK for 🥔 (note the ACK is for the last packet in the segment, which implies that all previous packets have been received).&lt;&#x2F;p&gt;
+&lt;p&gt;Side note: keeping track of the number of times that a packet has been lost is important as the cubic congestion control algorithm described in &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc9438&#x2F;&quot;&gt;RFC 9438&lt;&#x2F;a&gt; (which is mentioned in RFC 8985) relies on this information.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;sctp-rto-vs-rack-rto&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#sctp-rto-vs-rack-rto&quot; aria-label=&quot;Anchor link for: sctp-rto-vs-rack-rto&quot;&gt;SCTP RTO vs RACK RTO&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;In this example, the authors of &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.rfc-editor.org&#x2F;rfc&#x2F;rfc8985.html&quot;&gt;RFC 8985&lt;&#x2F;a&gt; show how, without RACK, SCTP and TCP can suffer from spurious retransmissions when there are retransmission timeouts (RTOs). In this case, each food icon represents an entire segment instead of a packet.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sequenceDiagram&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant S as Sender&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant R as Receiver&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Send 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: Then right before&amp;lt;br&amp;gt;the end of the RTO...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: The receiver has a network hiccup!&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Send 🍳🥭&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: Received 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: End of the RTO&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    R-&amp;gt;&amp;gt;S: ACK 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;In this scenario, 🥐 is sent, and right before the end of the RTO, 🍳 and 🥭 are sent. The receiver gets 🥐, 🍳, and 🥭, but only manages to send an ACK for 🥐 right after the RTO. Let&#x27;s see how SCTP handles this without RACK versus with RACK.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sequenceDiagram&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant S as Sender&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant R as Receiver&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Send 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: Then right before&amp;lt;br&amp;gt;the end of the RTO...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: The receiver has a network hiccup!&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Send 🍳🥭&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: Received 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: End of the RTO&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    R-&amp;gt;&amp;gt;S: ACK 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: Without RACK...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    %% without rack&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note left of S: Mark 🥐🍳🥭 as lost&amp;lt;br&amp;gt;since RTO expired&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: Received 🍳🥭&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: The Sender incorrectly&amp;lt;br&amp;gt;ignores the ack for 🍳🥭!&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note left of S: Prepare to retransmit 🥐🍳🥭&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Retransmit 🥐🍳🥭&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We can see here that the receiver eventually sends an ACK for 🍳 and 🥭, but the sender ignores it and believes that 🥐, 🍳, and 🥭 are all missing instead of just 🥐. While it&#x27;s reasonable to assume that 🥐 is missing, it&#x27;s a little overzealous in retransmitting packets, which can increase network traffic during recovery, especially when it&#x27;s completely possible for the sender to wait for the acknowledgments of 🍳 and 🥭 from the receiver.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s see what RACK does!&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sequenceDiagram&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant S as Sender&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant R as Receiver&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Send 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: Then right before&amp;lt;br&amp;gt;the end of the RTO...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: The receiver has a network hiccup!&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Send 🍳🥭&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: Received 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: End of the RTO&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    R-&amp;gt;&amp;gt;S: ACK 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note over S,R: With RACK...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    %% with rack&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note left of S: Mark 🥐 as lost&amp;lt;br&amp;gt;since RTO expired&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of R: Received 🍳🥭&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note left of S: Prepare to retransmit 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    S-&amp;gt;&amp;gt;R: Retransmit 🥐&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here, RACK makes it so only 🥐 is marked as lost when the RTO expires. 🍳 and 🥭 aren&#x27;t marked as lost because their own RTOs have not yet expired by the time their ACKs are received. Therefore, only 🥐 is retransmitted, as the timers for 🍳 and 🥭 would be re-armed if an ACK is received for the retransmitted 🥐.&lt;&#x2F;p&gt;
+&lt;p&gt;In this example, even though both non-RACK and RACK end up retransmitting 🥐 despite the receiver already having it, the focus is on minimizing spurious retransmissions. This can save on the amount of data sent over the network, which naturally speeds up any retransmissions that might occur.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;rack-s-strategy&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#rack-s-strategy&quot; aria-label=&quot;Anchor link for: rack-s-strategy&quot;&gt;RACK&#x27;s strategy&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;In summary, RACK&#x27;s strategy generally has two main parts:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Detect packet losses as quickly as possible by utilizing time-based acknowledgments of segmented data and inferences from network statistics.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Use Tail Loss Probing (TLP), which sends sample data to gather more network statistics.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;The combination of these two strategies allows it to quickly determine issues and properly rectify them once identified. It also provides better resilience for some tricky edge cases! If you&#x27;re interested in seeing how RACK could perform in SCTP and other SCTP-specific improvements, check out &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;duepublico2.uni-due.de&#x2F;servlets&#x2F;MCRFileNodeServlet&#x2F;duepublico_derivate_00073893&#x2F;Diss_Weinrank.pdf#chapter.192&quot;&gt;chapter 7 of Felix Weinrank&#x27;s thesis&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;a-quick-look-at-the-results-why-this-matters-if-you-don-t-live-in-sctp-land&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#a-quick-look-at-the-results-why-this-matters-if-you-don-t-live-in-sctp-land&quot; aria-label=&quot;Anchor link for: a-quick-look-at-the-results-why-this-matters-if-you-don-t-live-in-sctp-land&quot;&gt;A quick look at the results (why this matters if you don&#x27;t live in SCTP land)&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;scp&quot;&gt;SCP&lt;&#x2F;a&gt; is a Go test harness that runs two Pion SCTP stacks against each other inside a deterministic, in-process &quot;virtual network&quot; (from Pion&#x2F;transport). It pins exact commits on each side, replays scenarios with a fixed seed, validates packet on the wire (CRC32c + basic SCTP parsing), and writes artifacts (&lt;code&gt;results.json&lt;&#x2F;code&gt;, packet logs, and pprof) so you can reproduce the numbers.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;the-headline-max-burst-more-throughput-less-cpu-lower-latency&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#the-headline-max-burst-more-throughput-less-cpu-lower-latency&quot; aria-label=&quot;Anchor link for: the-headline-max-burst-more-throughput-less-cpu-lower-latency&quot;&gt;The headline (max-burst): more throughput, less CPU, lower latency&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;This is the cleanest microbench in the suite: no loss, no delay, no jitter. Just a burst of messages in both directions. Comparing &lt;strong&gt;non-rack&amp;lt;-&amp;gt;non-rack&lt;&#x2F;strong&gt; vs &lt;strong&gt;rack&amp;lt;-&amp;gt;rack&lt;&#x2F;strong&gt; (There are similar improvements even when comparing &lt;strong&gt;rack&amp;lt;-&amp;gt;non-rack&lt;&#x2F;strong&gt;):&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;metric&lt;&#x2F;th&gt;&lt;th&gt;main (baseline)&lt;&#x2F;th&gt;&lt;th&gt;RACK&lt;&#x2F;th&gt;&lt;th&gt;delta&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;goodput&lt;&#x2F;td&gt;&lt;td&gt;234.55 Mbps&lt;&#x2F;td&gt;&lt;td&gt;316.42 Mbps&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;+34.9%&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;CPU time (&lt;code&gt;cpu_seconds&lt;&#x2F;code&gt;)&lt;&#x2F;td&gt;&lt;td&gt;0.0560 s&lt;&#x2F;td&gt;&lt;td&gt;0.0441 s&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;−21.3%&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;goodput &#x2F; CPU-second&lt;&#x2F;td&gt;&lt;td&gt;4,189&lt;&#x2F;td&gt;&lt;td&gt;7,177&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;+71.3%&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;latency p50&lt;&#x2F;td&gt;&lt;td&gt;16.37 ms&lt;&#x2F;td&gt;&lt;td&gt;11.86 ms&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;−27.5%&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;latency p99&lt;&#x2F;td&gt;&lt;td&gt;36.95 ms&lt;&#x2F;td&gt;&lt;td&gt;27.84 ms&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;−24.6%&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;p&gt;That &lt;strong&gt;+71% throughput-per-CPU&lt;&#x2F;strong&gt;  is simply the goodput measured (Mbps) divided by the run&#x27;s &lt;code&gt;cpu_seconds&lt;&#x2F;code&gt;. Non-rack cruised at ~234 Mbps using ~0.056 CPU seconds (~4,189 Mbps&#x2F;CPU-s), while RACK sustained 316 Mbps with ~0.044 CPU seconds (~7,177 Mbps&#x2F;CPU-s). That gap is the proof that rack delivers ~71% more work per unit of CPU.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;test-setup&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#test-setup&quot; aria-label=&quot;Anchor link for: test-setup&quot;&gt;Test setup&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;To test RACK, we ran these test profiles to compare how RACK performs against main (baseline):&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;max-burst&lt;&#x2F;strong&gt; - &quot;how fast can we go&quot; with no delay, loss, or reordering; it targets the raw transport path:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Goodput jumps +34.9% (234 -&amp;gt;316 Mbps) while CPU seconds drop by 21% (0.056 -&amp;gt;0.044 s) and p50&#x2F;p99 both fall by ~25%. RACK now delivers ~71% more Mbps per CPU-second.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;handshake&lt;&#x2F;strong&gt; - same burst pattern, this time &lt;strong&gt;including&lt;&#x2F;strong&gt; the COOKIE&#x2F;SHUTDOWN handshake, so we exercise setup timers:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Goodput climbs +15% (237 -&amp;gt;272 Mbps) while latency stays basically flat (15.65 -&amp;gt;15.99 ms for p50, 35.27 -&amp;gt;33.25 ms for p99), which confirms that the faster throughput comes without slower ACK paths.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;unordered-late-low-rtt&lt;&#x2F;strong&gt; - minor delay&#x2F;jitter (10 ms) but unordered delivery to simulate packet trains with mild disorder:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Minor latency and throughput noise. Both branches still pass but RACK keeps the delivery steady despite small unordered bursts.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;unordered-late-high-rtt&lt;&#x2F;strong&gt; - large RTT&#x2F;jitter (180 ms &#x2F; 60 ms) with unordered delivery, so we can watch how the stack copes with latency spikes:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Very high latency due to the profile, but RACK keeps throughput comparable while completely avoiding any regressions.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;unordered-late-dynamic-rtt&lt;&#x2F;strong&gt; - fluctuating RTT (40 ms base ±180 ms jitter) with unordered delivery to mimic burst-y network dynamics:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Both branches pass with no noticeable regressions from RACK, which shows that each branch handles jitter swings fine.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;congestion&lt;&#x2F;strong&gt; - ordered delivery with 2% loss and modest delay&#x2F;jitter to stress-tests congestion control and SACK-driven recovery:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The loss-handling path stays green and RACK doesn&#x27;t use extra CPU compared to master which shows the +35% clean-case gain doesn&#x27;t cost the loss profile.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;retransmission&lt;&#x2F;strong&gt; - ordered with 5% loss and 20 ms jitter to force fast-retransmit&#x2F;TLP scenario:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The fault case still hits retries and RACK&#x27;s CPU profile actually shows more JSON&#x2F;packet-logging work but that&#x27;s what we expect during retransmit storms.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;reorder-low&lt;&#x2F;strong&gt; - unordered with 1.5% loss plus deliberate reordering to exercise scheduler&#x2F;queue behavior under loss＋reorder:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Goodput improves +44% (1.79 Mbps -&amp;gt; 2.58 Mbps) and the run finishes faster (~3.70 s vs 5.34 s), so RACK dominates the low-rate reordering scenario.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;burst-loss&lt;&#x2F;strong&gt; - unordered with 4% loss and 50 ms jitter to push retransmit&#x2F;recovery under heavy loss bursts.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;fragmentation&lt;&#x2F;strong&gt; - oversized payloads require chunk fragmentation&#x2F;reassembly to verify large-message handling:&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Nothing improved or got worse.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;media-hevc&lt;&#x2F;strong&gt; - A real-world use case with video: one-way stream, paced HEVC frames (~25 fps), 3% loss, ~1200-byte max payload, across a ~13-14 Mbps link (taken from a real-world use case of sending DRM media over WebRTC datachannels) to ensure sustained media delivery works.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;RACK hits 12.90 Mbps goodput in 2.14 s (100% delivery) while the main branch streaming to the RACK branch sits at 11.34 Mbps in 4.66 s. That&#x27;s a 2x faster finish!&lt;&#x2F;p&gt;
+&lt;p&gt;We also have 3 negative tests to ensure that any corruptions or errors are still being caught:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;fault-checksum&lt;&#x2F;strong&gt; - corrupts every 7th DATA chunk&#x27;s checksum so receivers must drop it and log the error.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;fault-bad-chunk-len&lt;&#x2F;strong&gt; - mangles the chunk length field every 7th chunk to validate length checks&#x2F;parsing.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;fault-nonzero-padding&lt;&#x2F;strong&gt; - corrupts padding bytes every 7th chunk so padding validation and chunk isolation logic are exercised.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In both branches, these cases fail (as desired), which confirms that both branches detect the corruption and that there is no regression in behavior.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;cpu-flamegraphs&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#cpu-flamegraphs&quot; aria-label=&quot;Anchor link for: cpu-flamegraphs&quot;&gt;CPU flamegraphs&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;The flamegraphs below show the CPU profiles for max-burst runs. You can see in the metadata that the RACK profile captured &lt;strong&gt;20ms of samples&lt;&#x2F;strong&gt; (9.95% of 201.08ms duration) versus the master profile&#x27;s &lt;strong&gt;40ms of samples&lt;&#x2F;strong&gt; (19.86% of 201.45ms duration) – exactly half the sample count for a similar duration, which directly supports the efficiency claims.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;rack-cpu-master.svg&quot; alt=&quot;CPU Profile - Master&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;rack-cpu-active.svg&quot; alt=&quot;CPU Profile - Rack&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-rack-behaves-better-not-just-goes-faster&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#why-rack-behaves-better-not-just-goes-faster&quot; aria-label=&quot;Anchor link for: why-rack-behaves-better-not-just-goes-faster&quot;&gt;Why RACK behaves better (not just &quot;goes faster&quot;)&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;RACK changes &lt;em&gt;how&lt;&#x2F;em&gt; SCTP decides that something is lost and when it sends probes, so it wastes less work fixing problems that never really happened:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Instead of keying almost everything off &lt;strong&gt;&quot;three missing reports or an RTO fired&quot;&lt;&#x2F;strong&gt;, RACK uses &lt;strong&gt;time-based loss detection&lt;&#x2F;strong&gt;: it looks at when chunks were last SACKed&#x2F;ACKed and infers loss from elapsed time and the pattern of tail acknowledgments.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Tail Loss Probes (TLP)&lt;&#x2F;strong&gt; send a cheap &quot;sample&quot; chunk at the end of a burst to flush out late ACKs. If the receiver really did get the data, it answers and the sender avoids a full retransmission storm, otherwise, the probe doubles as the retransmission you needed anyway.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In practical terms that&#x27;s what the profiles and metrics are showing:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;We still see the same hot stack (&lt;code&gt;vnet.(*chunkUDP).UserData&lt;&#x2F;code&gt;, &lt;code&gt;runtime.memmove&lt;&#x2F;code&gt;, a thin layer of runtime&#x2F;type helpers) in both master and RACK. It&#x27;s the normal packet I&#x2F;O path.&lt;&#x2F;li&gt;
+&lt;li&gt;With RACK, that stack is exercised &lt;strong&gt;fewer times per unit of useful data&lt;&#x2F;strong&gt; because there are fewer spurious retransmits and fewer &quot;just in case&quot; timer expirations.&lt;&#x2F;li&gt;
+&lt;li&gt;That&#x27;s exactly how we get &lt;strong&gt;more goodput, lower latency, and smaller CPU profiles at the same time&lt;&#x2F;strong&gt;: RACK spends less CPU &quot;arguing with the network&quot; and more CPU pushing real user data through SCTP.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;spec-aligned-ack-behavior-and-testing&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#spec-aligned-ack-behavior-and-testing&quot; aria-label=&quot;Anchor link for: spec-aligned-ack-behavior-and-testing&quot;&gt;Spec-aligned ACK behavior and testing&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;Using SCP testing tool we were able to find some issues includes:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;In the initial RACK implementation, handling of transitions from high to low RTT was suboptimal due to the implementation using a global minimum for recent RTT measurements instead of a windowed minimum (&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc8985#section-6.2-1&quot;&gt;the latter approach is only a &quot;SHOULD&quot; in RFC 8985 section 6.2.1&lt;&#x2F;a&gt;). Atsushi Watanabe quickly identified it and we resolved the issue.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;The earlier version of RACK implementation also handled packet reordering poorly and consumed more CPU than non-RACK. This was corrected by implementing improved active RTT measurement, following the approach described in &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;duepublico2.uni-due.de&#x2F;servlets&#x2F;MCRFileNodeServlet&#x2F;duepublico_derivate_00073893&#x2F;Diss_Weinrank.pdf#page=120&quot;&gt;Weinrank&#x27;s work, see p. 120&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;A minor bug was discovered (and fixed) in the initial RACK implementation where the latest RTT was not measured for every packet.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;We also found that Pion SCTP did not send a SACK immediately after a TSN gap, causing RACK to perform worse under moderate reordering. After fixing this behavior to align with &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc4960#section-6.7&quot;&gt;RFC 4960 section 6.7 (surprisingly only a &quot;SHOULD&quot;)&lt;&#x2F;a&gt;, reordering test cases showed a ~30% improvement.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;looking-forward&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#looking-forward&quot; aria-label=&quot;Anchor link for: looking-forward&quot;&gt;Looking forward&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Keep an eye out for even more improvements and benchmarks from our improved SCTP implementation using real-world data, as well as how we&#x27;re doing it in an upcoming blog post!&lt;&#x2F;p&gt;
+&lt;p&gt;Thanks for reading!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;credits&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#credits&quot; aria-label=&quot;Anchor link for: credits&quot;&gt;Credits&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Huge thanks to the following for making this possible:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;JoTurk&quot;&gt;Jo Turk&lt;&#x2F;a&gt; for introducing me to Pion, making SCP, answering countless questions, and so much more.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;Sean-Der&quot;&gt;Sean DuBois&lt;&#x2F;a&gt; for making Pion, finding &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;duepublico2.uni-due.de&#x2F;servlets&#x2F;MCRFileNodeServlet&#x2F;duepublico_derivate_00073893&#x2F;Diss_Weinrank.pdf&quot;&gt;Felix Weinrank&#x27;s thesis&lt;&#x2F;a&gt;, and endless encouragement.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ValorZard&quot;&gt;Srayan Jana&lt;&#x2F;a&gt; for helping to bounce around many ideas.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;at-wat&quot;&gt;Atsushi Watanabe&lt;&#x2F;a&gt; for reviewing and catching the global minimum vs windowed minimum issue in the RACK PR.&lt;&#x2F;li&gt;
+&lt;li&gt;And many more people along the way!&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>WebRTC Survives When You Walk Out</title>
+        <published>2025-10-17T00:00:00+00:00</published>
+        <updated>2025-10-17T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Kevin Wang
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/automatic-renomination/"/>
+        <id>https://pion.ly/blog/automatic-renomination/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/automatic-renomination/">&lt;p&gt;Networking for a video call sounds simple. You send your video to the
+server and server sends video back. But that mental model breaks down in
+the real world. A connection that starts on stable home Wi-Fi may
+suddenly need to continue over cellular as someone walks out the door.
+The real challenge isn’t just connecting two points! It’s staying
+connected as the network beneath you changes.&lt;&#x2F;p&gt;
+&lt;p&gt;With &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;ice&#x2F;pull&#x2F;822&quot;&gt;automatic renomination&lt;&#x2F;a&gt;, Pion
+will now handle that completely seamlessly, allowing your media to flow
+without skipping a beat. It works by periodically detecting when new
+connection candidates are available and automatically switching to the
+highest quality candidate, taking advantage of a feature in WebRTC called
+&lt;em&gt;renomination&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s dive into how that works.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;how-does-webrtc-establish-connections&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#how-does-webrtc-establish-connections&quot; aria-label=&quot;Anchor link for: how-does-webrtc-establish-connections&quot;&gt;How does WebRTC establish connections?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Connections between two peers in WebRTC are established by exchanging
+&lt;strong&gt;candidates&lt;&#x2F;strong&gt; between the two peers in a signaling phase. These candidates
+can be host, server reflexive, peer reflexive, or relay candidates.
+The details of the various types of candidates are better explained in
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;webrtcforthecurious.com&#x2F;docs&#x2F;03-connecting&#x2F;#candidate-gathering&quot;&gt;WebRTC for the Curious&lt;&#x2F;a&gt;,
+but the relevant detail is that for each candidate, both peers open up
+ports to communicate.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;candidates-1.drawio.png&quot; alt=&quot;Candidates&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Eventually, the &lt;strong&gt;controlling&lt;&#x2F;strong&gt; peer picks a candidate and tells the
+&lt;strong&gt;controlled&lt;&#x2F;strong&gt; peer to use it in a Binding request. This candidate becomes
+the selected candidate that media flows over. After this point, the unused
+ports are closed.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;candidates-2.drawio.png&quot; alt=&quot;Candidates&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;But wait! This handshake is pretty slow. To speed things up and get media
+flowing faster, WebRTC allows media to flow over &lt;em&gt;any&lt;&#x2F;em&gt; candidate before one
+is formally nominated. This shaves off a few round trips between the peers,
+reducing connection latency, in a process called
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc5245#section-8.1.1.2&quot;&gt;aggressive nomination&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;changing-candidates-with-renomination&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#changing-candidates-with-renomination&quot; aria-label=&quot;Anchor link for: changing-candidates-with-renomination&quot;&gt;Changing candidates with renomination&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Now, what if we &lt;em&gt;never&lt;&#x2F;em&gt; commit a candidate? The ability to send media over
+any valid candidate is curious, and in fact quite useful because it means
+we have multiple paths to take advantage of. This is called &lt;strong&gt;renomination&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Under renomination, the controlling peer tells the controlled peer that it
+wants to be able to renominate candidates. When the controlled peer
+receives a binding request, instead of closing the ports, it leaves them
+open. This allows the controlling peer to elect a new candidate at will,
+which the controlled peer will accept media over, effectively enabling us
+to switch candidates mid-stream.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;candidates-1.drawio.png&quot; alt=&quot;Candidates&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;That can sound complex to negotiate but it amounts to a flag in the
+connection handshakes that ensures that both parties are aware of the desire
+to renominate, meaning the implementation of this feature in Pion amounts to
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;ice&#x2F;pull&#x2F;799&#x2F;files#diff-7099be149fabcd94ee9bab48ac30474180ef5c9ce65922291d181e0349aab230&quot;&gt;keeping track of a counter&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Now Pion is taking advantage of WebRTC&#x27;s aggressive nomination state,
+keeping candidates open, and has the ability to pick a new candidate.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;making-it-automatic&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#making-it-automatic&quot; aria-label=&quot;Anchor link for: making-it-automatic&quot;&gt;Making it automatic&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Ideally, the WebRTC connection can do this automatically so the
+user doesn&#x27;t have to pick. After all, manually renominating candidates seems
+useful but is a tedious user experience. Let&#x27;s do it automatically!&lt;&#x2F;p&gt;
+&lt;p&gt;To make this work, we need to solve two problems: knowing when the current
+candidate gets worse, and discovering when completely new candidates appear.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Detecting when candidates get worse:&lt;&#x2F;strong&gt; Turns out, this is already built
+into WebRTC. During the first connection establishment phase, candidates are
+pinged, evaluated, and ranked based on round trip time, packet loss, and
+type of candidate. This same ranking can be performed periodically instead
+of only at initialization. So, the connection can run this on a loop and
+automatically renominate candidates when the state of the network changes.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Discovering new candidates:&lt;&#x2F;strong&gt; What happens when a completely new candidate
+comes online? For example, if I connect to a wifi network mid-call, the
+phone receives a completely new IP address.&lt;&#x2F;p&gt;
+&lt;p&gt;This, too, is built into WebRTC, in the form of trickle ICE! If trickle
+ICE is enabled, candidate exchange can continue after the initial
+connection handshake until the two sides declare that they&#x27;ve exhausted the
+candidate search. Under automatic renomination, we go one step further and
+&lt;strong&gt;disable the exhaustion declaration&lt;&#x2F;strong&gt;, periodically checking for new
+candidates instead. When a new candidate arrives, we use the normal trickle
+ICE mechanism to exchange it between the two peers.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;putting-it-all-together&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#putting-it-all-together&quot; aria-label=&quot;Anchor link for: putting-it-all-together&quot;&gt;Putting it all together&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;And that ends up being enough! In summary, automatic renomination makes the
+following tweaks:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Signal renomination between the peers&lt;&#x2F;li&gt;
+&lt;li&gt;Keep all candidate ports open instead of closing them&lt;&#x2F;li&gt;
+&lt;li&gt;Disable trickle ICE termination&lt;&#x2F;li&gt;
+&lt;li&gt;Periodically ping all candidates and rerank them&lt;&#x2F;li&gt;
+&lt;li&gt;Renominate when a better candidate arises&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;With these pieces in place, Pion can seamlessly transition between different
+network links. If you want to see it in action, check out
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;ice&#x2F;tree&#x2F;master&#x2F;examples&#x2F;automatic-renomination&quot;&gt;this example&lt;&#x2F;a&gt;!&lt;&#x2F;p&gt;
+&lt;p&gt;One really nice thing that I personally liked about this feature when
+implementing it is that it felt like automatic renomination is a
+clever reading of the specification: it doesn&#x27;t need to reinvent a whole
+new mechanism and RFC.&lt;&#x2F;p&gt;
+&lt;p&gt;In fact, one can go one step further and send media over &lt;em&gt;all&lt;&#x2F;em&gt; candidates,
+because under aggressive nomination they are all valid. This, actually, is
+connection bonding for free! There are some practical considerations to
+getting this working well though, but that&#x27;s another blog post.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Making a game with Pion</title>
+        <published>2025-09-09T00:00:00+00:00</published>
+        <updated>2025-09-09T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Srayan Jana
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/making-a-game-with-pion/"/>
+        <id>https://pion.ly/blog/making-a-game-with-pion/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/making-a-game-with-pion/">&lt;p&gt;(The following was adapted from a talk I gave at &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;dwebseminar.org&#x2F;weekend&#x2F;&quot;&gt;DWeb Weekend 2025&lt;&#x2F;a&gt; at the Internet Archive in San Francisco on August 17, 2025)&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;simplifying-webrtc-datachannels-for-games&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#simplifying-webrtc-datachannels-for-games&quot; aria-label=&quot;Anchor link for: simplifying-webrtc-datachannels-for-games&quot;&gt;Simplifying WebRTC Datachannels for Games&lt;&#x2F;a&gt;&lt;&#x2F;h1&gt;
+&lt;p&gt;First of all, to get some stuff out of the way, instead of using the &quot;super complicated&quot; WebRTC datachannels, why don&#x27;t we use something simpler?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;why-not-use-websockets&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#why-not-use-websockets&quot; aria-label=&quot;Anchor link for: why-not-use-websockets&quot;&gt;Why Not Use Websockets?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Too slow&lt;&#x2F;strong&gt;: Most games use UDP with a reliability layer on top.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Suitable for turn-based games&lt;&#x2F;strong&gt;: Fine for games that are turn-based&#x2F;slow-paced, like Runescape.&lt;&#x2F;li&gt;
+&lt;li&gt;For more details, see:
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;gafferongames.com&#x2F;post&#x2F;udp_vs_tcp&#x2F;&quot;&gt;UDP vs TCP&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;gafferongames.com&#x2F;post&#x2F;client_server_connection&#x2F;&quot;&gt;Client-Server Connection&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;the-case-for-web-transport&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#the-case-for-web-transport&quot; aria-label=&quot;Anchor link for: the-case-for-web-transport&quot;&gt;The Case for Web Transport&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Replacement for Websockets, uses QUIC instead of TCP.&lt;&#x2F;li&gt;
+&lt;li&gt;However, it has been in development for a long time, and I want to get started on making games now.&lt;&#x2F;li&gt;
+&lt;li&gt;Current issues:
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;caniuse.com&#x2F;webtransport&quot;&gt;Caniuse WebTransport&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Official demos on &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;w3c&#x2F;webtransport&quot;&gt;GitHub&lt;&#x2F;a&gt; do not work on Firefox on Windows.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;w3c&#x2F;webtransport&#x2F;issues&#x2F;675&quot;&gt;GitHub Issue&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;bugzilla.mozilla.org&#x2F;show_bug.cgi?id=1969090&quot;&gt;Firefox Bugzilla&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Potential&lt;&#x2F;strong&gt;: Will probably solve most problems once finished and would be the best choice for making a multiplayer game on the web.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;datachannels-a-hidden-gem-of-webrtc&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#datachannels-a-hidden-gem-of-webrtc&quot; aria-label=&quot;Anchor link for: datachannels-a-hidden-gem-of-webrtc&quot;&gt;Datachannels: A Hidden Gem of WebRTC&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Feature&lt;&#x2F;strong&gt;: Lets us send unreliable packets over the web using SCTP.&lt;&#x2F;li&gt;
+&lt;li&gt;Advantage: We don’t need WebTransport; we can use this today.&lt;&#x2F;li&gt;
+&lt;li&gt;They were created in part for exactly this use case
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc8831#name-use-cases-for-unreliable-da&quot;&gt;See the reasoning for unreliable datachannels in the official specification itself&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;news.ycombinator.com&#x2F;item?id=13264952&quot;&gt;Not to mention that one of the original implementers of WebRTC wanted to enable this usecase&lt;&#x2F;a&gt;
+&lt;img src=&quot;&#x2F;img&#x2F;comment_from_webrtc_team.png&quot; alt=&quot;Comment from original WebRTC team member&quot; &#x2F;&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;benefits-and-drawbacks-of-webrtc&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#benefits-and-drawbacks-of-webrtc&quot; aria-label=&quot;Anchor link for: benefits-and-drawbacks-of-webrtc&quot;&gt;Benefits and Drawbacks of WebRTC&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;benefits&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#benefits&quot; aria-label=&quot;Anchor link for: benefits&quot;&gt;Benefits&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Host flexibility&lt;&#x2F;strong&gt;: Do not need to host servers - players can make their own.
+&lt;ul&gt;
+&lt;li&gt;No more need for port forwarding or Hamachi!&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Minimal server requirements&lt;&#x2F;strong&gt;: Only need one server for signaling.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Community-supported specification&lt;&#x2F;strong&gt;: There are many options for making your own WebRTC-based app.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;drawbacks&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#drawbacks&quot; aria-label=&quot;Anchor link for: drawbacks&quot;&gt;Drawbacks&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Complex setup&lt;&#x2F;strong&gt;: Setting up WebRTC is challenging.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Server dependence&lt;&#x2F;strong&gt;: You need to host or use two different servers (Signaling + STUN&#x2F;TURN).
+&lt;ul&gt;
+&lt;li&gt;Can use Google’s STUN, but combining signaling and STUN into one server would be nice.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;webrtc-implementations&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#webrtc-implementations&quot; aria-label=&quot;Anchor link for: webrtc-implementations&quot;&gt;WebRTC Implementations&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;webrtc-sdk&#x2F;libwebrtc?tab=readme-ov-file&quot;&gt;libwebrtc&lt;&#x2F;a&gt; - (a fork of) the original WebRTC implementation.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;paullouisageneau&#x2F;libdatachannel&quot;&gt;libdatachannel&lt;&#x2F;a&gt; - C&#x2F;C++.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;webrtc&quot;&gt;Pion WebRTC&lt;&#x2F;a&gt; - Go.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;webrtc-rs&#x2F;webrtc&quot;&gt;webrtc-rs&lt;&#x2F;a&gt; - Rust (using Tokio Runtime).&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;algesten&#x2F;str0m&quot;&gt;str0m&lt;&#x2F;a&gt; - Rust (sans-io).&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;sipsorcery-org&#x2F;sipsorcery&quot;&gt;sipsorcery&lt;&#x2F;a&gt; - C#&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ValveSoftware&#x2F;GameNetworkingSockets&quot;&gt;GameNetworkingSockets&lt;&#x2F;a&gt;
+&lt;ul&gt;
+&lt;li&gt;Uses ICE and STUN&#x2F;TURN for Peer to Peer.&lt;&#x2F;li&gt;
+&lt;li&gt;Created by Valve and made for Steam, which means if you&#x27;ve ever played a game like Counter Strike or Deadlock, you&#x27;ve already seen this library in action!&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;existing-game-networking-libraries-using-webrtc&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#existing-game-networking-libraries-using-webrtc&quot; aria-label=&quot;Anchor link for: existing-game-networking-libraries-using-webrtc&quot;&gt;Existing Game Networking Libraries Using WebRTC&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;geckosio&#x2F;geckos.io&quot;&gt;Geckos.io&lt;&#x2F;a&gt;
+&lt;ul&gt;
+&lt;li&gt;A client-server abstraction for WebRTC Datachannels written in Node.js.&lt;&#x2F;li&gt;
+&lt;li&gt;Past experience: Really nice but a bit inefficient. See &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;geckosio&#x2F;geckos.io&#x2F;issues&#x2F;269&quot;&gt;GitHub Issue&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;poki&#x2F;netlib&quot;&gt;Netlib&lt;&#x2F;a&gt; - Peer-to-peer WebRTC datachannel library for TypeScript.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;johanhelsing&#x2F;matchbox&quot;&gt;Matchbox&lt;&#x2F;a&gt; - WebRTC datachannel library for Rust, compiles to both native and WASM.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;peers&#x2F;peerjs&quot;&gt;PeerJS&lt;&#x2F;a&gt; - Great for browser-only apps&#x2F;games, not specifically for game networking.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rameshvarun&#x2F;netplayjs&quot;&gt;Netplayjs&lt;&#x2F;a&gt; - Untested but seems to work well.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;godotengine&#x2F;webrtc-native&quot;&gt;Godot Engine&#x27;s WebRTC Native&lt;&#x2F;a&gt; - Official Godot bindings to libdatachannel for Godot’s multiplayer API.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;real-world-uses&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#real-world-uses&quot; aria-label=&quot;Anchor link for: real-world-uses&quot;&gt;Real-World Uses&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;WebXash3D&lt;&#x2F;strong&gt;: Reimplementation of Half-Life 1 + Counter-Strike 1.6 using WebRTC.
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;yohimik&#x2F;webxash3d-fwgs&quot;&gt;GitHub WebXash3D&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ololoken&#x2F;xash3d-launcher&quot;&gt;Xash3D Launcher&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;turch.in&#x2F;cs&#x2F;index.html&quot;&gt;Counter Strike 1.6 on the web&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;img src=&quot;&#x2F;img&#x2F;counter_strike_on_the_web.png&quot; alt=&quot;Counter Strike&quot; &#x2F;&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Hypersomnia&lt;&#x2F;strong&gt; - Open source 2D shooter made with C++ and libdatachannel
+&lt;ul&gt;
+&lt;li&gt;Has cross platform capabilities between both
+&lt;ul&gt;
+&lt;li&gt;The &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;store.steampowered.com&#x2F;app&#x2F;2660970&#x2F;Hypersomnia&#x2F;&quot;&gt;native Steam port&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;And in the browser (On &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.crazygames.com&#x2F;game&#x2F;hypersomnia&quot;&gt;CrazyGames&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;hypersomnia.io&#x2F;&quot;&gt;the official website&lt;&#x2F;a&gt;)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;TeamHypersomnia&#x2F;Hypersomnia&quot;&gt;Github Link&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;why-go-for-development&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#why-go-for-development&quot; aria-label=&quot;Anchor link for: why-go-for-development&quot;&gt;Why Go for Development?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Efficient: It just gets the job done.&lt;&#x2F;li&gt;
+&lt;li&gt;Pion: Has a pure-Go implementation of WebRTC.&lt;&#x2F;li&gt;
+&lt;li&gt;Minimal dependencies: No need for external dependencies like OpenSSL.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;why-not-rust&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#why-not-rust&quot; aria-label=&quot;Anchor link for: why-not-rust&quot;&gt;Why Not Rust?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Preference: I like Rust, but Go has a more active scene&#x2F;easier help for WebRTC.&lt;&#x2F;li&gt;
+&lt;li&gt;Speed of development: It&#x27;s faster to code in Go compared to Rust.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;why-ebitengine-for-game-development&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#why-ebitengine-for-game-development&quot; aria-label=&quot;Anchor link for: why-ebitengine-for-game-development&quot;&gt;Why Ebitengine for Game Development?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;ebitengine.org&#x2F;&quot;&gt;Website Link&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Versatile&lt;&#x2F;strong&gt;: 2D game engine that works across various platforms.
+&lt;ul&gt;
+&lt;li&gt;The creator, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;hajimehoshi.com&#x2F;&quot;&gt;Hajime Hoshi&lt;&#x2F;a&gt;, has ported the engine (and the Go language!) to &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;ebitengine.org&#x2F;en&#x2F;blog&#x2F;native_compiling_for_nintendo_switch.html&quot;&gt;the Nintendo Switch&lt;&#x2F;a&gt; and other game consoles&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Battle Tested&lt;&#x2F;strong&gt;: Has been used for actual games like
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;playism.com&#x2F;en&#x2F;game&#x2F;frommadness-withlove&#x2F;&quot;&gt;From Madness with Love&lt;&#x2F;a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;store.steampowered.com&#x2F;app&#x2F;2101130&#x2F;From_Madness_with_Love&#x2F;&quot;&gt;Steam Link&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Coral &amp;amp; The Abyss
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;store.steampowered.com&#x2F;app&#x2F;3123920&#x2F;Coral__The_Abyss&#x2F;&quot;&gt;Steam Link&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.nintendo.com&#x2F;us&#x2F;store&#x2F;products&#x2F;coral-and-the-abyss-switch&#x2F;&quot;&gt;Nintendo eShop Link&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Rakuen
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;store.steampowered.com&#x2F;app&#x2F;559210&#x2F;Rakuen&#x2F;&quot;&gt;Steam Link&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.nintendo.com&#x2F;us&#x2F;store&#x2F;products&#x2F;rakuen-deluxe-edition-switch&#x2F;&quot;&gt;Nintendo eShop Link&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;And more on the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;ebitengine.org&#x2F;en&#x2F;showcase.html&quot;&gt;Ebitengine Showcase Page&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Potential Crossplay&lt;&#x2F;strong&gt;: You could make a cross platform multiplayer game in pure Go that works between the Nintendo Switch, PC, and the browser!&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;official-pion-example&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#official-pion-example&quot; aria-label=&quot;Anchor link for: official-pion-example&quot;&gt;Official Pion Example&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;We now have an official example using Ebitengine in the Pion &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;example-webrtc-applications&quot;&gt;example-webrtc-applications&lt;&#x2F;a&gt; repository&lt;&#x2F;li&gt;
+&lt;li&gt;This includes an bundled in signaling server so you can host your own lobby, and connect with another player.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;example-webrtc-applications&#x2F;tree&#x2F;master&#x2F;ebiten-game&quot;&gt;&lt;strong&gt;Github Link to Game&lt;&#x2F;strong&gt;&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;PR where it was merged in&lt;&#x2F;strong&gt;: &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;example-webrtc-applications&#x2F;pull&#x2F;351&quot;&gt;Example WebRTC Applications&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;Limitations&lt;&#x2F;strong&gt;
+&lt;ul&gt;
+&lt;li&gt;Right now, this can only support two players on the same computer
+&lt;ul&gt;
+&lt;li&gt;Could probably work between two different computers, but we would need to figure out how to setup CORS properly for the signaling server&lt;&#x2F;li&gt;
+&lt;li&gt;The machinery is there to support more than two players in a lobby, but as of writing this article it is &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;example-webrtc-applications&#x2F;blob&#x2F;5c7005933879d34fa19b4d0c744bb884a247f5dc&#x2F;ebiten-game&#x2F;game&#x2F;main.go#L154&quot;&gt;currently hardcoded&lt;&#x2F;a&gt; to just two
+&lt;img src=&quot;&#x2F;img&#x2F;game_on_web_and_desktop.png&quot; alt=&quot;Picture of game&quot; &#x2F;&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;other-games-that-use-webrtc&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#other-games-that-use-webrtc&quot; aria-label=&quot;Anchor link for: other-games-that-use-webrtc&quot;&gt;Other Games That Use WebRTC&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;toughlovearena.com&#x2F;&quot;&gt;Tough Love Arena&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.counterpicklabs.com&#x2F;&quot;&gt;Counterpick Labs&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;2dsoccer.com&#x2F;&quot;&gt;2D Soccer&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;possibilities-with-webrtc&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#possibilities-with-webrtc&quot; aria-label=&quot;Anchor link for: possibilities-with-webrtc&quot;&gt;Possibilities with WebRTC&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Hosting a Minecraft-style game without dedicated servers or port forwarding.&lt;&#x2F;li&gt;
+&lt;li&gt;Players host everything themselves: no need for VPN&#x2F;Hamachi.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;hr &#x2F;&gt;
+&lt;h2 id=&quot;community-acknowledgements&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#community-acknowledgements&quot; aria-label=&quot;Anchor link for: community-acknowledgements&quot;&gt;Community Acknowledgements&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;A big thanks to:
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;pion.ly&#x2F;discord&quot;&gt;The Pion Discord&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;discord.gg&#x2F;jXAP8jp3Nn&quot;&gt;The libdatachannel Discord&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;discord.gg&#x2F;3tVdM5H8cC&quot;&gt;The Ebitengine Discord&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;discord.com&#x2F;invite&#x2F;game-development-in-rust-676678179678715904&quot;&gt;The Rust gamedev Discord&lt;&#x2F;a&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;And many more who made this journey possible. I stand on the shoulders of giants.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>FEC with Pion</title>
+        <published>2025-06-23T00:00:00+00:00</published>
+        <updated>2025-06-23T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Jingyang Kang
+          </name>
+        </author>
+        
+        <author>
+          <name>
+            Aleksandr Alekseev
+          </name>
+        </author>
+        
+        <author>
+          <name>
+            Jo Turk
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/fec-with-pion/"/>
+        <id>https://pion.ly/blog/fec-with-pion/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/fec-with-pion/">&lt;p&gt;We are excited to have FEC encoding support available in the pion&#x2F;webrtc v4.1.2 + pion&#x2F;interceptor v0.1.38. In this blog post, we&#x27;ll explain what FEC is and how to implement it with Pion.&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;If you already know FEC, feel free to skip to &lt;a href=&quot;https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;fec-with-pion&#x2F;#flexfec-in-pion&quot;&gt;FlexFEC in Pion&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;h2 id=&quot;quick-background-what-is-fec&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#quick-background-what-is-fec&quot; aria-label=&quot;Anchor link for: quick-background-what-is-fec&quot;&gt;Quick background: What is FEC?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Forward Error Correction (FEC) is a proactive loss-recovery mechanism:&lt;&#x2F;p&gt;
+&lt;p&gt;The sender transmits extra mathematically derived parity packets (e.g. xor of the media packets) along with each block of media packets. If the receiver later discovers that one or even more packets are lost, it can use the parity packets to recover the lost packets, using the XOR result of the received packets and the parity (repair) packet, all without waiting for the lost packets to be retransmitted.&lt;&#x2F;p&gt;
+&lt;p&gt;A simple example:&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Data packets&lt;&#x2F;th&gt;&lt;th&gt;Parity packet&lt;&#x2F;th&gt;&lt;th&gt;Recovery logic&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;code&gt;A&lt;&#x2F;code&gt; &lt;code&gt;B&lt;&#x2F;code&gt; &lt;code&gt;C&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;&lt;code&gt;P = A ⊕ B ⊕ C&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;td&gt;If &lt;code&gt;B&lt;&#x2F;code&gt; is lost, receiver computes &lt;code&gt;B = A ⊕ C ⊕ P&lt;&#x2F;code&gt;&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;p&gt;Because parity travels with the media, recovery happens locally and immediately. The trade‑off is more data on the link.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;we-already-have-nack-why-fec&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#we-already-have-nack-why-fec&quot; aria-label=&quot;Anchor link for: we-already-have-nack-why-fec&quot;&gt;We Already Have NACK, Why FEC?&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Alice is sending a video stream to Bob with WebRTC. In an imaginary perfect network condition in which no packet loss happens and the network delay is 0 ms, all Alice needs to do is encode the video, pack RTP packets, and send them to Bob. What Bob needs to do is simply depacketize RTP packets and decode the payload into video frames. Everything is great except this imaginary perfect network condition doesn&#x27;t exist.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sequenceDiagram&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    title &amp;quot;Perfect Network&amp;quot;&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant Alice&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant Bob&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n+1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n+2&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Note right of Bob: Great! :)&amp;lt;br&#x2F;&amp;gt;But not reality&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s gradually introduce more factors into our network, to make it closer and closer to the real internet we live in. First, let&#x27;s add packet loss while keep network delay still at 0 ms. With packet loss, not every packet Alice sends is guaranteed to be received by Bob. So, we need a mechanism to recover these lost packets. A straight forward approach is to make Alice resend the lost packets again. In order to notify Alice which packet is lost and needs to be retransmitted, Bob should explicitly send message to Alice, containing the sequence number of lost packets. This is NACK. With NACK in our lossy but no-delay network, all packets can be retransmitted immediately after Bob sends a NACK request. Problem solved? In this case, yes. But in the real world, no.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sequenceDiagram&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    title Using NACK&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant Alice&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant Bob&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n+1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n+2&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    alt Packet n lost&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        Bob--&amp;gt;&amp;gt;Alice: NACK n&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        Note right of Bob: Extra RTT(s) here&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        Alice-&amp;gt;&amp;gt;Bob: RTX Packet n&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Next, we are also adding delays to our imaginary network. At this point, it basically has all the characteristics of real world networks. Can our current mechanism tackle network delay + loss without hurting transportation quality? Sadly, no. If Alice packs a frame into 10 packets, Bob can&#x27;t decode the frame even if only 1 packet is lost. And since NACK takes at least 1 additional RTT (more than 1 when retransmitted packets are lost too), this frame is delayed on Bob&#x27;s side. To make things even worse, in modern video codecs, in order to increase compression ratio, encoders use a technology called &lt;strong&gt;forward prediction&lt;&#x2F;strong&gt;, which means subsequent frames relies on the data of previous frame to decode. For any frame delayed due to network loss, all subsequent dependent frames will be delayed. This can cause noticeable jank for Bob, which is bad.&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;mermaid&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;sequenceDiagram&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    title Using FEC&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant Alice&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    participant Bob&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n+1&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: Video Packet n+2&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    Alice-&amp;gt;&amp;gt;Bob: FEC Packet&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    alt Packet n lost&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        Bob-&amp;gt;&amp;gt;Bob: Recover n from n+1, n+2, and the FEC Packet&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;        Note right of Bob: No extra RTT(s) here&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span&gt;    end&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;FEC is a mechanism that can mitigate this. FEC stands for &lt;strong&gt;Forward Error Correction&lt;&#x2F;strong&gt;. Basically, it means that we can send more data to recover from potential packet losses. With FEC enabled, Alice does not only send 10 video packets to Bob, but also a few redundant packets, containing data XORed from video packets. When packets get lost during transmission, Bob can try to recover it with redundant data from FEC packets. In this case, no additional RTT is needed to recover packets lost, so video streaming is not affected.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;recovery-groups&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#recovery-groups&quot; aria-label=&quot;Anchor link for: recovery-groups&quot;&gt;Recovery groups&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;on-the-sender-side&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#on-the-sender-side&quot; aria-label=&quot;Anchor link for: on-the-sender-side&quot;&gt;On the sender side&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;Media packets are grouped for protection, for example:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Group 1: M1, M3, M5 protected by F1&lt;&#x2F;li&gt;
+&lt;li&gt;Group 2: M2, M4 protected by F2&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;fec_sender.drawio.png&quot; alt=&quot;FEC Sender&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;on-the-receiver-side&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#on-the-receiver-side&quot; aria-label=&quot;Anchor link for: on-the-receiver-side&quot;&gt;On the receiver side&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;During the transmission, some media packets might be lost:&lt;&#x2F;p&gt;
+&lt;p&gt;Received FEC packets are used to reconstruct missing data:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;F1 recover any lost packet from Group 1&lt;&#x2F;li&gt;
+&lt;li&gt;F2 recover any lost packet from Group 2&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&lt;img src=&quot;&#x2F;img&#x2F;fec_receiver.drawio.png&quot; alt=&quot;FEC Receiver&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;fec-mechanisms-in-webrtc&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#fec-mechanisms-in-webrtc&quot; aria-label=&quot;Anchor link for: fec-mechanisms-in-webrtc&quot;&gt;FEC Mechanisms in WebRTC&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;In WebRTC there are two main RTP based forward-error-correction (FEC) mechanisms. They both generate XOR parity packets, but the way they&#x27;re signalled and routed is very different:&lt;&#x2F;p&gt;
+&lt;table&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Feature&lt;&#x2F;th&gt;&lt;th&gt;&lt;strong&gt;FlexFEC (&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc8627&#x2F;&quot;&gt;RFC 8627&lt;&#x2F;a&gt;)&lt;&#x2F;strong&gt;&lt;&#x2F;th&gt;&lt;th&gt;&lt;strong&gt;ULPFEC + RED (&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc5109&#x2F;&quot;&gt;RFC 5109&lt;&#x2F;a&gt;)&lt;&#x2F;strong&gt;&lt;&#x2F;th&gt;&lt;&#x2F;tr&gt;&lt;&#x2F;thead&gt;&lt;tbody&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Transport&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;Travels on its own SSRC and payload-type, SDP advertises an extra repair m-section and an &lt;code&gt;a=ssrc-group:FEC-FR &amp;lt;media-ssrc&amp;gt; &amp;lt;fec-ssrc&amp;gt;&lt;&#x2F;code&gt; line.&lt;&#x2F;td&gt;&lt;td&gt;Parity bytes are wrapped inside a RED packet that uses the same SSRC as the media. No extra m-section needed; you just add a RED and a ULPFEC payload-type.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Codecs&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;True &lt;strong&gt;Codec-agnostic&lt;&#x2F;strong&gt;, works with VP8&#x2F;9, H.264, AV1 … anything that produces RTP packets.&lt;&#x2F;td&gt;&lt;td&gt;While &lt;strong&gt;codec-agnostic&lt;&#x2F;strong&gt; in theory, Chromium limits full protection to VPx and AV1. With H264 and H265 the encoder can&#x27;t flag per-partition loss importance in a way that is useful for FEC. ULPFEC + Nack for codecs without Picture-ID will have to retransmit FEC packets, So ULPFEC is not used for H264 and H265.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Loss patterns handled&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;Two-dimensional (rows × columns) parity&lt;&#x2F;td&gt;&lt;td&gt;Single-direction parity&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;strong&gt;Implementation status&lt;&#x2F;strong&gt;&lt;&#x2F;td&gt;&lt;td&gt;All Chromium-based browsers can &lt;em&gt;receive&lt;&#x2F;em&gt; FlexFEC; &lt;strong&gt;send-side&lt;&#x2F;strong&gt; support is still immature. Limited receive support in Safari and Firefox doesn&#x27;t support it.&lt;&#x2F;td&gt;&lt;td&gt;&lt;strong&gt;Send + Receive&lt;&#x2F;strong&gt; in Chrome, Firefox, Safari.&lt;&#x2F;td&gt;&lt;&#x2F;tr&gt;
+&lt;&#x2F;tbody&gt;&lt;&#x2F;table&gt;
+&lt;p&gt;FlexFEC is the only option that remains fully codec-agnostic. ULPFEC does a fine job for VP8&#x2F;VP9&#x2F;AV1, but offers little benefit for H264 or H265.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;codec-integrated-fec&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#codec-integrated-fec&quot; aria-label=&quot;Anchor link for: codec-integrated-fec&quot;&gt;Codec-integrated FEC&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;While FlexFEC and ULPFEC live at the RTP packet layer, some codecs integrate redundancy straight into the encoded payload itself.&lt;&#x2F;p&gt;
+&lt;p&gt;The only such codec you&#x27;ll meet in browsers today is Opus, and the way it works is when you set &lt;code&gt;useinbandfec=1&lt;&#x2F;code&gt;, the Opus encoder embeds a low-bit-rate redundancy (LBRR) copy of frame N-1 inside the packet that carries frame N. If packet N-1 is lost, the decoder can reconstruct it from the tail of N.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;fec-isn-t-magic-trade-offs-to-keep-in-mind&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#fec-isn-t-magic-trade-offs-to-keep-in-mind&quot; aria-label=&quot;Anchor link for: fec-isn-t-magic-trade-offs-to-keep-in-mind&quot;&gt;FEC isn&#x27;t magic: trade-offs to keep in mind&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Bandwidth overhead&lt;&#x2F;strong&gt;
+If you add 20% FEC without raising the send cap, you&#x27;ll need to reduce the video resolution or quality to stay within the cap. In good network conditions where the packet loss is minimal, FEC steals bandwidth in exchange for redundancy you don&#x27;t need.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Extra load on a congested link&lt;&#x2F;strong&gt;
+When the loss is caused by congestion, adding more packets for FEC can deepen the problem, in congested networks, sometimes disabling FEC yields better results.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Loss pattern mismatch&lt;&#x2F;strong&gt;
+Random 1-2% loss is where light FEC shines. But for example, 10% bursts every few hundred ms requires high parity, which often ends up worse than just using RTX.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Silent failures&lt;&#x2F;strong&gt;
+Analytics may count frames as &quot;recovered&quot; even if the end user gets artifacts or glitches.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Only packets, not outages&lt;&#x2F;strong&gt;
+A 100ms network stall drops all packets, media and parity alike; so buffering or retransmission is still needed.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;FEC is best for high-latency networks&lt;&#x2F;strong&gt;
+FEC is designed to avoid the delay of waiting for retransmissions, but for example, if your round-trip time (RTT) is under 30-50ms, do you really need it? In low-latency networks, simply retransmitting lost packets might be more efficient and better overall than sending redundant data up front.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;p&gt;So, start with the lowest cost protection first (Opus in-band FEC for audio, RTX for video). Add FEC only when telemetry shows sustained loss or when you have bandwidth room. FEC should be a dynamic option, not a set-and-forget checkbox that you enable for all users, and all network conditions.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;fec-algorithms-beyond-xor&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#fec-algorithms-beyond-xor&quot; aria-label=&quot;Anchor link for: fec-algorithms-beyond-xor&quot;&gt;FEC algorithms beyond XOR&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;FlexFEC and ULPFEC both use XOR-based recovery logic to generate packets. Another family of algorithms, like &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Reed%E2%80%93Solomon_error_correction&quot;&gt;Reed-Solomon&lt;&#x2F;a&gt;, can recover from more complex losses but are currently not standardized in WebRTC due to their higher computational cost and block-based design, which is not best suited for real-time use in WebRTC.&lt;&#x2F;p&gt;
+&lt;p&gt;If you&#x27;re curious, the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;klauspost&#x2F;reedsolomon&quot;&gt;klauspost&#x2F;reedsolomon Go library&lt;&#x2F;a&gt; offers a SIMD-accelerated implementation that&#x27;s fun to experiment with.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;flexfec-in-pion&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#flexfec-in-pion&quot; aria-label=&quot;Anchor link for: flexfec-in-pion&quot;&gt;FlexFEC in Pion&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Pion now supports basic FlexFEC encoding! You can pair it with Chromium and Safari (receive-only), and it&#x27;s simple to integrate – just register the payload type in your media engine and add the interceptor, then you&#x27;re good to go! More about it in &lt;a href=&quot;https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;fec-with-pion&#x2F;#enable-flexfec-encoding-in-pion&quot;&gt;Enable FlexFEC Encoding in Pion&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;For a quick demo, you can check out the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;webrtc&#x2F;tree&#x2F;887f5c6e0c405ac51b5a1b7db1e23dc4f9c7e4fb&#x2F;examples&#x2F;play-from-disk-fec&quot;&gt;play-from-disk-fec&lt;&#x2F;a&gt; example.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;what-to-look-forward-to-in-the-final-flexfec-implementation&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#what-to-look-forward-to-in-the-final-flexfec-implementation&quot; aria-label=&quot;Anchor link for: what-to-look-forward-to-in-the-final-flexfec-implementation&quot;&gt;What to look forward to in the final FlexFEC implementation&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;If you worked with FlexFEC, you may have come across multiple draft versions, &lt;strong&gt;FlexFEC-03&lt;&#x2F;strong&gt; and &lt;strong&gt;FlexFEC-20&lt;&#x2F;strong&gt;. The final standard is published as &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc8627&#x2F;&quot;&gt;RFC 8627&lt;&#x2F;a&gt;, and while it builds on ideas introduced in the -20 draft, it formalizes several features and adds important clarifications.&lt;&#x2F;p&gt;
+&lt;p&gt;Although Pion doesn&#x27;t yet fully support RFC 8627, we&#x27;re tracking it closely and excited about the improvements it will bring, here are some of the highlights:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Flexible Masking (Selective Protection)&lt;&#x2F;strong&gt;:
+RFC 8627 introduces a &lt;strong&gt;flexible mask&lt;&#x2F;strong&gt; mode, allowing senders to protect an arbitrary subset of source packets. Instead of a fixed pattern, it sends a bitmask indicating exactly which packets are covered. This can be used to implement smarter FEC strategies, such as protecting only keyframes or higher-priority codec configuration packets.
+-&amp;gt; &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc8627&#x2F;#section-1.1.4&quot;&gt;RFC 8627, Section 1.1.4&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Hybrid FEC and Retransmission Support&lt;&#x2F;strong&gt;
+The final spec explicitly supports both &lt;strong&gt;proactive FEC&lt;&#x2F;strong&gt; and &lt;strong&gt;RTP retransmission&lt;&#x2F;strong&gt;. It also requires that when FlexFEC is used alongside another retransmission mechanism, the answer in an SDP negotiation must use FlexFEC only, ensuring consistent protection handling.
+-&amp;gt; &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc8627&#x2F;#section-1.1.7&quot;&gt;RFC 8627, Section 1.1.7&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Improved Scalability and Consistency&lt;&#x2F;strong&gt;
+RFC 8627 addresses scalability limitations from earlier FEC mechanisms like &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc5109&quot;&gt;RFC 5109&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc2733&quot;&gt;RFC 2733&lt;&#x2F;a&gt;. It also reuses the &lt;strong&gt;RTP repair stream format&lt;&#x2F;strong&gt; defined in &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;html&#x2F;rfc6363&quot;&gt;RFC 6363&lt;&#x2F;a&gt;, making it more consistent with modern RTP practices and easier to interoperate with existing tooling.
+-&amp;gt; &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc8627&#x2F;#section-1.1.1&quot;&gt;RFC 8627, Section 1.1.1&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Packet and Header Format Clarifications&lt;&#x2F;strong&gt;
+The final spec clearly defines key header fields. For example, the &lt;strong&gt;R bit&lt;&#x2F;strong&gt; distinguishes retransmission (R=1) from FEC repair (R=0), while the &lt;strong&gt;F bit&lt;&#x2F;strong&gt; selects between flexible-mask mode (F=0) and fixed-offset mode (F=1). These explicit semantics simplify implementation logic and parsing.
+-&amp;gt; &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;datatracker.ietf.org&#x2F;doc&#x2F;rfc8627&#x2F;#section-6.2&quot;&gt;RFC 8627, Section 6.2&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;enable-flexfec-encoding-in-pion&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#enable-flexfec-encoding-in-pion&quot; aria-label=&quot;Anchor link for: enable-flexfec-encoding-in-pion&quot;&gt;Enable FlexFEC Encoding in Pion&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;You can use the helper for quick setup:&lt;&#x2F;p&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;go&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;err&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; =&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; webrtc&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;ConfigureFlexFEC03&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;fecPayloadType&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; mediaEngine&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; interceptorRegistry&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Or setup codec and interceptor by hand:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;Register FlexFEC03 codec to MediaEngine&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;go&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;err&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; =&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; mediaEngine&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;RegisterCodec&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt;    webrtc&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt;RTPCodecParameters&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;{&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;        RTPCodecCapability&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt; webrtc&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#267F99, #F9E2AF);&quot;&gt;RTPCodecCapability&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;{&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;            MimeType&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;     webrtc&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;MimeTypeFlexFEC03&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;            ClockRate&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#098658, #FAB387);&quot;&gt;    90000&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;            Channels&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#098658, #FAB387);&quot;&gt;     0&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;            SDPFmtpLine&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;  &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;repair-window=10000000&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#A31515, #A6E3A1);&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;            RTCPFeedback&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#0000FF, #F38BA8);&quot;&gt; nil&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;        }&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;        PayloadType&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#098658, #FAB387);&quot;&gt; 118&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#008000, #9399B2);&quot;&gt; &#x2F;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#008000, #9399B2);&quot;&gt; You can change this&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;    }&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;    webrtc&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;RTPCodecTypeVideo&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;ol start=&quot;2&quot;&gt;
+&lt;li&gt;Register FlexFEC interceptor&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;pre class=&quot;giallo&quot; style=&quot;color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);&quot;&gt;&lt;code data-lang=&quot;go&quot;&gt;&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;fecInterceptor&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; err&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #94E2D5);&quot;&gt; :=&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt; flexfec&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;NewFecInterceptor&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#008000, #9399B2);&quot;&gt;&#x2F;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#008000, #9399B2);&quot;&gt; handle error...&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;giallo-l&quot;&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;interceptorRegistry&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#795E26, #89B4FA);&quot;&gt;Add&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#001080, #CDD6F4);&quot;&gt;fecInterceptor&lt;&#x2F;span&gt;&lt;span style=&quot;color: light-dark(#000000, #9399B2);&quot;&gt;)&lt;&#x2F;span&gt;&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;That&#x27;s it! But with a few catches:&lt;&#x2F;p&gt;
+&lt;ol&gt;
+&lt;li&gt;The order of the FlexFEC interceptor in the chain of interceptors matters. It should be registered before &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;interceptor&#x2F;blob&#x2F;a1938a5c1ed53b7cd245ae019cd358ad8080cd5f&#x2F;pkg&#x2F;twcc&#x2F;sender_interceptor.go&quot;&gt;TWCC header extension interceptor&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;interceptor&#x2F;blob&#x2F;a1938a5c1ed53b7cd245ae019cd358ad8080cd5f&#x2F;pkg&#x2F;nack&#x2F;responder_interceptor.go&quot;&gt;NACK responder interceptor&lt;&#x2F;a&gt; if you are using these.&lt;&#x2F;li&gt;
+&lt;li&gt;If you are using congestion controller, be aware of the bandwidth FEC is taking, you should set your encoder&#x27;s bitrate to &lt;code&gt;cc_estimated_bandwidth - fec_bitrate&lt;&#x2F;code&gt;. By default, for every 5 media packets, 2 FEC packets will be produced, so expect roughly 40% bitrate overhead. You can tune FEC parameters to reduce or increase it.&lt;&#x2F;li&gt;
+&lt;li&gt;Enabling FlexFEC encoding may introduce significant CPU&#x2F;RAM overhead.&lt;&#x2F;li&gt;
+&lt;li&gt;Current implementation does not protect media packet batches if they contain missing or reordered packets. So, it works best with senders that packetize media themselves.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;h3 id=&quot;configuring-flexfec-encoder-interceptor&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#configuring-flexfec-encoder-interceptor&quot; aria-label=&quot;Anchor link for: configuring-flexfec-encoder-interceptor&quot;&gt;Configuring FlexFEC Encoder Interceptor&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;You can customize FEC protection by tweaking &lt;code&gt;NumMediaPackets&lt;&#x2F;code&gt; and &lt;code&gt;NumFECPackets&lt;&#x2F;code&gt; using the interceptor&#x27;s &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;interceptor&#x2F;blob&#x2F;a1938a5c1ed53b7cd245ae019cd358ad8080cd5f&#x2F;pkg&#x2F;flexfec&#x2F;option.go&quot;&gt;options&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;It will result in a protection profile which uses &lt;code&gt;NumFECPackets&lt;&#x2F;code&gt; FEC packets to protect each &lt;code&gt;NumMediaPackets&lt;&#x2F;code&gt; media packets. Interleaved protection will be used, which means that media packet &lt;code&gt;X&lt;&#x2F;code&gt; will be protected by FEC packet &lt;code&gt;(X mod NumFECPackets)&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;verify-that-flexfec-is-enabled&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#verify-that-flexfec-is-enabled&quot; aria-label=&quot;Anchor link for: verify-that-flexfec-is-enabled&quot;&gt;Verify that FlexFEC is Enabled&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;ul&gt;
+&lt;li&gt;On sender side, which is within Pion, you can log the packets using the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;interceptor&#x2F;tree&#x2F;a1938a5c1ed53b7cd245ae019cd358ad8080cd5f&#x2F;pkg&#x2F;packetdump&quot;&gt;packetdump interceptor&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;On receiver side, for example, in Chromium, you can go to &lt;code&gt;chrome:&#x2F;&#x2F;webrtc-internals&lt;&#x2F;code&gt; and search for the stats graph of &lt;code&gt;fecBytesReceived&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;credits&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#credits&quot; aria-label=&quot;Anchor link for: credits&quot;&gt;Credits&lt;&#x2F;a&gt;&lt;&#x2F;h2&gt;
+&lt;p&gt;Huge thanks to everyone who contributed to this project: &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;aalekseevx&#x2F;&quot;&gt;Aleksandr Alekseev&lt;&#x2F;a&gt;, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;3DRX&#x2F;&quot;&gt;Jingyang Kang&lt;&#x2F;a&gt;, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;JoTurk&quot;&gt;Jo Turk&lt;&#x2F;a&gt;, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pougetat&quot;&gt;Thomas Pouget-Abadie&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Pion Opus</title>
+        <published>2022-10-02T00:00:00+00:00</published>
+        <updated>2022-10-02T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Sean DuBois
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/pion-opus/"/>
+        <id>https://pion.ly/blog/pion-opus/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/pion-opus/">&lt;p&gt;I am so excited to announce that &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;opus&quot;&gt;pion&#x2F;opus&lt;&#x2F;a&gt; is now available. It is a Pure Go implementation
+of the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;opus-codec.org&#x2F;&quot;&gt;Opus Codec&lt;&#x2F;a&gt;. pion&#x2F;opus is far from done though. It is far enough along for others to start playing
+with and contributing too though. We still have a lot more work to do. If you are interested now is a great time to get involved!&lt;&#x2F;p&gt;
+&lt;p&gt;Now that the code is shared I wanted to share my goals, what I learned and hopes for the future.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-opus&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#why-opus&quot; aria-label=&quot;Anchor link for: why-opus&quot;&gt;Why Opus?&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;I had a few a different reasons for starting this project. Some of the goals I had from the very begining, others I picked up along the way.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Complete the WebRTC Stack&lt;&#x2F;strong&gt; -
+Implementing Opus was a clear next step for the Pion project. For the last 5 years we have been developing different parts
+of the &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;webrtcforthecurious.com&#x2F;docs&#x2F;01-what-why-and-how&#x2F;&quot;&gt;WebRTC Stack&lt;&#x2F;a&gt;. We have completed everything but audio and
+video codecs. It feels great getting closer to the goal of having the entire software stack in one memory.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Empower others to learn Opus&lt;&#x2F;strong&gt; -
+When implementing pion&#x2F;opus I designed it so others can learn from it. &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;opus&#x2F;blob&#x2F;master&#x2F;internal&#x2F;silk&#x2F;decoder.go#L1676&quot;&gt;silk&#x2F;decoder.go&lt;&#x2F;a&gt;
+includes the relevant comments from the RFC. I made sure to use the same variable names and flow as the RFC. My hope is that developers can jump into the code
+and learn quickly from the unit tests and code that follows the RFC.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Enable Pion users&lt;&#x2F;strong&gt; -
+Pion users have been building more and more interesting things. One developer is building Go clients that make it easier
+for musicians to play together. Another developer is building clients that make it easier for his customers to bridge
+protocols. The last developer is building a WebRTC&#x2F;Phone bridge. All of them have talked about frustrations with cross
+compiling and making C libs work with Go. I am sure more developers have been frustrated and just haven&#x27;t felt comfortable
+enough to discuss it.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;More efficent use of Opus&lt;&#x2F;strong&gt; -
+I hope to expose the internals of this library so users can more efficently work with Opus. Maybe instead of running a Fast Fourier transform to implement
+a talking notifier developers will only do partial decode. I would also like to build a bitstream analyzer using this library to help users trying to learn Opus.
+I am not sure what will happen, but it is always suprising what developers build when you give them more tools.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Proving Myself&lt;&#x2F;strong&gt; -
+Codecs were always a daunting topic to me. I spend a lot of time using codecs, but never really understanding them. It felt like a
+chance for growth to take this on. I also get asked lots of questions about coded media and have to answer in generalizations. I
+hope in the future I can give people more concrete answers after this project is complete.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Inspire more Go media projects&lt;&#x2F;strong&gt; -
+Go is a incredibly powerful language. You can build scalable, secure and maintainable software quickly. If you have the libraries you need. I believe
+having a Opus implementation will inspire other developers to join in the challenge of making Go better for media development. I want a future with more
+and more Go media projects, that can&#x27;t happen unless we write these libraries.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Get a new group of developers involved in Pion&lt;&#x2F;strong&gt; -
+Pion has primarily been WebRTC users. I hope that by having a Opus implementation it will bring a new set of eyes on the Pion project.
+I think all the existing Pion projects would benefit greatly from developers joining with different opinions and backgrounds. Personally
+it will be motivating to work with new people who have new demands. The pressure of Pion has lowered lately as the core libraries have stabilized.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Create opportunity for contributors&lt;&#x2F;strong&gt; -
+My favorite part of working on Pion is seeing the opportunities it creates. It brings me a lot of happiness watching developers grow as they contribute to Pion.
+They become better programmers and collaborators. Pion also provides lots of great career opportunities. I have see multiple contributors get high paying
+jobs because of the skills developed while working on Pion. It has ranged from new developers who haven&#x27;t finished college to seasoned developers with decades of experience.
+Getting involved in Open Source can be rewarding for anyone.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;what-i-learned&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#what-i-learned&quot; aria-label=&quot;Anchor link for: what-i-learned&quot;&gt;What I learned&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;Not as much about audio as I hoped! When implementing this codec I spent a lot of time reading &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.rfc-editor.org&#x2F;rfc&#x2F;rfc6716&quot;&gt;RFC6716&lt;&#x2F;a&gt;.
+The RFC talks about the how, and not the why though. It is possible to learn the high level details like &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Linear_predictive_coding&quot;&gt;LPC&lt;&#x2F;a&gt;.
+I wasn&#x27;t able to find any details about the particulars of SILK itself. When this project is done I hope to go research that and write it down.&lt;&#x2F;p&gt;
+&lt;p&gt;A few implementations of Opus exist. &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;xiph&#x2F;opus&quot;&gt;libopus&lt;&#x2F;a&gt;, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lostromb&#x2F;concentus&quot;&gt;concentus&lt;&#x2F;a&gt;, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lu-zero&#x2F;opus&quot;&gt;lu-zero&#x2F;opus&lt;&#x2F;a&gt;
+and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;FFmpeg&#x2F;FFmpeg&#x2F;blob&#x2F;master&#x2F;libavcodec&#x2F;opusdec.c&quot;&gt;FFMpeg&lt;&#x2F;a&gt;. If you want to learn Opus I found the Rust implementation and FFmpeg the easiest to understand.
+It is surprising how most of these efforts were driven by a single person!&lt;&#x2F;p&gt;
+&lt;p&gt;The Opus community is very helpful. A special shout out to Luca Barbato who responded to many emails from me. Without his help I would have never made it this far.
+The developers in the #opus libera channel were very helpful also. Timothy Terriberry took a lot of time answering my questions on IRC. He also provided earlier&#x2F;simpler
+implementations of Silk which helped me understand things a lot better.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;future&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#future&quot; aria-label=&quot;Anchor link for: future&quot;&gt;Future&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;I don&#x27;t know how much actual usage this project will see. I think I could have spent my time better elsewhere, but I am happy that I didn&#x27;t quit. Quite a few times I wanted to give up.
+I held on to the idea that it is better to finish late and have something to show, then quit and have nothing at all.&lt;&#x2F;p&gt;
+&lt;p&gt;My prediction&#x2F;hope is that this project will give me an opportunity to work with smart and interesting people. I anticipate that I will get some contributors that want to learn.
+I also think this project will mean that &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;webrtc-rs&#x2F;webrtc&quot;&gt;webrtc-rs&lt;&#x2F;a&gt; will get a Opus implementation. With this and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;xiph&#x2F;rav1e&quot;&gt;rav1e&lt;&#x2F;a&gt; I see
+a future for Pure Rust WebRTC clients!&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>ION, grown up and moving out.</title>
+        <published>2022-07-19T00:00:00+00:00</published>
+        <updated>2022-07-19T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Sean DuBois
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/ion-grown-up-and-moving-out/"/>
+        <id>https://pion.ly/blog/ion-grown-up-and-moving-out/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/ion-grown-up-and-moving-out/">&lt;p&gt;Going forward the ION project will now be hosted at &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ionorg&#x2F;ion&quot;&gt;ionorg&#x2F;ion&lt;&#x2F;a&gt;. ION itself is not changing in any other way.
+We are just making these changes to more clearly reflect the actual leadership and organization of the project. Changes like this aren&#x27;t free
+though. Users may have to change imports, tooling and other software. We apologize for that, but hope these benefits are worth it.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;recognize-the-actual-leadership-of-ion&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#recognize-the-actual-leadership-of-ion&quot; aria-label=&quot;Anchor link for: recognize-the-actual-leadership-of-ion&quot;&gt;Recognize the actual leadership of ION&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;The leadership and contributors of ION and Pion are often conflated. Often I will have users ask me questions or even thank me for ION.
+This confusion is demotivating for the people actually doing the hard work. I worry that long term it will hurt the project.&lt;&#x2F;p&gt;
+&lt;p&gt;ION was created by &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;adwpc&quot;&gt;adwpc&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;cloudwebrtc&quot;&gt;CloudWebRTC&lt;&#x2F;a&gt; in March of 2019. As the project
+has progressed it saw significant changes from &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;tarrencev&quot;&gt;tarrencev&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;OrlandoCo&quot;&gt;OrlandoCo&lt;&#x2F;a&gt; who
+made architectural changes and other leadership. ION also has a healthy community of developers answering questions and building tools.
+&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;TannerGabriel&quot;&gt;TannerGabriel&lt;&#x2F;a&gt;, &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;leewardbound&quot;&gt;leewardbound&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;billylindeman&quot;&gt;billylindeman&lt;&#x2F;a&gt;
+always seems to be helping users on &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;pion.ly&#x2F;slack&quot;&gt;Slack&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;I hope by separating ION and Pion it will make the leadership clearer and help users reach the right people.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;support-all-the-servers-sfus-written-with-pion&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#support-all-the-servers-sfus-written-with-pion&quot; aria-label=&quot;Anchor link for: support-all-the-servers-sfus-written-with-pion&quot;&gt;Support all the Servers&#x2F;SFUs written with Pion&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;At the time no other Pion based servers existed. Pion users were requesting an easier solution for building servers, so it made sense to make one.
+As time went on developers outside the Pion project built these new and interesting WebRTC server projects (sorted alphabetically).&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;creamlab&#x2F;ducksoup&quot;&gt;DuckSoup&lt;&#x2F;a&gt; - Videoconferencing tool for social experiments.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;galene.org&#x2F;&quot;&gt;Galène&lt;&#x2F;a&gt; - SFU that is easy to deploy with low resource requirements designed for lectures, conferences and tutorials.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;code.rocketnine.space&#x2F;tslocum&#x2F;harmony&quot;&gt;Harmony&lt;&#x2F;a&gt; - Voice and text communications platform&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MixinNetwork&#x2F;kraken&quot;&gt;Kraken&lt;&#x2F;a&gt; - SFU designed especially for group audio conferencing.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;livekit.io&#x2F;&quot;&gt;LiveKit&lt;&#x2F;a&gt; - Room based API that is horizontally-scalable out of the box.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;mynaparrot&#x2F;plugNmeet-server&quot;&gt;Plug-N-Meet&lt;&#x2F;a&gt; - Providers higher level WebRTC tools with plugins for Joomla, Moodle, Wordpress&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;With ION existing under the Pion organization users would unfairly ignore these other projects. I want to celebrate and encourage everyone who
+is building things with Pion.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Pion is a nonprofit project</title>
+        <published>2021-12-27T00:00:00+00:00</published>
+        <updated>2021-12-27T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Sean DuBois
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/pion-nonprofit/"/>
+        <id>https://pion.ly/blog/pion-nonprofit/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/pion-nonprofit/">&lt;p&gt;Pion saw its first commit Wed Mar 7 2018. I didn&#x27;t have grand aspirations
+for the project. It &lt;a href=&quot;..&#x2F;why-webrtc&quot;&gt;felt important&lt;&#x2F;a&gt; at the time to make WebRTC more
+accessible. Proprietary alternatives were being proposed and they
+didn&#x27;t have technical advantages, they were just easier to use.
+I enjoyed solving issues one at a time and helping users
+use Pion.&lt;&#x2F;p&gt;
+&lt;p&gt;Interest in WebRTC then exploded in 2020. Lots of new demand for WebRTC
+software popped up over night. New developers started learning it,
+companies were founded around it and lots of VC money started entering
+the space.&lt;&#x2F;p&gt;
+&lt;p&gt;I was approached by a few VCs who asked if I had any plans to do something
+commercial with Pion. It sounded exciting and I would have been fun to work
+on it full-time. In the end I decided that it may benefit me personally, but
+would be a net negative. These are the reasons I decided against it.&lt;&#x2F;p&gt;
+&lt;p&gt;I have seen many for profit projects not have these issues. I just don&#x27;t
+believe I have the skills&#x2F;enviroment&#x2F;team to make it work.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;reduce-opportunities-for-individuals&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#reduce-opportunities-for-individuals&quot; aria-label=&quot;Anchor link for: reduce-opportunities-for-individuals&quot;&gt;Reduce opportunities for individuals&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;Working on Open Source early in my career had a huge impact on me, and I
+hope that working on Pion can do the same for others. A few milestones that
+mean a lot to me.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;First job in video because of a project they built with Pion.&lt;&#x2F;li&gt;
+&lt;li&gt;First speaking opportunity talking about a Pion contribution.&lt;&#x2F;li&gt;
+&lt;li&gt;Company that uses Pion hiring multiple contributors and offering much better salaries.&lt;&#x2F;li&gt;
+&lt;li&gt;A contributor that is an expert in RTC returning to the field through Pion&lt;&#x2F;li&gt;
+&lt;li&gt;Companies created by first time founders using Pion&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;If Pion was for profit I don&#x27;t think I could create an environment where this would
+all be happening. I can focus on giving individuals the best outcome and not worry about
+a business.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;harder-to-be-a-community&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#harder-to-be-a-community&quot; aria-label=&quot;Anchor link for: harder-to-be-a-community&quot;&gt;Harder to be a community&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;For me Pion isn&#x27;t just software, but a community to build things with
+others who are passionate. I love seeing all the projects that people
+share in &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;pion.ly&#x2F;slack&quot;&gt;Slack&lt;&#x2F;a&gt;. I remember lots of late night
+debugging sessions and difficult bugs overcome. I remember the excitement
+when &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;webrtcforthecurious.com&quot;&gt;WebRTC for the Curious&lt;&#x2F;a&gt; first started.&lt;&#x2F;p&gt;
+&lt;p&gt;I don&#x27;t think those relationships would have been made if Pion was a for profit
+project. I would have to prioritize issues effecting the business. I want to create
+an environment where developers can pour their passion into problems that interest them.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;competition-with-contributors-and-users&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#competition-with-contributors-and-users&quot; aria-label=&quot;Anchor link for: competition-with-contributors-and-users&quot;&gt;Competition with contributors and users&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;I enjoy having an open discourse with the companies and projects that use Pion. I love
+learning about what people are building and learning from them. I am filled with so
+much joy seeing all the different use cases.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;formant.io&#x2F;&quot;&gt;Robotics&lt;&#x2F;a&gt; - Makes it possible to build robots that make hospitals safer.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;livekit.io&quot;&gt;Cloud Ready WebRTC&lt;&#x2F;a&gt; - Making it so any company to build and scale WebRTC&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.100ms.live&#x2F;&quot;&gt;Low&#x2F;No-Code WebRTC&lt;&#x2F;a&gt; - Empowering the next generation of builders so they don&#x27;t need to learn the details.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;neverinstall.com&#x2F;&quot;&gt;Application Streaming&lt;&#x2F;a&gt; - Users who can&#x27;t afford the latest hardware can still access everything.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;piepacker.com&#x2F;&quot;&gt;Collaborative Gaming&lt;&#x2F;a&gt; - Multiplayer NES in the browser, don&#x27;t let distance stop you from spending time together.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;strivecast.com&#x2F;p2p-sdk&#x2F;&quot;&gt;P2P CDN&lt;&#x2F;a&gt; - Reduce network strain by sharing what you have already downloaded. Bringing P2P to everyone!&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;yous.ai&#x2F;&quot;&gt;Digital Signal Processing&lt;&#x2F;a&gt; - Real time translations. Allow users to communicate with no shared language.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;goheadroom.com&#x2F;&quot;&gt;Computer Vision&lt;&#x2F;a&gt; - Process gestures and expressions. Make video conferencing feel more natural.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;All these projects have caused Pion to grow in different ways. They all have different needs and pushed Pion in lots of good ways. If I started
+building competing software I would lose out on learning all these stories. Also lots of great Open Source projects &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;awesome-pion&quot;&gt;Using Pion&lt;&#x2F;a&gt;
+that I have learned from.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;less-diverse-contributions&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#less-diverse-contributions&quot; aria-label=&quot;Anchor link for: less-diverse-contributions&quot;&gt;Less diverse contributions&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;If I worked on Pion full-time more issues would be addressed by me directly.
+I am not sure this would be better for the project long term. Pion’s growth and
+quality is because we have so many contributors who bring a wide variety of opinions
+and experiences.&lt;&#x2F;p&gt;
+&lt;p&gt;Things like WASM Support, ORTC and Interceptors came from designs by other developers.
+If I had done everything myself I don&#x27;t believe it would be nearly as good.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;divide-between-employees-community&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#divide-between-employees-community&quot; aria-label=&quot;Anchor link for: divide-between-employees-community&quot;&gt;Divide between employees&#x2F;community&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;All community members are equal in the Pion ecosystem. Each developer only
+needs one approval to merge their PR. I don&#x27;t ever want there to be a
+split. Employees of &#x27;Pion Inc&#x27; would be viewed differently and would have access
+to resources others wouldn&#x27;t have.&lt;&#x2F;p&gt;
+&lt;p&gt;It is important to me that Pion is welcoming and inclusive to all.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+    <entry xml:lang="en">
+        <title>Why WebRTC?</title>
+        <published>2021-12-05T00:00:00+00:00</published>
+        <updated>2021-12-05T00:00:00+00:00</updated>
+        
+        <author>
+          <name>
+            Sean DuBois
+          </name>
+        </author>
+        
+        <link rel="alternate" type="text/html" href="https://pion.ly/blog/why-webrtc/"/>
+        <id>https://pion.ly/blog/why-webrtc/</id>
+        
+        <content type="html" xml:base="https://pion.ly/blog/why-webrtc/">&lt;p&gt;This is a question I get in lots of different forms. Why should I use WebRTC instead of my
+preferred video protocol? Why does WebRTC need to be in my browser? Why does WebRTC have to
+be so complicated? Why do you continue to work on WebRTC projects?&lt;&#x2F;p&gt;
+&lt;p&gt;These are my answers to the Why&#x27;s of WebRTC. Lots of nuance exists, and these answers are heavily
+influenced by the work I do. I have been working with WebRTC since 2013. In that time I worked on two implementations &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;webrtc&quot;&gt;Pion&lt;&#x2F;a&gt;
+and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;awslabs&#x2F;amazon-kinesis-video-streams-webrtc-sdk-c&quot;&gt;KVS WebRTC&lt;&#x2F;a&gt;. I also co-authored a book &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;webrtcforthecurious.com&#x2F;&quot;&gt;WebRTC for the Curious&lt;&#x2F;a&gt;.
+I have used WebRTC at &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;golightstream.com&#x2F;&quot;&gt;startups&lt;&#x2F;a&gt; and &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;9to5mac.com&#x2F;2021&#x2F;06&#x2F;11&#x2F;hands-on-heres-a-first-look-at-how-facetime-works-in-a-web-browser&#x2F;&quot;&gt;corporate&lt;&#x2F;a&gt; projects.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;webrtc-supports-more-then-just-your-use-case&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#webrtc-supports-more-then-just-your-use-case&quot; aria-label=&quot;Anchor link for: webrtc-supports-more-then-just-your-use-case&quot;&gt;WebRTC supports more then just your use case&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;WebRTC supports a diverse set of use cases. It is hard to appreciate all of them when you are focused on your problem.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Multiple tracks of bi-directional audio and video&lt;&#x2F;li&gt;
+&lt;li&gt;Media negotiation, codecs and media events like adding and removing tracks&lt;&#x2F;li&gt;
+&lt;li&gt;P2P connectivity with optimal path discovery, Client&#x2F;Server can be built as well.&lt;&#x2F;li&gt;
+&lt;li&gt;Binary and text communication, lossy and unordered data with flow control APIs&lt;&#x2F;li&gt;
+&lt;li&gt;Mandatory encryption, secure by default and requires no developer configuration&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Supporting a wide set of features has some big benefits. Most WebRTC developers only care about a specific use case, and
+improve WebRTC for their needs. However, they coincidentally improve it for everyone. Lots of money has been invested in WebRTC by
+conferencing companies. These changes have empowered Open Source project, startups and others that don&#x27;t have the same resources.
+Projects like &lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;snowflake.torproject.org&#x2F;&quot;&gt;Snowflake&lt;&#x2F;a&gt; are only possible because others pushed WebRTC to it&#x27;s present day quality.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;webrtc-is-a-standard&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#webrtc-is-a-standard&quot; aria-label=&quot;Anchor link for: webrtc-is-a-standard&quot;&gt;WebRTC is a standard&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;WebRTC is a IETF&#x2F;W3C standard. Multiple individuals have been involved since its creation. Beyond that WebRTC is made up of multiple existing
+standards. The majority of what WebRTC defines is how to combine these existing complicated subsystems.&lt;&#x2F;p&gt;
+&lt;p&gt;I use WebRTC because I know it has a safe future. Protocols that are owned by a single corporation or project can be changed at any
+time. As an individual you also have a chance to influence WebRTC. You can get involved in the standards or write your own WebRTC software and tools.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;webrtc-has-multiple-implementations-and-is-in-the-browser&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#webrtc-has-multiple-implementations-and-is-in-the-browser&quot; aria-label=&quot;Anchor link for: webrtc-has-multiple-implementations-and-is-in-the-browser&quot;&gt;WebRTC has multiple implementations and is in the browser&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;WebRTC is available in every major browser and most major languages. WebRTC isn&#x27;t just a browser technology!&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;sipsorcery-org&#x2F;sipsorcery&quot;&gt;C#&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;paullouisageneau&#x2F;libdatachannel&quot;&gt;C++&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rawrtc&#x2F;rawrtc&quot;&gt;C++&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;webrtc.googlesource.com&#x2F;src&#x2F;&quot;&gt;C++&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;awslabs&#x2F;amazon-kinesis-video-streams-webrtc-sdk-c&quot;&gt;C&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.membraneframework.org&#x2F;&quot;&gt;Elixir&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;gstreamer.freedesktop.org&#x2F;documentation&#x2F;webrtc&#x2F;index.html&quot;&gt;GStreamer&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;webrtc&quot;&gt;Go&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;node-webrtc&#x2F;node-webrtc&quot;&gt;Node.js&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;aiortc&#x2F;aiortc&quot;&gt;Python&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;webrtc-rs&#x2F;webrtc&quot;&gt;Rust&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;shinyoshiaki&#x2F;werift-webrtc&quot;&gt;Typescript&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;You also have a wealth of servers to choose from&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;antmedia.io&#x2F;&quot;&gt;ant media server&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;jech&#x2F;galene&quot;&gt;galène&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pion&#x2F;ion-sfu&quot;&gt;ion-sfu&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;meetecho&#x2F;janus-gateway&quot;&gt;janus-gateway&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;jitsi&#x2F;jitsi-meet&quot;&gt;jitsi&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;kurento&#x2F;&quot;&gt;kurento&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;lynckia&#x2F;licode&quot;&gt;licode&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;livekit.io&#x2F;&quot;&gt;livekit&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;mediasoup.org&#x2F;&quot;&gt;mediasoup&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;github.com&#x2F;medooze&quot;&gt;medooze&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a rel=&quot;external&quot; href=&quot;https:&#x2F;&#x2F;www.red5.net&#x2F;red5-media-server&#x2F;&quot;&gt;Red5 Media Server&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;WebRTC&#x27;s wide availability makes it easy to build with. Developers can use the language, paradigm and tools they are most comfortable with.
+Just worry about learning WebRTC and not a new language. WebRTC also has a high bus factor. If a single developer or company stops supporting
+their software you have lots of alternatives.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;webrtc-supports-all-skill-levels&quot;&gt;&lt;a class=&quot;zola-anchor&quot; href=&quot;#webrtc-supports-all-skill-levels&quot; aria-label=&quot;Anchor link for: webrtc-supports-all-skill-levels&quot;&gt;WebRTC supports all skill levels&lt;&#x2F;a&gt;&lt;&#x2F;h3&gt;
+&lt;p&gt;You can build a simple 1:1 audio+video communication application in 50 lines of Javascript. You don&#x27;t need any knowledge of VoIP or networking.
+WebRTC also allows a great degree of flexibility if you have more niche needs. You can ship your own Congestion Control and Error Correction for media.
+You can choose your own algorithm for path selection when establishing the connection. Even if you make these changes you will still be standards compliant
+and can connect to existing WebRTC clients!&lt;&#x2F;p&gt;
+&lt;p&gt;WebRTC&#x27;s accessibility allows a wide range of applications to be built with it. You don&#x27;t need to be a video and networking expert to build your
+cool idea. I continue to stay involved with WebRTC because it has a rich ecosystem of developers. Life becomes stale if you build the same thing
+over and over again. With WebRTC I have had a chance to interact with so many different projects. Remote surgery, drones, robotics, file sharing,
+one hundred thousand viewer events, sub-second bidding for cattle, game streaming, VPNs in the browser, real-time voice translation, and these are
+just the public projects! WebRTC lets beginners bring their interesting ideas to life.&lt;&#x2F;p&gt;
+</content>
+        
+    </entry>
+</feed>

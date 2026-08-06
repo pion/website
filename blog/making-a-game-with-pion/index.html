@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+Making a game with Pion - Pion
+</title>
+
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/styles.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="theme-color" content="#e53935">
+    <meta property="og:site_name" content="Pion" />
+
+    
+
+<link rel="canonical" href="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;making-a-game-with-pion&#x2F;">
+
+
+<meta name="description" content="Cross platform multiplayer without proprietary APIs is possible thanks to Pion!" />
+<meta property="og:description" content="Cross platform multiplayer without proprietary APIs is possible thanks to Pion!" />
+
+
+<meta property="og:title" content="Making a game with Pion" />
+<meta property="og:url" content="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;making-a-game-with-pion&#x2F;" />
+<meta property="og:type" content="article" />
+
+
+<meta name="article:author" content="Srayan Jana" />
+
+
+
+<meta name="article:published_time" content='2025-09-09T00:00:00+0000' />
+
+
+
+
+
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav class="links">
+                <a href="/">
+                    <svg class="pion-logo" viewBox="0 0 423 125" preserveAspectRatio="xMidYMid meet" width="100%"
+                        height="100%">
+                        <use href="/img/pion-logo.svg#Page-1"></use>
+                    </svg>
+                </a>
+                <a href="/blog">Blog</a>
+                <a href="/why-pion">Why Pion?</a>
+
+                <div class="brand-links">
+                    
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+                </div>
+            </nav>
+        </header>
+
+        
+<article class="post-article">
+    <div class="article-header">
+        <h1>Making a game with Pion</h1>
+        
+        <p class="details">
+            <span class="authors">Srayan Jana</span> — <time datetime="2025-09-09">2025-09-09</time>
+        </p>
+        
+    </div>
+
+    <div class="article-content">
+        <p>(The following was adapted from a talk I gave at <a rel="external" href="https://dwebseminar.org/weekend/">DWeb Weekend 2025</a> at the Internet Archive in San Francisco on August 17, 2025)</p>
+<h1 id="simplifying-webrtc-datachannels-for-games"><a class="zola-anchor" href="#simplifying-webrtc-datachannels-for-games" aria-label="Anchor link for: simplifying-webrtc-datachannels-for-games">Simplifying WebRTC Datachannels for Games</a></h1>
+<p>First of all, to get some stuff out of the way, instead of using the "super complicated" WebRTC datachannels, why don't we use something simpler?</p>
+<h2 id="why-not-use-websockets"><a class="zola-anchor" href="#why-not-use-websockets" aria-label="Anchor link for: why-not-use-websockets">Why Not Use Websockets?</a></h2>
+<ul>
+<li><strong>Too slow</strong>: Most games use UDP with a reliability layer on top.</li>
+<li><strong>Suitable for turn-based games</strong>: Fine for games that are turn-based/slow-paced, like Runescape.</li>
+<li>For more details, see:
+<ul>
+<li><a rel="external" href="https://gafferongames.com/post/udp_vs_tcp/">UDP vs TCP</a></li>
+<li><a rel="external" href="https://gafferongames.com/post/client_server_connection/">Client-Server Connection</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="the-case-for-web-transport"><a class="zola-anchor" href="#the-case-for-web-transport" aria-label="Anchor link for: the-case-for-web-transport">The Case for Web Transport</a></h2>
+<ul>
+<li>Replacement for Websockets, uses QUIC instead of TCP.</li>
+<li>However, it has been in development for a long time, and I want to get started on making games now.</li>
+<li>Current issues:
+<ul>
+<li><a rel="external" href="https://caniuse.com/webtransport">Caniuse WebTransport</a></li>
+<li>Official demos on <a rel="external" href="https://github.com/w3c/webtransport">GitHub</a> do not work on Firefox on Windows.</li>
+<li><a rel="external" href="https://github.com/w3c/webtransport/issues/675">GitHub Issue</a></li>
+<li><a rel="external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1969090">Firefox Bugzilla</a></li>
+</ul>
+</li>
+<li><strong>Potential</strong>: Will probably solve most problems once finished and would be the best choice for making a multiplayer game on the web.</li>
+</ul>
+<h2 id="datachannels-a-hidden-gem-of-webrtc"><a class="zola-anchor" href="#datachannels-a-hidden-gem-of-webrtc" aria-label="Anchor link for: datachannels-a-hidden-gem-of-webrtc">Datachannels: A Hidden Gem of WebRTC</a></h2>
+<ul>
+<li><strong>Feature</strong>: Lets us send unreliable packets over the web using SCTP.</li>
+<li>Advantage: We don’t need WebTransport; we can use this today.</li>
+<li>They were created in part for exactly this use case
+<ul>
+<li><a rel="external" href="https://datatracker.ietf.org/doc/html/rfc8831#name-use-cases-for-unreliable-da">See the reasoning for unreliable datachannels in the official specification itself</a></li>
+<li><a rel="external" href="https://news.ycombinator.com/item?id=13264952">Not to mention that one of the original implementers of WebRTC wanted to enable this usecase</a>
+<img src="/img/comment_from_webrtc_team.png" alt="Comment from original WebRTC team member" /></li>
+</ul>
+</li>
+</ul>
+<h2 id="benefits-and-drawbacks-of-webrtc"><a class="zola-anchor" href="#benefits-and-drawbacks-of-webrtc" aria-label="Anchor link for: benefits-and-drawbacks-of-webrtc">Benefits and Drawbacks of WebRTC</a></h2>
+<h3 id="benefits"><a class="zola-anchor" href="#benefits" aria-label="Anchor link for: benefits">Benefits</a></h3>
+<ul>
+<li><strong>Host flexibility</strong>: Do not need to host servers - players can make their own.
+<ul>
+<li>No more need for port forwarding or Hamachi!</li>
+</ul>
+</li>
+<li><strong>Minimal server requirements</strong>: Only need one server for signaling.</li>
+<li><strong>Community-supported specification</strong>: There are many options for making your own WebRTC-based app.</li>
+</ul>
+<h3 id="drawbacks"><a class="zola-anchor" href="#drawbacks" aria-label="Anchor link for: drawbacks">Drawbacks</a></h3>
+<ul>
+<li><strong>Complex setup</strong>: Setting up WebRTC is challenging.</li>
+<li><strong>Server dependence</strong>: You need to host or use two different servers (Signaling + STUN/TURN).
+<ul>
+<li>Can use Google’s STUN, but combining signaling and STUN into one server would be nice.</li>
+</ul>
+</li>
+</ul>
+<h2 id="webrtc-implementations"><a class="zola-anchor" href="#webrtc-implementations" aria-label="Anchor link for: webrtc-implementations">WebRTC Implementations</a></h2>
+<ul>
+<li><a rel="external" href="https://github.com/webrtc-sdk/libwebrtc?tab=readme-ov-file">libwebrtc</a> - (a fork of) the original WebRTC implementation.</li>
+<li><a rel="external" href="https://github.com/paullouisageneau/libdatachannel">libdatachannel</a> - C/C++.</li>
+<li><a rel="external" href="https://github.com/pion/webrtc">Pion WebRTC</a> - Go.</li>
+<li><a rel="external" href="https://github.com/webrtc-rs/webrtc">webrtc-rs</a> - Rust (using Tokio Runtime).</li>
+<li><a rel="external" href="https://github.com/algesten/str0m">str0m</a> - Rust (sans-io).</li>
+<li><a rel="external" href="https://github.com/sipsorcery-org/sipsorcery">sipsorcery</a> - C#</li>
+<li><a rel="external" href="https://github.com/ValveSoftware/GameNetworkingSockets">GameNetworkingSockets</a>
+<ul>
+<li>Uses ICE and STUN/TURN for Peer to Peer.</li>
+<li>Created by Valve and made for Steam, which means if you've ever played a game like Counter Strike or Deadlock, you've already seen this library in action!</li>
+</ul>
+</li>
+</ul>
+<h3 id="existing-game-networking-libraries-using-webrtc"><a class="zola-anchor" href="#existing-game-networking-libraries-using-webrtc" aria-label="Anchor link for: existing-game-networking-libraries-using-webrtc">Existing Game Networking Libraries Using WebRTC</a></h3>
+<ul>
+<li><a rel="external" href="https://github.com/geckosio/geckos.io">Geckos.io</a>
+<ul>
+<li>A client-server abstraction for WebRTC Datachannels written in Node.js.</li>
+<li>Past experience: Really nice but a bit inefficient. See <a rel="external" href="https://github.com/geckosio/geckos.io/issues/269">GitHub Issue</a>.</li>
+</ul>
+</li>
+<li><a rel="external" href="https://github.com/poki/netlib">Netlib</a> - Peer-to-peer WebRTC datachannel library for TypeScript.</li>
+<li><a rel="external" href="https://github.com/johanhelsing/matchbox">Matchbox</a> - WebRTC datachannel library for Rust, compiles to both native and WASM.</li>
+<li><a rel="external" href="https://github.com/peers/peerjs">PeerJS</a> - Great for browser-only apps/games, not specifically for game networking.</li>
+<li><a rel="external" href="https://github.com/rameshvarun/netplayjs">Netplayjs</a> - Untested but seems to work well.</li>
+<li><a rel="external" href="https://github.com/godotengine/webrtc-native">Godot Engine's WebRTC Native</a> - Official Godot bindings to libdatachannel for Godot’s multiplayer API.</li>
+</ul>
+<h2 id="real-world-uses"><a class="zola-anchor" href="#real-world-uses" aria-label="Anchor link for: real-world-uses">Real-World Uses</a></h2>
+<ul>
+<li><strong>WebXash3D</strong>: Reimplementation of Half-Life 1 + Counter-Strike 1.6 using WebRTC.
+<ul>
+<li><a rel="external" href="https://github.com/yohimik/webxash3d-fwgs">GitHub WebXash3D</a></li>
+<li><a rel="external" href="https://github.com/ololoken/xash3d-launcher">Xash3D Launcher</a></li>
+<li><a rel="external" href="https://turch.in/cs/index.html">Counter Strike 1.6 on the web</a></li>
+<li><img src="/img/counter_strike_on_the_web.png" alt="Counter Strike" /></li>
+</ul>
+</li>
+<li><strong>Hypersomnia</strong> - Open source 2D shooter made with C++ and libdatachannel
+<ul>
+<li>Has cross platform capabilities between both
+<ul>
+<li>The <a rel="external" href="https://store.steampowered.com/app/2660970/Hypersomnia/">native Steam port</a></li>
+<li>And in the browser (On <a rel="external" href="https://www.crazygames.com/game/hypersomnia">CrazyGames</a> and <a rel="external" href="https://hypersomnia.io/">the official website</a>)</li>
+</ul>
+</li>
+<li><a rel="external" href="https://github.com/TeamHypersomnia/Hypersomnia">Github Link</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="why-go-for-development"><a class="zola-anchor" href="#why-go-for-development" aria-label="Anchor link for: why-go-for-development">Why Go for Development?</a></h2>
+<ul>
+<li>Efficient: It just gets the job done.</li>
+<li>Pion: Has a pure-Go implementation of WebRTC.</li>
+<li>Minimal dependencies: No need for external dependencies like OpenSSL.</li>
+</ul>
+<h2 id="why-not-rust"><a class="zola-anchor" href="#why-not-rust" aria-label="Anchor link for: why-not-rust">Why Not Rust?</a></h2>
+<ul>
+<li>Preference: I like Rust, but Go has a more active scene/easier help for WebRTC.</li>
+<li>Speed of development: It's faster to code in Go compared to Rust.</li>
+</ul>
+<h2 id="why-ebitengine-for-game-development"><a class="zola-anchor" href="#why-ebitengine-for-game-development" aria-label="Anchor link for: why-ebitengine-for-game-development">Why Ebitengine for Game Development?</a></h2>
+<ul>
+<li><a rel="external" href="https://ebitengine.org/">Website Link</a></li>
+<li><strong>Versatile</strong>: 2D game engine that works across various platforms.
+<ul>
+<li>The creator, <a rel="external" href="https://hajimehoshi.com/">Hajime Hoshi</a>, has ported the engine (and the Go language!) to <a rel="external" href="https://ebitengine.org/en/blog/native_compiling_for_nintendo_switch.html">the Nintendo Switch</a> and other game consoles</li>
+</ul>
+</li>
+<li><strong>Battle Tested</strong>: Has been used for actual games like
+<ul>
+<li><a rel="external" href="https://playism.com/en/game/frommadness-withlove/">From Madness with Love</a>
+<ul>
+<li><a rel="external" href="https://store.steampowered.com/app/2101130/From_Madness_with_Love/">Steam Link</a></li>
+</ul>
+</li>
+<li>Coral &amp; The Abyss
+<ul>
+<li><a rel="external" href="https://store.steampowered.com/app/3123920/Coral__The_Abyss/">Steam Link</a></li>
+<li><a rel="external" href="https://www.nintendo.com/us/store/products/coral-and-the-abyss-switch/">Nintendo eShop Link</a></li>
+</ul>
+</li>
+<li>Rakuen
+<ul>
+<li><a rel="external" href="https://store.steampowered.com/app/559210/Rakuen/">Steam Link</a></li>
+<li><a rel="external" href="https://www.nintendo.com/us/store/products/rakuen-deluxe-edition-switch/">Nintendo eShop Link</a></li>
+</ul>
+</li>
+<li>And more on the <a rel="external" href="https://ebitengine.org/en/showcase.html">Ebitengine Showcase Page</a></li>
+</ul>
+</li>
+<li><strong>Potential Crossplay</strong>: You could make a cross platform multiplayer game in pure Go that works between the Nintendo Switch, PC, and the browser!</li>
+</ul>
+<h2 id="official-pion-example"><a class="zola-anchor" href="#official-pion-example" aria-label="Anchor link for: official-pion-example">Official Pion Example</a></h2>
+<ul>
+<li>We now have an official example using Ebitengine in the Pion <a rel="external" href="https://github.com/pion/example-webrtc-applications">example-webrtc-applications</a> repository</li>
+<li>This includes an bundled in signaling server so you can host your own lobby, and connect with another player.</li>
+<li><a rel="external" href="https://github.com/pion/example-webrtc-applications/tree/master/ebiten-game"><strong>Github Link to Game</strong></a></li>
+<li><strong>PR where it was merged in</strong>: <a rel="external" href="https://github.com/pion/example-webrtc-applications/pull/351">Example WebRTC Applications</a></li>
+<li><strong>Limitations</strong>
+<ul>
+<li>Right now, this can only support two players on the same computer
+<ul>
+<li>Could probably work between two different computers, but we would need to figure out how to setup CORS properly for the signaling server</li>
+<li>The machinery is there to support more than two players in a lobby, but as of writing this article it is <a rel="external" href="https://github.com/pion/example-webrtc-applications/blob/5c7005933879d34fa19b4d0c744bb884a247f5dc/ebiten-game/game/main.go#L154">currently hardcoded</a> to just two
+<img src="/img/game_on_web_and_desktop.png" alt="Picture of game" /></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="other-games-that-use-webrtc"><a class="zola-anchor" href="#other-games-that-use-webrtc" aria-label="Anchor link for: other-games-that-use-webrtc">Other Games That Use WebRTC</a></h2>
+<ul>
+<li><a rel="external" href="https://toughlovearena.com/">Tough Love Arena</a></li>
+<li><a rel="external" href="https://www.counterpicklabs.com/">Counterpick Labs</a></li>
+<li><a rel="external" href="https://2dsoccer.com/">2D Soccer</a></li>
+</ul>
+<h2 id="possibilities-with-webrtc"><a class="zola-anchor" href="#possibilities-with-webrtc" aria-label="Anchor link for: possibilities-with-webrtc">Possibilities with WebRTC</a></h2>
+<ul>
+<li>Hosting a Minecraft-style game without dedicated servers or port forwarding.</li>
+<li>Players host everything themselves: no need for VPN/Hamachi.</li>
+</ul>
+<hr />
+<h2 id="community-acknowledgements"><a class="zola-anchor" href="#community-acknowledgements" aria-label="Anchor link for: community-acknowledgements">Community Acknowledgements</a></h2>
+<ul>
+<li>A big thanks to:
+<ul>
+<li><a rel="external" href="https://pion.ly/discord">The Pion Discord</a></li>
+<li><a rel="external" href="https://discord.gg/jXAP8jp3Nn">The libdatachannel Discord</a></li>
+<li><a rel="external" href="https://discord.gg/3tVdM5H8cC">The Ebitengine Discord</a></li>
+<li><a rel="external" href="https://discord.com/invite/game-development-in-rust-676678179678715904">The Rust gamedev Discord</a></li>
+</ul>
+</li>
+<li>And many more who made this journey possible. I stand on the shoulders of giants.</li>
+</ul>
+
+    </div>
+</article>
+
+
+
+        <footer>
+            <div class="icons">
+                
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+            </div>
+        </footer>
+
+    </main>
+</body>
+
+</html>

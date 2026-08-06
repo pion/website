@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+WebRTC Survives When You Walk Out - Pion
+</title>
+
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/styles.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="theme-color" content="#e53935">
+    <meta property="og:site_name" content="Pion" />
+
+    
+
+<link rel="canonical" href="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;automatic-renomination&#x2F;">
+
+
+<meta name="description" content="An overview of automatic renomination in Pion" />
+<meta property="og:description" content="An overview of automatic renomination in Pion" />
+
+
+<meta property="og:title" content="WebRTC Survives When You Walk Out" />
+<meta property="og:url" content="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;automatic-renomination&#x2F;" />
+<meta property="og:type" content="article" />
+
+
+<meta name="article:author" content="Kevin Wang" />
+
+
+
+<meta name="article:published_time" content='2025-10-17T00:00:00+0000' />
+
+
+
+
+
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav class="links">
+                <a href="/">
+                    <svg class="pion-logo" viewBox="0 0 423 125" preserveAspectRatio="xMidYMid meet" width="100%"
+                        height="100%">
+                        <use href="/img/pion-logo.svg#Page-1"></use>
+                    </svg>
+                </a>
+                <a href="/blog">Blog</a>
+                <a href="/why-pion">Why Pion?</a>
+
+                <div class="brand-links">
+                    
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+                </div>
+            </nav>
+        </header>
+
+        
+<article class="post-article">
+    <div class="article-header">
+        <h1>WebRTC Survives When You Walk Out</h1>
+        
+        <p class="details">
+            <span class="authors">Kevin Wang</span> — <time datetime="2025-10-17">2025-10-17</time>
+        </p>
+        
+    </div>
+
+    <div class="article-content">
+        <p>Networking for a video call sounds simple. You send your video to the
+server and server sends video back. But that mental model breaks down in
+the real world. A connection that starts on stable home Wi-Fi may
+suddenly need to continue over cellular as someone walks out the door.
+The real challenge isn’t just connecting two points! It’s staying
+connected as the network beneath you changes.</p>
+<p>With <a rel="external" href="https://github.com/pion/ice/pull/822">automatic renomination</a>, Pion
+will now handle that completely seamlessly, allowing your media to flow
+without skipping a beat. It works by periodically detecting when new
+connection candidates are available and automatically switching to the
+highest quality candidate, taking advantage of a feature in WebRTC called
+<em>renomination</em>.</p>
+<p>Let's dive into how that works.</p>
+<h2 id="how-does-webrtc-establish-connections"><a class="zola-anchor" href="#how-does-webrtc-establish-connections" aria-label="Anchor link for: how-does-webrtc-establish-connections">How does WebRTC establish connections?</a></h2>
+<p>Connections between two peers in WebRTC are established by exchanging
+<strong>candidates</strong> between the two peers in a signaling phase. These candidates
+can be host, server reflexive, peer reflexive, or relay candidates.
+The details of the various types of candidates are better explained in
+<a rel="external" href="https://webrtcforthecurious.com/docs/03-connecting/#candidate-gathering">WebRTC for the Curious</a>,
+but the relevant detail is that for each candidate, both peers open up
+ports to communicate.</p>
+<p><img src="/img/candidates-1.drawio.png" alt="Candidates" /></p>
+<p>Eventually, the <strong>controlling</strong> peer picks a candidate and tells the
+<strong>controlled</strong> peer to use it in a Binding request. This candidate becomes
+the selected candidate that media flows over. After this point, the unused
+ports are closed.</p>
+<p><img src="/img/candidates-2.drawio.png" alt="Candidates" /></p>
+<p>But wait! This handshake is pretty slow. To speed things up and get media
+flowing faster, WebRTC allows media to flow over <em>any</em> candidate before one
+is formally nominated. This shaves off a few round trips between the peers,
+reducing connection latency, in a process called
+<a rel="external" href="https://datatracker.ietf.org/doc/html/rfc5245#section-8.1.1.2">aggressive nomination</a>.</p>
+<h2 id="changing-candidates-with-renomination"><a class="zola-anchor" href="#changing-candidates-with-renomination" aria-label="Anchor link for: changing-candidates-with-renomination">Changing candidates with renomination</a></h2>
+<p>Now, what if we <em>never</em> commit a candidate? The ability to send media over
+any valid candidate is curious, and in fact quite useful because it means
+we have multiple paths to take advantage of. This is called <strong>renomination</strong>.</p>
+<p>Under renomination, the controlling peer tells the controlled peer that it
+wants to be able to renominate candidates. When the controlled peer
+receives a binding request, instead of closing the ports, it leaves them
+open. This allows the controlling peer to elect a new candidate at will,
+which the controlled peer will accept media over, effectively enabling us
+to switch candidates mid-stream.</p>
+<p><img src="/img/candidates-1.drawio.png" alt="Candidates" /></p>
+<p>That can sound complex to negotiate but it amounts to a flag in the
+connection handshakes that ensures that both parties are aware of the desire
+to renominate, meaning the implementation of this feature in Pion amounts to
+<a rel="external" href="https://github.com/pion/ice/pull/799/files#diff-7099be149fabcd94ee9bab48ac30474180ef5c9ce65922291d181e0349aab230">keeping track of a counter</a>.</p>
+<p>Now Pion is taking advantage of WebRTC's aggressive nomination state,
+keeping candidates open, and has the ability to pick a new candidate.</p>
+<h2 id="making-it-automatic"><a class="zola-anchor" href="#making-it-automatic" aria-label="Anchor link for: making-it-automatic">Making it automatic</a></h2>
+<p>Ideally, the WebRTC connection can do this automatically so the
+user doesn't have to pick. After all, manually renominating candidates seems
+useful but is a tedious user experience. Let's do it automatically!</p>
+<p>To make this work, we need to solve two problems: knowing when the current
+candidate gets worse, and discovering when completely new candidates appear.</p>
+<p><strong>Detecting when candidates get worse:</strong> Turns out, this is already built
+into WebRTC. During the first connection establishment phase, candidates are
+pinged, evaluated, and ranked based on round trip time, packet loss, and
+type of candidate. This same ranking can be performed periodically instead
+of only at initialization. So, the connection can run this on a loop and
+automatically renominate candidates when the state of the network changes.</p>
+<p><strong>Discovering new candidates:</strong> What happens when a completely new candidate
+comes online? For example, if I connect to a wifi network mid-call, the
+phone receives a completely new IP address.</p>
+<p>This, too, is built into WebRTC, in the form of trickle ICE! If trickle
+ICE is enabled, candidate exchange can continue after the initial
+connection handshake until the two sides declare that they've exhausted the
+candidate search. Under automatic renomination, we go one step further and
+<strong>disable the exhaustion declaration</strong>, periodically checking for new
+candidates instead. When a new candidate arrives, we use the normal trickle
+ICE mechanism to exchange it between the two peers.</p>
+<h2 id="putting-it-all-together"><a class="zola-anchor" href="#putting-it-all-together" aria-label="Anchor link for: putting-it-all-together">Putting it all together</a></h2>
+<p>And that ends up being enough! In summary, automatic renomination makes the
+following tweaks:</p>
+<ul>
+<li>Signal renomination between the peers</li>
+<li>Keep all candidate ports open instead of closing them</li>
+<li>Disable trickle ICE termination</li>
+<li>Periodically ping all candidates and rerank them</li>
+<li>Renominate when a better candidate arises</li>
+</ul>
+<p>With these pieces in place, Pion can seamlessly transition between different
+network links. If you want to see it in action, check out
+<a rel="external" href="https://github.com/pion/ice/tree/master/examples/automatic-renomination">this example</a>!</p>
+<p>One really nice thing that I personally liked about this feature when
+implementing it is that it felt like automatic renomination is a
+clever reading of the specification: it doesn't need to reinvent a whole
+new mechanism and RFC.</p>
+<p>In fact, one can go one step further and send media over <em>all</em> candidates,
+because under aggressive nomination they are all valid. This, actually, is
+connection bonding for free! There are some practical considerations to
+getting this working well though, but that's another blog post.</p>
+
+    </div>
+</article>
+
+
+
+        <footer>
+            <div class="icons">
+                
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+            </div>
+        </footer>
+
+    </main>
+</body>
+
+</html>
