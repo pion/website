@@ -256,6 +256,16 @@ hr {
         border-radius: 5px;
         margin: 2px;
     }
+
+    & blockquote {
+        padding: 0.75rem 1rem;
+
+        border-left: 4px solid var(--link-color);
+        border-radius: 4px;
+
+        background-color: light-dark(#ffffff, #ffffff0a);
+        font-size: 1.05rem;
+    }
 }
 
 .zola-anchor {
