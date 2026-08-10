@@ -158,4 +158,9 @@ identify your DTLS traffic. Solves a few problems for DTLS users.
 * Load balance effectively, route sessions to specific servers.
 * Support long running sessions. IoT device can shut down and come back days later
 
-## DTLS 1.3: an implementor's perspective
+## Implementor's perspective
+
+### Finished is a different story in 1.3
+In DTLS 1.2 you have have one finite state machine. After the handshakes finishes you are done. With 1.3 things get a bit more complicated! You need to handle NewSessionTicket and KeyUpdate. Going into this project I didn't appreciate that complication from just reading the IETF doc.
+
+This required a second state machine with its own ACK handling, retransmission timer etc..... See Pion's [post-handshake implementation](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/internal/handshake/post_handshake.go#L36-L55).
