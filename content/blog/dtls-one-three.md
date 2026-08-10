@@ -13,7 +13,7 @@ TLS is the protocol used for secure communication across the Internet (and intra
 
 * Encryption - Prevent attackers from seeing the protected data
 * Authentication - Confirm who you are communicating with
-* Integrity - Detect tampered or corrupted packets
+* Integrity - Detect tampered or corrupted records
 
 To accomplish this, TLS standardized a handshake so two TLS peers can agree on a cipher and keying material. DTLS extends and modifies the TLS
 handshake so it can work over a lossy protocol.
@@ -25,7 +25,7 @@ DTLS 1.3 had quite a few changes. These are the ones we noticed and found most e
 
 ### Uses Less Data
 Each DTLS 1.2 record has a header with metadata required for the session.
-Each packet uses a fixed 13-byte record header:
+Each record uses a fixed 13-byte record header:
 
 ```text
       0 1 2 3 4 5 6 7
@@ -81,8 +81,8 @@ With an MTU of 1280 (the default for WebRTC), you could save 47 MB on a 5 GB tra
 ### Connects Faster
 DTLS 1.3 connects faster for two reasons.
 
-First, DTLS 1.3 has explicit ACKs. During handshaking, if a packet was lost in DTLS 1.2, both sides would wait and then retransmit on timeout. With DTLS 1.3,
-each side now sends explicit ACK messages. This means it can detect and recover from a packet loss immediately.
+First, DTLS 1.3 has explicit ACKs. During handshaking, if a datagram was lost in DTLS 1.2, both sides would wait and then retransmit on timeout. With DTLS 1.3,
+each side now sends explicit ACK messages. This means it can detect and recover from a datagram loss immediately.
 
 Second, DTLS 1.3 allows key sharing in the ClientHello. This removes an entire round trip, the server no longer waits for the ClientKeyExchange!
 This allows the handshake to be shrunk down to only 1 RTT (from 2 in DTLS 1.2).
@@ -131,7 +131,8 @@ DTLS 1.3 improves security in a bunch of ways: lots of insecure/brittle stuff wa
 Renegotiation was removed. Renegotiation was a source of bugs/security issues (CVE-2009-3555) and was entirely removed. Pion DTLS never implemented
 renegotiation, but we are excited not to get requests for it anymore!
 
-More of the handshake is encrypted.
+For DTLS 1.3 more of the handshake is encrypted. A big improvements is that certificates are no longer exchanged in plaintext.
+This was a big fingerprinting surface that is now closed.
 
 Fragile/difficult-to-implement cipher suites are removed. Only AEAD cipher suites are available now.
 AEAD is easier to use because encryption + authentication is done in one call.
@@ -146,6 +147,15 @@ sessions. If an attacker got access to the private key for RSA sessions, they co
 for each individual session. A pre-shared-key session can still be configured not to use ephemeral keys. Devices that are battery-powered/constrained
 might not be powerful enough to generate an ephemeral key pair for each session, so they may use this instead.
 
-### Network Mobility
+### Network Mobility/Scaling
+One of the exciting things about UDP is its connection-less nature. A user can be streaming media/uploading a file and switch networks without interruption.
+This wasn't easily possible with DTLS because it doesn't provide a session identifier. Most deployments would depend on the clients IP+Port as the session identifier.
+
+DTLS 1.3 (and RFC 9146 a modification to DTLS 1.2) have a fix for this though! DTLS record headers now can contain a unique id for the session. You can now uniquely
+identify your DTLS traffic. Solves a few problems for DTLS users.
+
+* Identify clients as they switch between WiFi and Cellular.
+* Load balance effectively, route sessions to specific servers.
+* Support long running sessions. IoT device can shut down and come back days later
 
 ## DTLS 1.3: an implementor's perspective
