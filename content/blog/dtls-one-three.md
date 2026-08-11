@@ -192,3 +192,15 @@ You can implement something near the end of the spec and discover that you need 
 Our initial implementation maintained only one active epoch and record protection per direction. Supporting `KeyUpdate` required per-epoch state and a series of refactors. See [the tracking issue](https://github.com/pion/dtls/issues/983).
 
 *— [Jo Turk](https://github.com/JoTurk)*
+
+### The Importance of Interop Testing
+
+While working on Pion DTLS, [Jo Turk](https://github.com/JoTurk) created a dedicated repository for DTLS interoperability testing: [dtls-interop](https://github.com/pion/dtls-interop).
+
+Testing against wolfSSL she found three issues in Pion's DTLS 1.3 implementation (and fixed them)
+
+* [Recognize partial handshake retransmissions](https://github.com/pion/dtls/pull/1001)
+* [Resume and ACK split flights](https://github.com/pion/dtls/pull/1002)
+* [Handle duplicated Flight 4](https://github.com/pion/dtls/pull/1003)
+
+It currently tests against OpenSSL, BoringSSL (Chrome), and wolfSSL. Firefox and more will be added soon!
