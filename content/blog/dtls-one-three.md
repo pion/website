@@ -1,14 +1,14 @@
 ---
-title: DTLS 1.3 is a sweet upgrade
-description: DTLS 1.3 uses less data, connects faster, it's more secure, and handles bad networks better.
+title: "DTLS 1.3 Is Coming to Go: An Implementer's Perspective"
+description: DTLS 1.3 uses less data and connects faster. It is more secure and handles bad networks better.
 date: 1970-01-01
 authors: ["Theodor Midtlien", "Jo Turk", "Adriano Sela Aviles", "R Chiu", "Sean DuBois"]
 ---
 
-## What is DTLS?
+## What Is DTLS?
 DTLS is the Datagram (UDP) variant of TLS. You might not be familiar with TLS, but you use it extensively!
 
-TLS is the protocol used for secure communication across the Internet (and intranets). Most web browsing and many emails/VPNs run over it.
+TLS is the protocol used for secure communication across the Internet (and intranets). Most web browsing and many email and VPN services run over it.
 
 (D)TLS solves three things:
 
@@ -16,7 +16,7 @@ TLS is the protocol used for secure communication across the Internet (and intra
 * **Authentication** - Confirm who you are communicating with
 * **Integrity** - Detect tampered or corrupted records
 
-To accomplish this, TLS standardized a handshake so two TLS peers can agree on a cipher and keying material. DTLS extends and modifies the TLS
+To accomplish this, TLS standardized a handshake so two TLS peers can agree on a cipher suite and keying material. DTLS extends and modifies the TLS
 handshake so it can work over a lossy protocol.
 
 If you are curious about deeper details on the protocol, see [WebRTC for the Curious - Securing](https://webrtcforthecurious.com/docs/04-securing/).
@@ -79,20 +79,20 @@ DTLS 1.3 uses a variable-length unified header that can be as small as **2 bytes
      E = Epoch
 ```
 
-> With an MTU of 1280 (the default for WebRTC), you could save **47 MB** on a **5 GB transfer!** That might not sound like a lot, but at scale, that will be massive savings.
+> With Pion's default MTU of 1200, you could save **50 MB** on a **5 GiB transfer!** That might not sound like a lot, but at scale, it will add up to massive savings.
 
 ### Connects Faster
 DTLS 1.3 connects faster for two reasons.
 
-**First, DTLS 1.3 has explicit ACKs.** During handshaking, if a datagram was lost in DTLS 1.2, both sides would wait and then retransmit on timeout. With DTLS 1.3,
-each side now sends explicit `ACK` messages. This means it can detect and recover from a datagram loss immediately.
+**First, DTLS 1.3 has explicit ACKs.** During the handshake, if a datagram was lost in DTLS 1.2, both sides would wait and then retransmit on timeout.
+With DTLS 1.3, each side can send explicit `ACK` messages. This allows selective or early retransmission after a datagram loss.
 
-**Second, DTLS 1.3 allows key sharing in the `ClientHello`.** This removes an entire round trip, the server no longer waits for the `ClientKeyExchange`!
+**Second, DTLS 1.3 allows a key share in the `ClientHello`.** This removes an entire round trip. The server no longer waits for the `ClientKeyExchange`!
 
 > This allows the handshake to be shrunk down to only **1 RTT** (from **2** in DTLS 1.2).
 
-Below are simplified versions of the handshakes, but note how the client only has to wait for one message for the server to send encrypted data (Application Data)
-in DTLS 1.3, versus waiting for two messages from the server to start.
+Below are simplified versions of the handshakes. Note how the client only has to wait for one server flight to receive encrypted data (Application Data)
+in DTLS 1.3, versus waiting for two server flights in DTLS 1.2.
 
 #### DTLS 1.2
 
@@ -124,73 +124,71 @@ Client                                    Server
 ClientHello + key_share    ----->
 
                            Flight 2
-                           <-----         ServerHello, Finished, Application Data
+                           <-----         ServerHello, EncryptedExtensions, Finished, Application Data
 
                          Server data after 1 RTT
 ```
 
 ### Improved Security
-DTLS 1.3 improves security in a bunch of ways: lots of insecure/brittle stuff was removed, and a few new things were added.
+DTLS 1.3 improves security in a bunch of ways: lots of insecure and brittle stuff was removed, and a few new things were added.
 
-**Renegotiation was removed.** Renegotiation was a source of bugs/security issues (`CVE-2009-3555`) and was entirely removed. Pion DTLS never implemented
+**Renegotiation was removed.** Renegotiation was a source of bugs and security issues (`CVE-2009-3555`) and was entirely removed. Pion DTLS never implemented
 renegotiation, but we are excited not to get requests for it anymore!
 
-**For DTLS 1.3 more of the handshake is encrypted.** A big improvements is that certificates are no longer exchanged in plaintext.
+**More of the handshake is encrypted.** A big improvement is that certificates are no longer exchanged in plaintext.
 This was a big fingerprinting surface that is now closed.
 
-**Fragile/difficult-to-implement cipher suites are removed.** Only `AEAD` cipher suites are available now.
-`AEAD` is easier to use because encryption + authentication is done in one call.
+**Fragile and difficult-to-implement cipher suites are removed.** Only `AEAD` cipher suites are available now.
+`AEAD` is easier to use because encryption and authentication are done in one call.
 
 Compare Pion's use of [CBC](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/pkg/crypto/ciphersuite/cbc.go#L71)
 to its use of [AEAD](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/pkg/crypto/ciphersuite/ciphersuite.go#L64).
 
-With `CBC` we have to do authentication and encryption separately. When doing `AEAD` it is one operation. Another benefit of one operation is
-that `AES-GCM` is often more Performant. Since `CBC-and-HMAC` is two operations you end up with more copying/instructions.
+With `CBC`, we have to do authentication and encryption separately. `AEAD` combines authentication and encryption into one operation. Another benefit is
+that `AES-GCM` is often more performant. Since `CBC-and-HMAC` involves two operations, you end up with more copying and instructions.
 
-**DTLS 1.3 requires forward secrecy for all non-pre-shared-key sessions.**
+**Forward secrecy is required for all non-pre-shared-key sessions.**
 
 In DTLS 1.2, you had the option to use cipher suites with `RSA` key exchange
-or ephemeral key exchange. Ephemeral key exchange means you generate a new key for each session, RSA means the server would reuse the same key across many
+or ephemeral key exchange. Ephemeral key exchange means you generate a new key for each session. RSA means the server would reuse the same key across many
 sessions. If an attacker got access to the private key for RSA sessions, they could decrypt every session. With ephemeral keys, the attacker needs the keys
 for each individual session.
 
-A pre-shared-key session can still be configured not to use ephemeral keys. Devices that are battery-powered/constrained
+A pre-shared-key session can still be configured not to use ephemeral keys. Devices that are battery-powered or constrained
 might not be powerful enough to generate an ephemeral key pair for each session, so they may use this instead.
 
-### Network Mobility/Scaling
-One of the exciting things about UDP is its connection-less nature. A user can be streaming media/uploading a file and switch networks without interruption.
+### Connection Identification Added
+One of the exciting things about UDP is its connectionless nature. A user can stream media or upload a file and switch networks without interruption.
 
-This wasn't easily possible with DTLS because it doesn't provide a session identifier. Most deployments would depend on the clients IP+Port as the session identifier.
+This wasn't easily possible with DTLS because it doesn't provide a session identifier. Most deployments would depend on the client's IP address and port as the session identifier.
 
-DTLS 1.3 (and RFC 9146 a modification to DTLS 1.2) have a fix for this though! DTLS record headers now can contain a unique id for the session.
+DTLS 1.3 and RFC 9146, an extension to DTLS 1.2, have a fix for this, though! DTLS record headers can now contain a unique ID for the session.
 
-You can now uniquely identify your DTLS traffic. Solves a few problems for DTLS users.
+You can now uniquely identify your DTLS traffic. This solves a few problems for DTLS users.
 
-* **Identify clients** as they switch between WiFi and Cellular.
-* **Load balance effectively**, route sessions to specific servers.
-* **Support long running sessions.** IoT device can shut down and come back days later
+* **Identify clients** as they switch between Wi-Fi and cellular networks.
+* **Load balance effectively** by routing sessions to specific servers.
+* **Support long-running sessions.** An IoT device can shut down and come back days later.
 
 ---
 
-## Implementor's perspective
+## Implementer's Perspective
 
-### Finished is a different story in 1.3
-In DTLS 1.2 you have have one finite state machine. **After the handshakes finishes you are done.** With 1.3 things get a bit more complicated! You need to handle `NewSessionTicket` and `KeyUpdate`. *Going into this project I didn't appreciate that complication from just reading the IETF doc.*
+### Finished Is a Different Story in 1.3
+In DTLS 1.2, you have one finite state machine. **After the handshake finishes, you are done.** With DTLS 1.3, things get a bit more complicated! You need to handle `NewSessionTicket` and `KeyUpdate`. *Going into this project, I didn't appreciate that complication from just reading the IETF doc.*
 
-**This required a second state machine** with its own `ACK` handling, retransmission timer etc..... See Pion's [post-handshake implementation](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/internal/handshake/post_handshake.go#L36-L55).
+**This required a second state machine** with its own `ACK` handling, retransmission timer, etc. See Pion's [post-handshake implementation](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/internal/handshake/post_handshake.go#L36-L55).
 
-*-- [Sean-Der](https://github.com/Sean-Der)*
+*— [Sean-Der](https://github.com/Sean-Der)*
 
+### The Names Are Scarier Than the Concepts
+The TLS and DTLS specs make things feel really complex, but the concepts underneath are actually pretty simple. The spec is dense with terms like `HKDF`, `AEAD`, and `AES`. Once you learn the vocabulary, it's actually quite easy to follow!
 
-### The names are scarier than the concepts
-The TLS and DTLS specs make things feel really complex, but the concepts underneath are actually pretty simple. The spec is dense with terms like `HKDF`, `AEAD`, and `AES`. Once you learn the vocabulary it's actually quite easy to follow!
+*— [Jo Turk](https://github.com/JoTurk)*
 
-*-- [Jo Turk](https://github.com/JoTurk)*
-
-
-### The spec isn't linear
+### The Spec Isn't Linear
 You can implement something near the end of the spec and discover that you need to refactor everything from the record layer to the ciphers. [Section 6.1](https://www.rfc-editor.org/rfc/rfc9147.html#section-6.1) introduces epochs, but it isn't until [Section 8](https://www.rfc-editor.org/rfc/rfc9147.html#section-8) that it becomes clear that the client can be at epoch 3 while the server is at epoch 4, and that the state needs to be explicitly directional.
 
 Our initial implementation maintained only one active epoch and record protection per direction. Supporting `KeyUpdate` required per-epoch state and a series of refactors. See [the tracking issue](https://github.com/pion/dtls/issues/983).
 
-*-- [Jo Turk](https://github.com/JoTurk)*
+*— [Jo Turk](https://github.com/JoTurk)*
