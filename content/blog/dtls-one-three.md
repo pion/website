@@ -178,3 +178,19 @@ You can now uniquely identify your DTLS traffic. Solves a few problems for DTLS 
 In DTLS 1.2 you have have one finite state machine. **After the handshakes finishes you are done.** With 1.3 things get a bit more complicated! You need to handle `NewSessionTicket` and `KeyUpdate`. *Going into this project I didn't appreciate that complication from just reading the IETF doc.*
 
 **This required a second state machine** with its own `ACK` handling, retransmission timer etc..... See Pion's [post-handshake implementation](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/internal/handshake/post_handshake.go#L36-L55).
+
+*-- [Sean-Der](https://github.com/Sean-Der)*
+
+
+### The names are scarier than the concepts
+The TLS and DTLS specs make things feel really complex, but the concepts underneath are actually pretty simple. The spec is dense with terms like `HKDF`, `AEAD`, and `AES`. Once you learn the vocabulary it's actually quite easy to follow!
+
+*-- [Jo Turk](https://github.com/JoTurk)*
+
+
+### The spec isn't linear
+You can implement something near the end of the spec and discover that you need to refactor everything from the record layer to the ciphers. [Section 6.1](https://www.rfc-editor.org/rfc/rfc9147.html#section-6.1) introduces epochs, but it isn't until [Section 8](https://www.rfc-editor.org/rfc/rfc9147.html#section-8) that it becomes clear that the client can be at epoch 3 while the server is at epoch 4, and that the state needs to be explicitly directional.
+
+Our initial implementation maintained only one active epoch and record protection per direction. Supporting `KeyUpdate` required per-epoch state and a series of refactors. See [the tracking issue](https://github.com/pion/dtls/issues/983).
+
+*-- [Jo Turk](https://github.com/JoTurk)*
