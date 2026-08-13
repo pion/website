@@ -79,6 +79,7 @@ DTLS 1.3 uses a variable-length unified header that can be as small as **2 bytes
      E = Epoch
 ```
 
+> [!NOTE]
 > With Pion's default MTU of 1200, you could save **50 MB** on a **5 GiB transfer!** That might not sound like a lot, but at scale, it will add up to massive savings.
 
 ### Connects Faster
@@ -89,6 +90,7 @@ With DTLS 1.3, each side can send explicit `ACK` messages. This allows selective
 
 **Second, DTLS 1.3 allows a key share in the `ClientHello`.** This removes an entire round trip. The server no longer waits for the `ClientKeyExchange`!
 
+> [!NOTE]
 > This allows the handshake to be shrunk down to only **1 RTT** (from **2** in DTLS 1.2).
 
 Below are simplified versions of the handshakes. Note how the client only has to wait for one server flight to receive encrypted data (Application Data)
