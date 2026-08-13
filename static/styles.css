@@ -137,7 +137,7 @@ footer {
     width: 50%;
 }
 
-.intro + .intro {
+.intro+.intro {
     margin-top: 1.5rem;
 }
 
@@ -258,13 +258,101 @@ hr {
     }
 
     & blockquote {
-        padding: 0.75rem 1rem;
+        border-left: 3px solid light-dark(#0000004f, #ffffff40);
+        padding-left: 10px;
 
-        border-left: 4px solid var(--link-color);
-        border-radius: 4px;
+        font-size: 0.85em;
 
-        background-color: light-dark(#ffffff, #ffffff0a);
-        font-size: 1.05rem;
+        & * {
+            opacity: 0.9;
+        }
+    }
+
+    & [class^=markdown-alert] {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+
+        & * {
+            opacity: 1.0;
+        }
+
+        &::before {
+            display: flex;
+            font-size: 0.8em;
+            padding-bottom: 0.35rem;
+        }
+    }
+
+    --alert-color-light: 70% 0.13;
+    --alert-color-dark: 62% 0.13;
+
+    --alert-color-light-text: 45% 0.13;
+    --alert-color-dark-text: 80% 0.13;
+
+    --alert-note: 245;
+    --alert-tip: 145;
+    --alert-important: 323;
+    --alert-warning: 69;
+    --alert-caution: 23;
+
+    & .markdown-alert-note {
+        border-left: 3px solid light-dark(oklch(var(--alert-color-light) var(--alert-note)),
+                oklch(var(--alert-color-dark) var(--alert-note)));
+
+        &::before {
+            content: "ℹ️ Note";
+
+            color: light-dark(oklch(var(--alert-color-light-text) var(--alert-note)),
+                    oklch(var(--alert-color-dark-text) var(--alert-note)));
+        }
+    }
+
+    & .markdown-alert-tip {
+        border-left: 3px solid light-dark(oklch(var(--alert-color-light) var(--alert-tip)),
+                oklch(var(--alert-color-dark) var(--alert-tip)));
+
+        &::before {
+            content: "💡 Tip";
+
+            color: light-dark(oklch(var(--alert-color-light-text) var(--alert-tip)),
+                    oklch(var(--alert-color-dark-text) var(--alert-tip)));
+        }
+    }
+
+    & .markdown-alert-important {
+        border-left: 3px solid light-dark(oklch(var(--alert-color-light) var(--alert-important)),
+                oklch(var(--alert-color-dark) var(--alert-important)));
+
+        &::before {
+            content: "📌 Important";
+
+            color: light-dark(oklch(var(--alert-color-light-text) var(--alert-important)),
+                    oklch(var(--alert-color-dark-text) var(--alert-important)));
+        }
+    }
+
+    & .markdown-alert-warning {
+        border-left: 3px solid light-dark(oklch(var(--alert-color-light) var(--alert-warning)),
+                oklch(var(--alert-color-dark) var(--alert-warning)));
+
+        &::before {
+            content: "⚠️ Warning";
+
+            color: light-dark(oklch(var(--alert-color-light-text) var(--alert-warning)),
+                    oklch(var(--alert-color-dark-text) var(--alert-warning)));
+        }
+    }
+
+    & .markdown-alert-caution {
+        border-left: 3px solid light-dark(oklch(var(--alert-color-light) var(--alert-caution)),
+                oklch(var(--alert-color-dark) var(--alert-caution)));
+
+        &::before {
+            content: "🛑 Caution";
+
+            color: light-dark(oklch(var(--alert-color-light-text) var(--alert-caution)),
+                    oklch(var(--alert-color-dark-text) var(--alert-caution)));
+        }
     }
 }
 
