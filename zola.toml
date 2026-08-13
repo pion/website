@@ -12,7 +12,10 @@ default_language = "en"
 generate_feeds = true
 feed_filenames = ["atom.xml", "rss.xml"]
 
+
 [markdown]
+github_alerts = true
+
 insert_anchor_links = "heading"
 
 [markdown.highlighting]
