@@ -247,7 +247,8 @@ hr {
     }
 
     & p code {
-        background-color: light-dark(#ffffff, #ffffff0a);
+        background-color: light-dark(#ffffff, #232331);
+        border: 1px solid light-dark(#00000024, #ffffff0d);
         padding: 0.25rem 0.4rem;
 
         font-size: 14px;
