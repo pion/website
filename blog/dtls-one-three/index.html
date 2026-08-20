@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+DTLS 1.3 in Go: An Implementer’s Perspective - Pion
+</title>
+
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/styles.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="theme-color" content="#e53935">
+    <meta property="og:site_name" content="Pion" />
+
+    <link rel="alternate" type="application/rss+xml" title="Pion" href="https://pion.ly/rss.xml">
+    <link rel="alternate" type="application/atom+xml" title="Pion" href="https://pion.ly/atom.xml">
+
+    
+
+<link rel="canonical" href="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;dtls-one-three&#x2F;">
+
+
+<meta name="description" content="DTLS 1.3 uses less data and connects faster. It is more secure and handles bad networks better." />
+<meta property="og:description" content="DTLS 1.3 uses less data and connects faster. It is more secure and handles bad networks better." />
+
+
+<meta property="og:title" content="DTLS 1.3 in Go: An Implementer’s Perspective" />
+<meta property="og:url" content="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;dtls-one-three&#x2F;" />
+<meta property="og:type" content="article" />
+
+
+<meta name="article:author" content="Theodor Midtlien, Jo Turk, Adriano Sela Aviles, R Chiu, Sean DuBois" />
+
+
+
+<meta name="article:published_time" content='2026-08-21T00:00:00+0000' />
+
+
+
+
+
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav class="links">
+                <a href="/">
+                    <svg class="pion-logo" viewBox="0 0 423 125" preserveAspectRatio="xMidYMid meet" width="100%"
+                        height="100%">
+                        <use href="/img/pion-logo.svg#Page-1"></use>
+                    </svg>
+                </a>
+                <a href="/blog">Blog</a>
+                <a href="/why-pion">Why Pion?</a>
+
+                <div class="brand-links">
+                    
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+                </div>
+            </nav>
+        </header>
+
+        
+<article class="post-article">
+    <div class="article-header">
+        <h1>DTLS 1.3 in Go: An Implementer’s Perspective</h1>
+        
+        <p class="details">
+            <span class="authors">Theodor Midtlien, Jo Turk, Adriano Sela Aviles, R Chiu, Sean DuBois</span> — <time datetime="2026-08-21">2026-08-21</time>
+        </p>
+        
+    </div>
+
+    <div class="article-content">
+        <h2 id="what-is-dtls"><a class="zola-anchor" href="#what-is-dtls" aria-label="Anchor link for: what-is-dtls">What Is DTLS?</a></h2>
+<p>DTLS is the Datagram (UDP) variant of TLS. You might not be familiar with TLS, but you use it extensively!</p>
+<p>TLS is the protocol used for secure communication across the Internet (and intranets). Most web browsing and many email and VPN services run over it.</p>
+<p>(D)TLS solves three things:</p>
+<ul>
+<li><strong>Encryption</strong> - Prevent attackers from seeing the protected data</li>
+<li><strong>Authentication</strong> - Confirm who you are communicating with</li>
+<li><strong>Integrity</strong> - Detect tampered or corrupted records</li>
+</ul>
+<p>To accomplish this, TLS standardized a handshake so two TLS peers can agree on a cipher suite and keying material. DTLS extends and modifies the TLS
+handshake so it can work over a lossy protocol.</p>
+<p>If you are curious about deeper details on the protocol, see <a rel="external" href="https://webrtcforthecurious.com/docs/04-securing/">WebRTC for the Curious - Securing</a>.</p>
+<hr />
+<h2 id="dtls-1-3-upgrades"><a class="zola-anchor" href="#dtls-1-3-upgrades" aria-label="Anchor link for: dtls-1-3-upgrades">DTLS 1.3 Upgrades</a></h2>
+<p><em>DTLS 1.3 had quite a few changes. These are the ones we noticed and found most exciting.</em></p>
+<h3 id="uses-less-data"><a class="zola-anchor" href="#uses-less-data" aria-label="Anchor link for: uses-less-data">Uses Less Data</a></h3>
+<p>Each DTLS 1.2 record has a header with metadata required for the session.
+Each record uses a fixed <strong>13-byte</strong> record header:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>      0 1 2 3 4 5 6 7</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     |  Content Type |  1 byte</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     |    Version    |  2 bytes</span></span>
+<span class="giallo-l"><span>     +               +</span></span>
+<span class="giallo-l"><span>     |               |</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     |     Epoch     |  2 bytes</span></span>
+<span class="giallo-l"><span>     +               +</span></span>
+<span class="giallo-l"><span>     |               |</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     |               |</span></span>
+<span class="giallo-l"><span>     +               +</span></span>
+<span class="giallo-l"><span>     |               |</span></span>
+<span class="giallo-l"><span>     +    Sequence   +  6 bytes</span></span>
+<span class="giallo-l"><span>     |     Number    |</span></span>
+<span class="giallo-l"><span>     +               +</span></span>
+<span class="giallo-l"><span>     |               |</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     |     Length    |  2 bytes</span></span>
+<span class="giallo-l"><span>     +               +</span></span>
+<span class="giallo-l"><span>     |               |</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span></code></pre>
+<p>DTLS 1.3 uses a variable-length unified header that can be as small as <strong>2 bytes</strong>:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>      0 1 2 3 4 5 6 7</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     |0|0|1|C|S|L|E E|  1 byte</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     | Connection ID |  optional, variable length</span></span>
+<span class="giallo-l"><span>     |   (if any)    |</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     |  8- or 16-bit |  1 or 2 bytes</span></span>
+<span class="giallo-l"><span>     |Sequence Number|</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"><span>     | 16-bit Length |  optional, 2 bytes</span></span>
+<span class="giallo-l"><span>     +-+-+-+-+-+-+-+-+</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>     C = Connection ID present</span></span>
+<span class="giallo-l"><span>     S = Sequence number length</span></span>
+<span class="giallo-l"><span>     L = Length present</span></span>
+<span class="giallo-l"><span>     E = Epoch</span></span></code></pre>
+<blockquote class="markdown-alert-note">
+<p>With Pion's default MTU of 1200, you could save <strong>50 MB</strong> on a <strong>5 GiB transfer!</strong> That might not sound like a lot, but at scale, it will add up to massive savings.</p>
+</blockquote>
+<h3 id="connects-faster"><a class="zola-anchor" href="#connects-faster" aria-label="Anchor link for: connects-faster">Connects Faster</a></h3>
+<p>DTLS 1.3 connects faster for two reasons.</p>
+<p><strong>First, DTLS 1.3 has explicit ACKs.</strong> During the handshake, if a datagram was lost in DTLS 1.2, both sides would wait and then retransmit on timeout.
+With DTLS 1.3, each side can send explicit <code>ACK</code> messages. This allows selective or early retransmission after a datagram loss.</p>
+<p><strong>Second, DTLS 1.3 allows a key share in the <code>ClientHello</code>.</strong> This removes an entire round trip. The server no longer waits for the <code>ClientKeyExchange</code>!</p>
+<blockquote class="markdown-alert-note">
+<p>This allows the handshake to be shrunk down to only <strong>1 RTT</strong> (from <strong>2</strong> in DTLS 1.2).</p>
+</blockquote>
+<p>Below are simplified versions of the handshakes. Note how the client only has to wait for one server flight to receive encrypted data (Application Data)
+in DTLS 1.3, versus waiting for two server flights in DTLS 1.2.</p>
+<h4 id="dtls-1-2"><a class="zola-anchor" href="#dtls-1-2" aria-label="Anchor link for: dtls-1-2">DTLS 1.2</a></h4>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>Client                                               Server</span></span>
+<span class="giallo-l"><span>------                                               ------</span></span>
+<span class="giallo-l"><span>                                  Flight 1</span></span>
+<span class="giallo-l"><span>ClientHello                       --------&gt;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>                                  Flight 2</span></span>
+<span class="giallo-l"><span>                                  &lt;--------          ServerHello, ServerHelloDone</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>                                  Flight 3</span></span>
+<span class="giallo-l"><span>ClientKeyExchange,                --------&gt;</span></span>
+<span class="giallo-l"><span>ChangeCipherSpec, Finished</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>                                  Flight 4</span></span>
+<span class="giallo-l"><span>                                  &lt;--------          ChangeCipherSpec, Finished, Application Data</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>                     Server data after 2 RTTs</span></span></code></pre><h4 id="dtls-1-3"><a class="zola-anchor" href="#dtls-1-3" aria-label="Anchor link for: dtls-1-3">DTLS 1.3</a></h4>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>Client                                    Server</span></span>
+<span class="giallo-l"><span>------                                    ------</span></span>
+<span class="giallo-l"><span>                           Flight 1</span></span>
+<span class="giallo-l"><span>ClientHello + key_share    -----&gt;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>                           Flight 2</span></span>
+<span class="giallo-l"><span>                           &lt;-----         ServerHello, EncryptedExtensions, Finished, Application Data</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>                         Server data after 1 RTT</span></span></code></pre><h3 id="improved-security"><a class="zola-anchor" href="#improved-security" aria-label="Anchor link for: improved-security">Improved Security</a></h3>
+<p>DTLS 1.3 improves security in a bunch of ways: lots of insecure and brittle stuff was removed, and a few new things were added.</p>
+<p><strong>Renegotiation was removed.</strong> Renegotiation was a source of bugs and security issues (<code>CVE-2009-3555</code>) and was entirely removed. Pion DTLS never implemented
+renegotiation, but we are excited not to get requests for it anymore!</p>
+<p><strong>More of the handshake is encrypted.</strong> A big improvement is that certificates are no longer exchanged in plaintext.
+This was a big fingerprinting surface that is now closed.</p>
+<p><strong>Fragile and difficult-to-implement cipher suites are removed.</strong> Only <code>AEAD</code> cipher suites are available now.
+<code>AEAD</code> is easier to use because encryption and authentication are done in one call.</p>
+<p>Compare Pion's use of <a rel="external" href="https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/pkg/crypto/ciphersuite/cbc.go#L71">CBC</a>
+to its use of <a rel="external" href="https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/pkg/crypto/ciphersuite/ciphersuite.go#L64">AEAD</a>.</p>
+<p>With <code>CBC</code>, we have to do authentication and encryption separately. <code>AEAD</code> combines authentication and encryption into one operation. Another benefit is
+that <code>AES-GCM</code> is often more performant. Since <code>CBC-and-HMAC</code> involves two operations, you end up with more copying and instructions.</p>
+<p><strong>Forward secrecy is required for all non-pre-shared-key sessions.</strong></p>
+<p>In DTLS 1.2, you had the option to use cipher suites with <code>RSA</code> key exchange
+or ephemeral key exchange. Ephemeral key exchange means you generate a new key for each session. RSA means the server would reuse the same key across many
+sessions. If an attacker got access to the private key for RSA sessions, they could decrypt every session. With ephemeral keys, the attacker needs the keys
+for each individual session.</p>
+<p>A pre-shared-key session can still be configured not to use ephemeral keys. Devices that are battery-powered or constrained
+might not be powerful enough to generate an ephemeral key pair for each session, so they may use this instead.</p>
+<h3 id="connection-identification-added"><a class="zola-anchor" href="#connection-identification-added" aria-label="Anchor link for: connection-identification-added">Connection Identification Added</a></h3>
+<p>One of the exciting things about UDP is its connectionless nature. A user can stream media or upload a file and switch networks without interruption.</p>
+<p>This wasn't easily possible with DTLS because it doesn't provide a session identifier. Most deployments would depend on the client's IP address and port as the session identifier.</p>
+<p>DTLS 1.3 and RFC 9146, an extension to DTLS 1.2, have a fix for this, though! DTLS record headers can now contain a unique ID for the session.</p>
+<p>You can now uniquely identify your DTLS traffic. This solves a few problems for DTLS users.</p>
+<ul>
+<li><strong>Identify clients</strong> as they switch between Wi-Fi and cellular networks.</li>
+<li><strong>Load balance effectively</strong> by routing sessions to specific servers.</li>
+<li><strong>Support long-running sessions.</strong> An IoT device can shut down and come back days later.</li>
+</ul>
+<hr />
+<h2 id="implementer-s-perspective"><a class="zola-anchor" href="#implementer-s-perspective" aria-label="Anchor link for: implementer-s-perspective">Implementer's Perspective</a></h2>
+<h3 id="finished-is-a-different-story-in-1-3"><a class="zola-anchor" href="#finished-is-a-different-story-in-1-3" aria-label="Anchor link for: finished-is-a-different-story-in-1-3">Finished Is a Different Story in 1.3</a></h3>
+<p>In Pion DTLS 1.2, we had one finite state machine. <strong>After the handshake finishes, you are done.</strong> With DTLS 1.3, things get a bit more complicated! You need to handle <code>NewSessionTicket</code> and <code>KeyUpdate</code>. <em>Going into this project, I didn't appreciate that complication from just reading the IETF doc.</em></p>
+<p><strong>This required a second state machine</strong> with its own <code>ACK</code> handling, retransmission timer, etc. See Pion's <a rel="external" href="https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/internal/handshake/post_handshake.go#L36-L55">post-handshake implementation</a>.</p>
+<p><em>— <a rel="external" href="https://github.com/Sean-Der">Sean-Der</a></em></p>
+<h3 id="the-names-are-scarier-than-the-concepts"><a class="zola-anchor" href="#the-names-are-scarier-than-the-concepts" aria-label="Anchor link for: the-names-are-scarier-than-the-concepts">The Names Are Scarier Than the Concepts</a></h3>
+<p>The TLS and DTLS specs make things feel really complex, but the concepts underneath are actually pretty simple. The spec is dense with terms like <code>HKDF</code>, <code>AEAD</code>, and <code>AES</code>. Once you learn the vocabulary, it's actually quite easy to follow!</p>
+<p><em>— <a rel="external" href="https://github.com/JoTurk">Jo Turk</a></em></p>
+<h3 id="the-spec-isn-t-linear"><a class="zola-anchor" href="#the-spec-isn-t-linear" aria-label="Anchor link for: the-spec-isn-t-linear">The Spec Isn't Linear</a></h3>
+<p>You can implement something near the end of the spec and discover that you need to refactor everything from the record layer to the ciphers. <a rel="external" href="https://www.rfc-editor.org/rfc/rfc9147.html#section-6.1">Section 6.1</a> introduces epochs, but it isn't until <a rel="external" href="https://www.rfc-editor.org/rfc/rfc9147.html#section-8">Section 8</a> that it becomes clear that the client can be at epoch 3 while the server is at epoch 4, and that the state needs to be explicitly directional.</p>
+<p>Our initial implementation maintained only one active epoch and record protection per direction. Supporting <code>KeyUpdate</code> required per-epoch state and a series of refactors. See <a rel="external" href="https://github.com/pion/dtls/issues/983">the tracking issue</a>.</p>
+<p><em>— <a rel="external" href="https://github.com/JoTurk">Jo Turk</a></em></p>
+<h3 id="dtls-1-2-fallback-isn-t-a-fresh-handshake"><a class="zola-anchor" href="#dtls-1-2-fallback-isn-t-a-fresh-handshake" aria-label="Anchor link for: dtls-1-2-fallback-isn-t-a-fresh-handshake">DTLS 1.2 Fallback Isn't a Fresh Handshake</a></h3>
+<p>Falling back from a 1.3 handshake to 1.2 is not the same as starting a fresh 1.2 handshake. State from the dual-version path can leak into the fallback and break interoperability with a pure 1.2 implementation. It's important to test a 1.2 only implementation. It's not good enough to just force a 1.3 implementation into 1.2 mode!</p>
+<p>We found several bugs where the fallback offered 1.3 extensions or dropped 1.2 extensions. <a rel="external" href="https://github.com/pion/dtls/pull/1030">One example was fixed in Pion DTLS #1030</a>.</p>
+<p><em>— <a rel="external" href="https://github.com/JoTurk">Jo Turk</a></em></p>
+<h3 id="sharing-code-means-understanding-both-specs"><a class="zola-anchor" href="#sharing-code-means-understanding-both-specs" aria-label="Anchor link for: sharing-code-means-understanding-both-specs">Sharing Code Means Understanding Both Specs</a></h3>
+<p>Supporting DTLS 1.2 and 1.3 in one stack was harder than implementing 1.3 alone. Reusing negotiation and extension-validation code appears straightforward, but they have minor differences between the versions.</p>
+<p>Retry behavior is different between versions. In DTLS 1.2 a <code>ClientHello</code> could change from a <code>HelloVerifyRequest</code>. In 1.3 a <code>HelloRetryRequest</code> causes the client to send a second <code>ClientHello</code> and it has stricter rules around what can change.
+Moving negotiation and validation into shared libraries exposed extension-validation bugs. We had to <a rel="external" href="https://github.com/pion/dtls/pull/1028">reject unsolicited server extensions</a>, <a rel="external" href="https://github.com/pion/dtls/pull/1038">require configured SRTP profiles on both the client and server</a>, and <a rel="external" href="https://github.com/pion/dtls/pull/1023">validate extension blocks in every context</a>.</p>
+<p>Reducing code duplication ended up being a much harder task than anticipated.</p>
+<p><em>— <a rel="external" href="https://github.com/JoTurk">Jo Turk</a></em></p>
+<h3 id="the-importance-of-interop-testing"><a class="zola-anchor" href="#the-importance-of-interop-testing" aria-label="Anchor link for: the-importance-of-interop-testing">The Importance of Interop Testing</a></h3>
+<p>While working on Pion DTLS, <a rel="external" href="https://github.com/JoTurk">Jo Turk</a> created a dedicated repository for DTLS interoperability testing: <a rel="external" href="https://github.com/pion/dtls-interop">dtls-interop</a>.</p>
+<p>Testing against wolfSSL she found three issues in Pion's DTLS 1.3 implementation (and fixed them)</p>
+<ul>
+<li><a rel="external" href="https://github.com/pion/dtls/pull/1001">Recognize partial handshake retransmissions</a></li>
+<li><a rel="external" href="https://github.com/pion/dtls/pull/1002">Resume and ACK split flights</a></li>
+<li><a rel="external" href="https://github.com/pion/dtls/pull/1003">Handle duplicated Flight 4</a></li>
+</ul>
+<p>It currently tests against OpenSSL, BoringSSL (Chrome), and wolfSSL. Firefox and more will be added soon!</p>
+
+    </div>
+</article>
+
+
+
+        <footer>
+            <div class="icons">
+                
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+            </div>
+        </footer>
+
+    </main>
+</body>
+
+</html>

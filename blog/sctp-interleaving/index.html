@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+Fixing WebRTC data-channels head-of-line blocking with RFC-8260 - Pion
+</title>
+
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/styles.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="theme-color" content="#e53935">
+    <meta property="og:site_name" content="Pion" />
+
+    <link rel="alternate" type="application/rss+xml" title="Pion" href="https://pion.ly/rss.xml">
+    <link rel="alternate" type="application/atom+xml" title="Pion" href="https://pion.ly/atom.xml">
+
+    
+
+<link rel="canonical" href="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;sctp-interleaving&#x2F;">
+
+
+<meta name="description" content="Pion adds support for RFC-8260 (Stream Schedulers and User Message Interleaving) which fixes the sender-side head-of-line blocking" />
+<meta property="og:description" content="Pion adds support for RFC-8260 (Stream Schedulers and User Message Interleaving) which fixes the sender-side head-of-line blocking" />
+
+
+<meta property="og:title" content="Fixing WebRTC data-channels head-of-line blocking with RFC-8260" />
+<meta property="og:url" content="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;sctp-interleaving&#x2F;" />
+<meta property="og:type" content="article" />
+
+
+<meta name="article:author" content="Jo Turk" />
+
+
+
+<meta name="article:published_time" content='2026-05-17T00:00:00+0000' />
+
+
+
+<script src="/js/vendor/mermaid.min.js"></script>
+<script src="/js/mermaid-render.js"></script>
+
+
+
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav class="links">
+                <a href="/">
+                    <svg class="pion-logo" viewBox="0 0 423 125" preserveAspectRatio="xMidYMid meet" width="100%"
+                        height="100%">
+                        <use href="/img/pion-logo.svg#Page-1"></use>
+                    </svg>
+                </a>
+                <a href="/blog">Blog</a>
+                <a href="/why-pion">Why Pion?</a>
+
+                <div class="brand-links">
+                    
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+                </div>
+            </nav>
+        </header>
+
+        
+<article class="post-article">
+    <div class="article-header">
+        <h1>Fixing WebRTC data-channels head-of-line blocking with RFC-8260</h1>
+        
+        <p class="details">
+            <span class="authors">Jo Turk</span> — <time datetime="2026-05-17">2026-05-17</time>
+        </p>
+        
+    </div>
+
+    <div class="article-content">
+        <h2 id="what-is-head-of-line-blocking-and-why-it-s-an-issue-with-webrtc-datachannels"><a class="zola-anchor" href="#what-is-head-of-line-blocking-and-why-it-s-an-issue-with-webrtc-datachannels" aria-label="Anchor link for: what-is-head-of-line-blocking-and-why-it-s-an-issue-with-webrtc-datachannels">What is head-of-line blocking and why it's an issue with WebRTC datachannels</a></h2>
+<p>SCTP (the protocol used by WebRTC data channels) looks like it should be perfect for multiplexed application data. It is message-based, it supports multiple streams inside one association, and WebRTC data channels are built on top of it for non-media data.</p>
+<p>To understand sender-side head-of-line blocking, we first need to understand how SCTP sends messages. Messages are scheduled based on their send order. SCTP fragments messages according to the path MTU (Maximum Transmission Unit), which is usually around 1200 bytes for WebRTC. A 256 KB message would therefore be split into roughly 218 smaller fragments (chunks).</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="mermaid"><span class="giallo-l"><span>flowchart LR</span></span>
+<span class="giallo-l"><span>    AppBulk[&quot;App sends large message&quot;] --&gt; SCTP[&quot;Classic SCTP sender&quot;]</span></span>
+<span class="giallo-l"><span>    AppControl[&quot;App sends tiny small message&quot;] --&gt; SCTP</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    SCTP --&gt; Frag[&quot;Fragment large message&lt;br/&gt;into DATA chunks&quot;]</span></span>
+<span class="giallo-l"><span>    Frag --&gt; Queue[&quot;large fragments stay together&quot;]</span></span>
+<span class="giallo-l"><span>    Queue --&gt; Wire[&quot;Wire order&quot;]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    Wire --&gt; F0[&quot;large frag 0&quot;]</span></span>
+<span class="giallo-l"><span>    F0 --&gt; F1[&quot;large frag 1&quot;]</span></span>
+<span class="giallo-l"><span>    F1 --&gt; F2[&quot;large frag 2&quot;]</span></span>
+<span class="giallo-l"><span>    F2 --&gt; FMore[&quot;... many more fragments ...&quot;]</span></span>
+<span class="giallo-l"><span>    FMore --&gt; tiny[&quot;tiny small message&quot;]</span></span></code></pre><h3 id="so-what-is-the-actual-problem"><a class="zola-anchor" href="#so-what-is-the-actual-problem" aria-label="Anchor link for: so-what-is-the-actual-problem">So what is the actual problem?</a></h3>
+<p>Imagine you're streaming media over SCTP for some special use case, maybe DRM protected-content or codecs that aren't normally supported by WebRTC media tracks (RTP), such as AAC audio or VVC video. At the same time you have control, telemetry or chat streams sharing the same SCTP association.</p>
+<p>If a media stream starts sending large reliable messages, SCTP will fragment them into smaller chunks, and those fragments can monopolize the send queue. In other words, small chat or control messages may end up waiting behind the large transfer.</p>
+<p>If the stream is reliable and packets are lost, retransmissions of those large fragments can delay smaller streams even further. Chat messages will look delayed, and control traffic will feel laggy.</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>large video fragment 0</span></span>
+<span class="giallo-l"><span>large video fragment 1</span></span>
+<span class="giallo-l"><span>large video fragment 2</span></span>
+<span class="giallo-l"><span>large video fragment 3</span></span>
+<span class="giallo-l"><span>...</span></span>
+<span class="giallo-l"><span>large video fragment 200</span></span>
+<span class="giallo-l"><span>tiny control message finally sent</span></span>
+<span class="giallo-l"><span>chat messages finally sent</span></span>
+<span class="giallo-l"><span>audio-like frame finally sent</span></span></code></pre><h3 id="so-why-can-t-i-just-fragment-the-messages-myself-and-have-my-own-queue"><a class="zola-anchor" href="#so-why-can-t-i-just-fragment-the-messages-myself-and-have-my-own-queue" aria-label="Anchor link for: so-why-can-t-i-just-fragment-the-messages-myself-and-have-my-own-queue">So why can't I just fragment the messages myself and have my own queue?</a></h3>
+<p>Many applications do exactly that to avoid large SCTP messages, instead of sending one huge message, the application splits it into smaller chunks (just like SCTP itself), and schedules those chunks itself.</p>
+<p>But the tradeoff is that you're now effectively building another protocol on top of SCTP.</p>
+<p>And you need to handle things like chunk numbering, reassembly, flow control, backpressure handling, retransmission semantics, fair scheduling, and message boundaries.</p>
+<p>This gets trickier depending on the stream mode (pick your poison).</p>
+<p>If you use partially reliable streams or unreliable streams (SCTP won't retransmit lost packets), you need to decide what happens when fragments are dropped, should it be discarded, partially decoded, retransmitted, some sort of <a rel="external" href="https://pion.ly/blog/fec-with-pion/">FEC</a>?</p>
+<p>But if you decide you're not going to deal with a complex unreliable handling, and you use reliable streams, then you're back dealing with delayed delivery on other streams under packet loss and retransmissions on bad networks.</p>
+<p><a rel="external" href="https://www.rfc-editor.org/rfc/rfc8260.html">RFC 8260</a> was written to fix exactly this class of problem. The issue was that TSN (Transmission Sequence Number), was doing too many jobs at once: reliability, fragment reassembly, and sequencing. fragmented messages also had to use consecutive TSNs.</p>
+<h2 id="what-i-data-changes"><a class="zola-anchor" href="#what-i-data-changes" aria-label="Anchor link for: what-i-data-changes">What I-DATA changes</a></h2>
+<p>SCTP message interleaving uses the <strong>I-DATA</strong> chunk. The important change is that TSN is no longer used to order fragments inside a user message. I-DATA adds:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>MID = Message Identifier</span></span>
+<span class="giallo-l"><span>FSN = Fragment Sequence Number</span></span></code></pre>
+<p>The <em>TSN still exists</em>, though. It is still used for reliability, SACKs (Selective Acknowledgment), loss detection, and retransmission. But fragment reassembly now uses <strong>MID + FSN</strong>, not "all fragments must be adjacent in TSN space." RFC 8260 says I-DATA adds MID and FSN, removes SSN, uses MID to identify the message, and uses FSN to enumerate fragments of that message.</p>
+<p>So the identity becomes:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>TSN = reliability / SACK / retransmission</span></span>
+<span class="giallo-l"><span>SID = SCTP stream</span></span>
+<span class="giallo-l"><span>MID = user message inside that stream</span></span>
+<span class="giallo-l"><span>FSN = fragment number inside that message</span></span></code></pre>
+<p>Example:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>SID=4 MID=90 FSN=0 TSN=100  video fragment</span></span>
+<span class="giallo-l"><span>SID=2 MID=301 FSN=0 TSN=101 chat message</span></span>
+<span class="giallo-l"><span>SID=0 MID=12 FSN=0 TSN=102 control message</span></span>
+<span class="giallo-l"><span>SID=4 MID=90 FSN=1 TSN=103 video fragment</span></span>
+<span class="giallo-l"><span>SID=1 MID=44 FSN=0 TSN=104 chat message</span></span>
+<span class="giallo-l"><span>SID=4 MID=90 FSN=2 TSN=105 video/ fragment</span></span></code></pre>
+<p>The video fragments still reassemble correctly because the fragments are identified by:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>SID=4 + MID=90 + FSN=0,1,2,...</span></span></code></pre>
+<p>They no longer need to occupy one contiguous TSN range :)</p>
+<h2 id="interleaving-under-loss"><a class="zola-anchor" href="#interleaving-under-loss" aria-label="Anchor link for: interleaving-under-loss">Interleaving under loss</a></h2>
+<p>Interleaving does not make packet loss disappear. It does not give every stream its own congestion window. It does not magically create bandwidth, It just lets other streams compete for send opportunities between fragments of a large message.</p>
+<p>With interleaving, a bad network can still look like this:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>bulk fragment sent</span></span>
+<span class="giallo-l"><span>audio-like frame sent</span></span>
+<span class="giallo-l"><span>control message sent</span></span>
+<span class="giallo-l"><span>bulk fragment sent</span></span>
+<span class="giallo-l"><span>telemetry sent</span></span>
+<span class="giallo-l"><span>bulk fragment lost</span></span>
+<span class="giallo-l"><span>audio-like frame sent</span></span>
+<span class="giallo-l"><span>retransmit lost bulk fragment</span></span>
+<span class="giallo-l"><span>control message sent</span></span></code></pre>
+<p>That is much better than:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>bulk fragment sent</span></span>
+<span class="giallo-l"><span>bulk fragment sent</span></span>
+<span class="giallo-l"><span>bulk fragment lost</span></span>
+<span class="giallo-l"><span>bulk fragment sent</span></span>
+<span class="giallo-l"><span>bulk fragment sent</span></span>
+<span class="giallo-l"><span>retransmit lost bulk fragment</span></span>
+<span class="giallo-l"><span>control finally sent</span></span>
+<span class="giallo-l"><span>audio-like frame finally sent</span></span>
+<span class="giallo-l"><span>telemetry finally sent</span></span></code></pre>
+<p>The retransmission still costs capacity, but it no longer has to trap every other stream behind the large message’s original serialization.</p>
+<h2 id="where-stream-schedulers-fit-in-the-title"><a class="zola-anchor" href="#where-stream-schedulers-fit-in-the-title" aria-label="Anchor link for: where-stream-schedulers-fit-in-the-title">Where "Stream Schedulers" fit in the title</a></h2>
+<p>Interleaving gives SCTP the ability to pick chunks from different streams. But it still needs a policy for deciding which stream goes next.</p>
+<p>Common policies are:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>round-robin:</span></span>
+<span class="giallo-l"><span>  each non-empty stream gets turns</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>priority:</span></span>
+<span class="giallo-l"><span>  high-priority streams are served before lower-priority streams</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>WFQ:</span></span>
+<span class="giallo-l"><span>  weighted fair queuing; streams receive capacity according to weights</span></span></code></pre>
+<p>RFC 8260 defines SCTP stream schedulers, including round-robin, priority, and weighted fair queuing. It says WFQ uses configurable per-stream weights and that, if one stream has n times another stream's weight, it should receive n times the capacity. It also says WFQ with user-message interleaving is used for WebRTC data channels.</p>
+<p>For HOL-sensitive apps, this is the powerful combination:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="plain"><span class="giallo-l"><span>I-DATA interleaving + WFQ or priority scheduling</span></span></code></pre>
+<p>Interleaving breaks the large-message wall. WFQ or priority decides who gets protected.</p>
+<p>Pion/SCTP implementation for RFC 8260 comes with WFQ scheduler (default), WFQ with custom weight so you can prioritize a specific stream (<code>func WithInterleavingWeightedFairqueuingWeight(streamID uint16, weight uint16)</code>), and round robin scheduler (enabled via <code>WithInterleavingRoundRobinScheduler()</code>).</p>
+<p>and if you feel like it you can even define your own custom scheduler :)</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="go"><span class="giallo-l"><span style="color: light-dark(#0000FF, #CBA6F7);">type</span><span style="color: light-dark(#267F99, #F9E2AF);"> InterleavingStreamScheduler</span><span style="color: light-dark(#0000FF, #CBA6F7);"> interface</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#795E26, #89B4FA);">	Reset</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#795E26, #89B4FA);">	Push</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#267F99, #F9E2AF);">StreamSchedulerChunk</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#795E26, #89B4FA);">	Peek</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#267F99, #F9E2AF);"> StreamSchedulerChunk</span></span>
+<span class="giallo-l"><span style="color: light-dark(#795E26, #89B4FA);">	Pop</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#267F99, #F9E2AF);">StreamSchedulerChunk</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#267F99, #CBA6F7);"> error</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#0000FF, #CBA6F7);">func</span><span style="color: light-dark(#795E26, #89B4FA);"> WithInterleavingStreamSchedulerFactory</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #EBA0AC);">newScheduler</span><span style="color: light-dark(#267F99, #F9E2AF);"> InterleavingStreamSchedulerFactory</span><span style="color: light-dark(#000000, #9399B2);">)</span></span></code></pre><h2 id="the-interleaving-inspection-example"><a class="zola-anchor" href="#the-interleaving-inspection-example" aria-label="Anchor link for: the-interleaving-inspection-example">The interleaving-inspection example</a></h2>
+<p>I added <a rel="external" href="https://github.com/pion/webrtc/tree/main/examples/sctp-interleaving-inspect">an example</a> to pion that lets you inspect and play with interleaving, it has a basic pressure test, if you have interleaving enabled, you'll see something like this (notice all control messages arrive before bulk chunks complete)</p>
+<p><img src="/img/interleaving-enabled.png" alt="interleaving-enabled" /></p>
+<p>if you don't have interleaving enabled, you'll see something like this (notice how control messages had to wait for bulk chunks to complete):</p>
+<p><img src="/img/interleaving-disabled.png" alt="interleaving-disabled" /></p>
+<h2 id="so-how-can-i-enable-and-use-interleaving"><a class="zola-anchor" href="#so-how-can-i-enable-and-use-interleaving" aria-label="Anchor link for: so-how-can-i-enable-and-use-interleaving">So how can I enable and use interleaving?</a></h2>
+<p>Interleaving should be enabled by default in Pion 4.2.13 and above, and there is nothing you need to do.</p>
+<p>As I wrote this, interleaving is enabled by default in Firefox, and is behind a flag in Chrome, and <a rel="external" href="https://github.com/pion/sctp/pull/443">merged to Pion/sctp</a>.</p>
+<p>Interleaving isn't actually used unless it's supported by the other side, and negotiated during the handshake. To know if a current stream has interleaving or not, we expose it through Pion's GetStats()</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="go"><span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">report</span><span style="color: light-dark(#000000, #94E2D5);"> :=</span><span style="color: light-dark(#001080, #CDD6F4);"> pc</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">GetStats</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">for</span><span style="color: light-dark(#001080, #CDD6F4);"> _</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> stat</span><span style="color: light-dark(#000000, #94E2D5);"> :=</span><span style="color: light-dark(#AF00DB, #CBA6F7);"> range</span><span style="color: light-dark(#001080, #CDD6F4);"> report</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">    sctpStats</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> ok</span><span style="color: light-dark(#000000, #94E2D5);"> :=</span><span style="color: light-dark(#001080, #CDD6F4);"> stat</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#267F99, #F9E2AF);">webrtc</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">SCTPTransportStats</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">    if</span><span style="color: light-dark(#000000, #94E2D5);"> !</span><span style="color: light-dark(#001080, #CDD6F4);">ok</span><span style="color: light-dark(#000000, #94E2D5);"> ||</span><span style="color: light-dark(#001080, #CDD6F4);"> sctpStats</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">Metadata</span><span style="color: light-dark(#000000, #94E2D5);"> ==</span><span style="color: light-dark(#0000FF, #F38BA8);"> nil</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">        continue</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">    fmt</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">Println</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#A31515, #A6E3A1);">&quot;</span><span style="color: light-dark(#A31515, #A6E3A1);">SCTP interleaving:</span><span style="color: light-dark(#A31515, #A6E3A1);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> sctpStats</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">Metadata</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">MessageInterleavingEnabled</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">    fmt</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">Println</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#A31515, #A6E3A1);">&quot;</span><span style="color: light-dark(#A31515, #A6E3A1);">Partial reliability:</span><span style="color: light-dark(#A31515, #A6E3A1);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> sctpStats</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">Metadata</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">PartialReliabilityMode</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">}</span></span></code></pre>
+<p>The stats metadata includes:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="json"><span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">{</span></span>
+<span class="giallo-l"><span style="color: light-dark(#0451A5, #9399B2);">  &quot;</span><span style="color: light-dark(#0451A5, #89B4FA);">metadata</span><span style="color: light-dark(#0451A5, #9399B2);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#0451A5, #9399B2);">    &quot;</span><span style="color: light-dark(#0451A5, #89B4FA);">messageInterleavingEnabled</span><span style="color: light-dark(#0451A5, #9399B2);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#0000FF, #FAB387);"> true</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#0451A5, #9399B2);">    &quot;</span><span style="color: light-dark(#0451A5, #89B4FA);">partialReliabilityMode</span><span style="color: light-dark(#0451A5, #9399B2);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#A31515, #A6E3A1);"> &quot;</span><span style="color: light-dark(#A31515, #A6E3A1);">i-forward-tsn</span><span style="color: light-dark(#A31515, #A6E3A1);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#0451A5, #9399B2);">    &quot;</span><span style="color: light-dark(#0451A5, #89B4FA);">zeroChecksumSendingEnabled</span><span style="color: light-dark(#0451A5, #9399B2);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#0000FF, #FAB387);"> true</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#0451A5, #9399B2);">    &quot;</span><span style="color: light-dark(#0451A5, #89B4FA);">zeroChecksumReceivingEnabled</span><span style="color: light-dark(#0451A5, #9399B2);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#0000FF, #FAB387);"> true</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">  }</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">}</span></span></code></pre>
+<p>We might have similar stats in the browser API if W3C accepts <a rel="external" href="https://github.com/w3c/webrtc-stats/issues/821">my issue</a>.</p>
+<h2 id="thanks"><a class="zola-anchor" href="#thanks" aria-label="Anchor link for: thanks">Thanks</a></h2>
+<p>Huge thanks to:</p>
+<ul>
+<li><a rel="external" href="https://github.com/Sean-Der">Sean DuBois</a> For introducing me to this spec, I saw him talking about it a few years ago, and for making and inviting me to Pion :)</li>
+<li><a rel="external" href="https://github.com/philipch07/">R Chiu</a> For making pion/sctp fun again. We hope to see her again in Pion.</li>
+<li><a rel="external" href="https://github.com/nils-ohlmeier">Nils Ohlmeier</a> For helping me navigate I-DATA support in Firefox, even tho I ghosted him for a bit after I got a new job :)</li>
+<li><a rel="external" href="https://github.com/ValorZard">Valor Zard</a> For making a list of all the libraries that supports RFC-8260 while I was doing interop tests, and for consistently and inderiectly reminding me to finish Pion's RFC-8260 implementation.</li>
+<li><a rel="external" href="https://github.com/fippo">Philipp Hancke</a> for helping me trying to get <a rel="external" href="https://github.com/w3c/webrtc-stats/issues/821">interleaving as a transport stats to w3c</a></li>
+<li><a rel="external" href="https://github.com/juliapixel/">Júlia Paschoalinoto</a> and <a rel="external" href="https://github.com/frantabot">Franta</a> for all the manual testing and feedback.</li>
+</ul>
+
+    </div>
+</article>
+
+
+
+        <footer>
+            <div class="icons">
+                
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+            </div>
+        </footer>
+
+    </main>
+</body>
+
+</html>

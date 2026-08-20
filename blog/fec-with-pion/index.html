@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+FEC with Pion - Pion
+</title>
+
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/styles.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="theme-color" content="#e53935">
+    <meta property="og:site_name" content="Pion" />
+
+    <link rel="alternate" type="application/rss+xml" title="Pion" href="https://pion.ly/rss.xml">
+    <link rel="alternate" type="application/atom+xml" title="Pion" href="https://pion.ly/atom.xml">
+
+    
+
+<link rel="canonical" href="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;fec-with-pion&#x2F;">
+
+
+<meta name="description" content="How to use FEC in Pion" />
+<meta property="og:description" content="How to use FEC in Pion" />
+
+
+<meta property="og:title" content="FEC with Pion" />
+<meta property="og:url" content="https:&#x2F;&#x2F;pion.ly&#x2F;blog&#x2F;fec-with-pion&#x2F;" />
+<meta property="og:type" content="article" />
+
+
+<meta name="article:author" content="Jingyang Kang, Aleksandr Alekseev, Jo Turk" />
+
+
+
+<meta name="article:published_time" content='2025-06-23T00:00:00+0000' />
+
+
+
+<script src="/js/vendor/mermaid.min.js"></script>
+<script src="/js/mermaid-render.js"></script>
+
+
+
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav class="links">
+                <a href="/">
+                    <svg class="pion-logo" viewBox="0 0 423 125" preserveAspectRatio="xMidYMid meet" width="100%"
+                        height="100%">
+                        <use href="/img/pion-logo.svg#Page-1"></use>
+                    </svg>
+                </a>
+                <a href="/blog">Blog</a>
+                <a href="/why-pion">Why Pion?</a>
+
+                <div class="brand-links">
+                    
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+                </div>
+            </nav>
+        </header>
+
+        
+<article class="post-article">
+    <div class="article-header">
+        <h1>FEC with Pion</h1>
+        
+        <p class="details">
+            <span class="authors">Jingyang Kang, Aleksandr Alekseev, Jo Turk</span> — <time datetime="2025-06-23">2025-06-23</time>
+        </p>
+        
+    </div>
+
+    <div class="article-content">
+        <p>We are excited to have FEC encoding support available in the pion/webrtc v4.1.2 + pion/interceptor v0.1.38. In this blog post, we'll explain what FEC is and how to implement it with Pion.</p>
+<blockquote>
+<p>If you already know FEC, feel free to skip to <a href="https://pion.ly/blog/fec-with-pion/#flexfec-in-pion">FlexFEC in Pion</a>.</p>
+</blockquote>
+<h2 id="quick-background-what-is-fec"><a class="zola-anchor" href="#quick-background-what-is-fec" aria-label="Anchor link for: quick-background-what-is-fec">Quick background: What is FEC?</a></h2>
+<p>Forward Error Correction (FEC) is a proactive loss-recovery mechanism:</p>
+<p>The sender transmits extra mathematically derived parity packets (e.g. xor of the media packets) along with each block of media packets. If the receiver later discovers that one or even more packets are lost, it can use the parity packets to recover the lost packets, using the XOR result of the received packets and the parity (repair) packet, all without waiting for the lost packets to be retransmitted.</p>
+<p>A simple example:</p>
+<table><thead><tr><th>Data packets</th><th>Parity packet</th><th>Recovery logic</th></tr></thead><tbody>
+<tr><td><code>A</code> <code>B</code> <code>C</code></td><td><code>P = A ⊕ B ⊕ C</code></td><td>If <code>B</code> is lost, receiver computes <code>B = A ⊕ C ⊕ P</code></td></tr>
+</tbody></table>
+<p>Because parity travels with the media, recovery happens locally and immediately. The trade‑off is more data on the link.</p>
+<h2 id="we-already-have-nack-why-fec"><a class="zola-anchor" href="#we-already-have-nack-why-fec" aria-label="Anchor link for: we-already-have-nack-why-fec">We Already Have NACK, Why FEC?</a></h2>
+<p>Alice is sending a video stream to Bob with WebRTC. In an imaginary perfect network condition in which no packet loss happens and the network delay is 0 ms, all Alice needs to do is encode the video, pack RTP packets, and send them to Bob. What Bob needs to do is simply depacketize RTP packets and decode the payload into video frames. Everything is great except this imaginary perfect network condition doesn't exist.</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="mermaid"><span class="giallo-l"><span>sequenceDiagram</span></span>
+<span class="giallo-l"><span>    title &quot;Perfect Network&quot;</span></span>
+<span class="giallo-l"><span>    participant Alice</span></span>
+<span class="giallo-l"><span>    participant Bob</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n+1</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n+2</span></span>
+<span class="giallo-l"><span>    Note right of Bob: Great! :)&lt;br/&gt;But not reality</span></span></code></pre>
+<p>Let's gradually introduce more factors into our network, to make it closer and closer to the real internet we live in. First, let's add packet loss while keep network delay still at 0 ms. With packet loss, not every packet Alice sends is guaranteed to be received by Bob. So, we need a mechanism to recover these lost packets. A straight forward approach is to make Alice resend the lost packets again. In order to notify Alice which packet is lost and needs to be retransmitted, Bob should explicitly send message to Alice, containing the sequence number of lost packets. This is NACK. With NACK in our lossy but no-delay network, all packets can be retransmitted immediately after Bob sends a NACK request. Problem solved? In this case, yes. But in the real world, no.</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="mermaid"><span class="giallo-l"><span>sequenceDiagram</span></span>
+<span class="giallo-l"><span>    title Using NACK</span></span>
+<span class="giallo-l"><span>    participant Alice</span></span>
+<span class="giallo-l"><span>    participant Bob</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n+1</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n+2</span></span>
+<span class="giallo-l"><span>    alt Packet n lost</span></span>
+<span class="giallo-l"><span>        Bob--&gt;&gt;Alice: NACK n</span></span>
+<span class="giallo-l"><span>        Note right of Bob: Extra RTT(s) here</span></span>
+<span class="giallo-l"><span>        Alice-&gt;&gt;Bob: RTX Packet n</span></span>
+<span class="giallo-l"><span>    end</span></span></code></pre>
+<p>Next, we are also adding delays to our imaginary network. At this point, it basically has all the characteristics of real world networks. Can our current mechanism tackle network delay + loss without hurting transportation quality? Sadly, no. If Alice packs a frame into 10 packets, Bob can't decode the frame even if only 1 packet is lost. And since NACK takes at least 1 additional RTT (more than 1 when retransmitted packets are lost too), this frame is delayed on Bob's side. To make things even worse, in modern video codecs, in order to increase compression ratio, encoders use a technology called <strong>forward prediction</strong>, which means subsequent frames relies on the data of previous frame to decode. For any frame delayed due to network loss, all subsequent dependent frames will be delayed. This can cause noticeable jank for Bob, which is bad.</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="mermaid"><span class="giallo-l"><span>sequenceDiagram</span></span>
+<span class="giallo-l"><span>    title Using FEC</span></span>
+<span class="giallo-l"><span>    participant Alice</span></span>
+<span class="giallo-l"><span>    participant Bob</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n+1</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: Video Packet n+2</span></span>
+<span class="giallo-l"><span>    Alice-&gt;&gt;Bob: FEC Packet</span></span>
+<span class="giallo-l"><span>    alt Packet n lost</span></span>
+<span class="giallo-l"><span>        Bob-&gt;&gt;Bob: Recover n from n+1, n+2, and the FEC Packet</span></span>
+<span class="giallo-l"><span>        Note right of Bob: No extra RTT(s) here</span></span>
+<span class="giallo-l"><span>    end</span></span></code></pre>
+<p>FEC is a mechanism that can mitigate this. FEC stands for <strong>Forward Error Correction</strong>. Basically, it means that we can send more data to recover from potential packet losses. With FEC enabled, Alice does not only send 10 video packets to Bob, but also a few redundant packets, containing data XORed from video packets. When packets get lost during transmission, Bob can try to recover it with redundant data from FEC packets. In this case, no additional RTT is needed to recover packets lost, so video streaming is not affected.</p>
+<h2 id="recovery-groups"><a class="zola-anchor" href="#recovery-groups" aria-label="Anchor link for: recovery-groups">Recovery groups</a></h2>
+<h3 id="on-the-sender-side"><a class="zola-anchor" href="#on-the-sender-side" aria-label="Anchor link for: on-the-sender-side">On the sender side</a></h3>
+<p>Media packets are grouped for protection, for example:</p>
+<ul>
+<li>Group 1: M1, M3, M5 protected by F1</li>
+<li>Group 2: M2, M4 protected by F2</li>
+</ul>
+<p><img src="/img/fec_sender.drawio.png" alt="FEC Sender" /></p>
+<h3 id="on-the-receiver-side"><a class="zola-anchor" href="#on-the-receiver-side" aria-label="Anchor link for: on-the-receiver-side">On the receiver side</a></h3>
+<p>During the transmission, some media packets might be lost:</p>
+<p>Received FEC packets are used to reconstruct missing data:</p>
+<ul>
+<li>F1 recover any lost packet from Group 1</li>
+<li>F2 recover any lost packet from Group 2</li>
+</ul>
+<p><img src="/img/fec_receiver.drawio.png" alt="FEC Receiver" /></p>
+<h2 id="fec-mechanisms-in-webrtc"><a class="zola-anchor" href="#fec-mechanisms-in-webrtc" aria-label="Anchor link for: fec-mechanisms-in-webrtc">FEC Mechanisms in WebRTC</a></h2>
+<p>In WebRTC there are two main RTP based forward-error-correction (FEC) mechanisms. They both generate XOR parity packets, but the way they're signalled and routed is very different:</p>
+<table><thead><tr><th>Feature</th><th><strong>FlexFEC (<a rel="external" href="https://datatracker.ietf.org/doc/rfc8627/">RFC 8627</a>)</strong></th><th><strong>ULPFEC + RED (<a rel="external" href="https://datatracker.ietf.org/doc/rfc5109/">RFC 5109</a>)</strong></th></tr></thead><tbody>
+<tr><td><strong>Transport</strong></td><td>Travels on its own SSRC and payload-type, SDP advertises an extra repair m-section and an <code>a=ssrc-group:FEC-FR &lt;media-ssrc&gt; &lt;fec-ssrc&gt;</code> line.</td><td>Parity bytes are wrapped inside a RED packet that uses the same SSRC as the media. No extra m-section needed; you just add a RED and a ULPFEC payload-type.</td></tr>
+<tr><td><strong>Codecs</strong></td><td>True <strong>Codec-agnostic</strong>, works with VP8/9, H.264, AV1 … anything that produces RTP packets.</td><td>While <strong>codec-agnostic</strong> in theory, Chromium limits full protection to VPx and AV1. With H264 and H265 the encoder can't flag per-partition loss importance in a way that is useful for FEC. ULPFEC + Nack for codecs without Picture-ID will have to retransmit FEC packets, So ULPFEC is not used for H264 and H265.</td></tr>
+<tr><td><strong>Loss patterns handled</strong></td><td>Two-dimensional (rows × columns) parity</td><td>Single-direction parity</td></tr>
+<tr><td><strong>Implementation status</strong></td><td>All Chromium-based browsers can <em>receive</em> FlexFEC; <strong>send-side</strong> support is still immature. Limited receive support in Safari and Firefox doesn't support it.</td><td><strong>Send + Receive</strong> in Chrome, Firefox, Safari.</td></tr>
+</tbody></table>
+<p>FlexFEC is the only option that remains fully codec-agnostic. ULPFEC does a fine job for VP8/VP9/AV1, but offers little benefit for H264 or H265.</p>
+<h3 id="codec-integrated-fec"><a class="zola-anchor" href="#codec-integrated-fec" aria-label="Anchor link for: codec-integrated-fec">Codec-integrated FEC</a></h3>
+<p>While FlexFEC and ULPFEC live at the RTP packet layer, some codecs integrate redundancy straight into the encoded payload itself.</p>
+<p>The only such codec you'll meet in browsers today is Opus, and the way it works is when you set <code>useinbandfec=1</code>, the Opus encoder embeds a low-bit-rate redundancy (LBRR) copy of frame N-1 inside the packet that carries frame N. If packet N-1 is lost, the decoder can reconstruct it from the tail of N.</p>
+<h2 id="fec-isn-t-magic-trade-offs-to-keep-in-mind"><a class="zola-anchor" href="#fec-isn-t-magic-trade-offs-to-keep-in-mind" aria-label="Anchor link for: fec-isn-t-magic-trade-offs-to-keep-in-mind">FEC isn't magic: trade-offs to keep in mind</a></h2>
+<ol>
+<li>
+<p><strong>Bandwidth overhead</strong>
+If you add 20% FEC without raising the send cap, you'll need to reduce the video resolution or quality to stay within the cap. In good network conditions where the packet loss is minimal, FEC steals bandwidth in exchange for redundancy you don't need.</p>
+</li>
+<li>
+<p><strong>Extra load on a congested link</strong>
+When the loss is caused by congestion, adding more packets for FEC can deepen the problem, in congested networks, sometimes disabling FEC yields better results.</p>
+</li>
+<li>
+<p><strong>Loss pattern mismatch</strong>
+Random 1-2% loss is where light FEC shines. But for example, 10% bursts every few hundred ms requires high parity, which often ends up worse than just using RTX.</p>
+</li>
+<li>
+<p><strong>Silent failures</strong>
+Analytics may count frames as "recovered" even if the end user gets artifacts or glitches.</p>
+</li>
+<li>
+<p><strong>Only packets, not outages</strong>
+A 100ms network stall drops all packets, media and parity alike; so buffering or retransmission is still needed.</p>
+</li>
+<li>
+<p><strong>FEC is best for high-latency networks</strong>
+FEC is designed to avoid the delay of waiting for retransmissions, but for example, if your round-trip time (RTT) is under 30-50ms, do you really need it? In low-latency networks, simply retransmitting lost packets might be more efficient and better overall than sending redundant data up front.</p>
+</li>
+</ol>
+<p>So, start with the lowest cost protection first (Opus in-band FEC for audio, RTX for video). Add FEC only when telemetry shows sustained loss or when you have bandwidth room. FEC should be a dynamic option, not a set-and-forget checkbox that you enable for all users, and all network conditions.</p>
+<h2 id="fec-algorithms-beyond-xor"><a class="zola-anchor" href="#fec-algorithms-beyond-xor" aria-label="Anchor link for: fec-algorithms-beyond-xor">FEC algorithms beyond XOR</a></h2>
+<p>FlexFEC and ULPFEC both use XOR-based recovery logic to generate packets. Another family of algorithms, like <a rel="external" href="https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction">Reed-Solomon</a>, can recover from more complex losses but are currently not standardized in WebRTC due to their higher computational cost and block-based design, which is not best suited for real-time use in WebRTC.</p>
+<p>If you're curious, the <a rel="external" href="https://github.com/klauspost/reedsolomon">klauspost/reedsolomon Go library</a> offers a SIMD-accelerated implementation that's fun to experiment with.</p>
+<h2 id="flexfec-in-pion"><a class="zola-anchor" href="#flexfec-in-pion" aria-label="Anchor link for: flexfec-in-pion">FlexFEC in Pion</a></h2>
+<p>Pion now supports basic FlexFEC encoding! You can pair it with Chromium and Safari (receive-only), and it's simple to integrate – just register the payload type in your media engine and add the interceptor, then you're good to go! More about it in <a href="https://pion.ly/blog/fec-with-pion/#enable-flexfec-encoding-in-pion">Enable FlexFEC Encoding in Pion</a>.</p>
+<p>For a quick demo, you can check out the <a rel="external" href="https://github.com/pion/webrtc/tree/887f5c6e0c405ac51b5a1b7db1e23dc4f9c7e4fb/examples/play-from-disk-fec">play-from-disk-fec</a> example.</p>
+<h3 id="what-to-look-forward-to-in-the-final-flexfec-implementation"><a class="zola-anchor" href="#what-to-look-forward-to-in-the-final-flexfec-implementation" aria-label="Anchor link for: what-to-look-forward-to-in-the-final-flexfec-implementation">What to look forward to in the final FlexFEC implementation</a></h3>
+<p>If you worked with FlexFEC, you may have come across multiple draft versions, <strong>FlexFEC-03</strong> and <strong>FlexFEC-20</strong>. The final standard is published as <a rel="external" href="https://datatracker.ietf.org/doc/rfc8627/">RFC 8627</a>, and while it builds on ideas introduced in the -20 draft, it formalizes several features and adds important clarifications.</p>
+<p>Although Pion doesn't yet fully support RFC 8627, we're tracking it closely and excited about the improvements it will bring, here are some of the highlights:</p>
+<ol>
+<li>
+<p><strong>Flexible Masking (Selective Protection)</strong>:
+RFC 8627 introduces a <strong>flexible mask</strong> mode, allowing senders to protect an arbitrary subset of source packets. Instead of a fixed pattern, it sends a bitmask indicating exactly which packets are covered. This can be used to implement smarter FEC strategies, such as protecting only keyframes or higher-priority codec configuration packets.
+-&gt; <a rel="external" href="https://datatracker.ietf.org/doc/rfc8627/#section-1.1.4">RFC 8627, Section 1.1.4</a></p>
+</li>
+<li>
+<p><strong>Hybrid FEC and Retransmission Support</strong>
+The final spec explicitly supports both <strong>proactive FEC</strong> and <strong>RTP retransmission</strong>. It also requires that when FlexFEC is used alongside another retransmission mechanism, the answer in an SDP negotiation must use FlexFEC only, ensuring consistent protection handling.
+-&gt; <a rel="external" href="https://datatracker.ietf.org/doc/rfc8627/#section-1.1.7">RFC 8627, Section 1.1.7</a></p>
+</li>
+<li>
+<p><strong>Improved Scalability and Consistency</strong>
+RFC 8627 addresses scalability limitations from earlier FEC mechanisms like <a rel="external" href="https://datatracker.ietf.org/doc/html/rfc5109">RFC 5109</a> and <a rel="external" href="https://datatracker.ietf.org/doc/html/rfc2733">RFC 2733</a>. It also reuses the <strong>RTP repair stream format</strong> defined in <a rel="external" href="https://datatracker.ietf.org/doc/html/rfc6363">RFC 6363</a>, making it more consistent with modern RTP practices and easier to interoperate with existing tooling.
+-&gt; <a rel="external" href="https://datatracker.ietf.org/doc/rfc8627/#section-1.1.1">RFC 8627, Section 1.1.1</a></p>
+</li>
+<li>
+<p><strong>Packet and Header Format Clarifications</strong>
+The final spec clearly defines key header fields. For example, the <strong>R bit</strong> distinguishes retransmission (R=1) from FEC repair (R=0), while the <strong>F bit</strong> selects between flexible-mask mode (F=0) and fixed-offset mode (F=1). These explicit semantics simplify implementation logic and parsing.
+-&gt; <a rel="external" href="https://datatracker.ietf.org/doc/rfc8627/#section-6.2">RFC 8627, Section 6.2</a></p>
+</li>
+</ol>
+<h3 id="enable-flexfec-encoding-in-pion"><a class="zola-anchor" href="#enable-flexfec-encoding-in-pion" aria-label="Anchor link for: enable-flexfec-encoding-in-pion">Enable FlexFEC Encoding in Pion</a></h3>
+<p>You can use the helper for quick setup:</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="go"><span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">err</span><span style="color: light-dark(#000000, #94E2D5);"> =</span><span style="color: light-dark(#001080, #CDD6F4);"> webrtc</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">ConfigureFlexFEC03</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #CDD6F4);">fecPayloadType</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> mediaEngine</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> interceptorRegistry</span><span style="color: light-dark(#000000, #9399B2);">)</span></span></code></pre>
+<p>Or setup codec and interceptor by hand:</p>
+<ol>
+<li>Register FlexFEC03 codec to MediaEngine</li>
+</ol>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="go"><span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">err</span><span style="color: light-dark(#000000, #94E2D5);"> =</span><span style="color: light-dark(#001080, #CDD6F4);"> mediaEngine</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">RegisterCodec</span><span style="color: light-dark(#000000, #9399B2);">(</span></span>
+<span class="giallo-l"><span style="color: light-dark(#267F99, #F9E2AF);">    webrtc</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">RTPCodecParameters</span><span style="color: light-dark(#000000, #9399B2);">{</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">        RTPCodecCapability</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#267F99, #F9E2AF);"> webrtc</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">RTPCodecCapability</span><span style="color: light-dark(#000000, #9399B2);">{</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">            MimeType</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#001080, #CDD6F4);">     webrtc</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">MimeTypeFlexFEC03</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">            ClockRate</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#098658, #FAB387);">    90000</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">            Channels</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#098658, #FAB387);">     0</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">            SDPFmtpLine</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#A31515, #A6E3A1);">  &quot;</span><span style="color: light-dark(#A31515, #A6E3A1);">repair-window=10000000</span><span style="color: light-dark(#A31515, #A6E3A1);">&quot;</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">            RTCPFeedback</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#0000FF, #F38BA8);"> nil</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">        }</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">        PayloadType</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#098658, #FAB387);"> 118</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#008000, #9399B2);"> //</span><span style="color: light-dark(#008000, #9399B2);"> You can change this</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">    }</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">    webrtc</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">RTPCodecTypeVideo</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">)</span></span></code></pre>
+<ol start="2">
+<li>Register FlexFEC interceptor</li>
+</ol>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);"><code data-lang="go"><span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">fecInterceptor</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span><span style="color: light-dark(#000000, #94E2D5);"> :=</span><span style="color: light-dark(#001080, #CDD6F4);"> flexfec</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">NewFecInterceptor</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#008000, #9399B2);">//</span><span style="color: light-dark(#008000, #9399B2);"> handle error...</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">interceptorRegistry</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">Add</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #CDD6F4);">fecInterceptor</span><span style="color: light-dark(#000000, #9399B2);">)</span></span></code></pre>
+<p>That's it! But with a few catches:</p>
+<ol>
+<li>The order of the FlexFEC interceptor in the chain of interceptors matters. It should be registered before <a rel="external" href="https://github.com/pion/interceptor/blob/a1938a5c1ed53b7cd245ae019cd358ad8080cd5f/pkg/twcc/sender_interceptor.go">TWCC header extension interceptor</a> and <a rel="external" href="https://github.com/pion/interceptor/blob/a1938a5c1ed53b7cd245ae019cd358ad8080cd5f/pkg/nack/responder_interceptor.go">NACK responder interceptor</a> if you are using these.</li>
+<li>If you are using congestion controller, be aware of the bandwidth FEC is taking, you should set your encoder's bitrate to <code>cc_estimated_bandwidth - fec_bitrate</code>. By default, for every 5 media packets, 2 FEC packets will be produced, so expect roughly 40% bitrate overhead. You can tune FEC parameters to reduce or increase it.</li>
+<li>Enabling FlexFEC encoding may introduce significant CPU/RAM overhead.</li>
+<li>Current implementation does not protect media packet batches if they contain missing or reordered packets. So, it works best with senders that packetize media themselves.</li>
+</ol>
+<h3 id="configuring-flexfec-encoder-interceptor"><a class="zola-anchor" href="#configuring-flexfec-encoder-interceptor" aria-label="Anchor link for: configuring-flexfec-encoder-interceptor">Configuring FlexFEC Encoder Interceptor</a></h3>
+<p>You can customize FEC protection by tweaking <code>NumMediaPackets</code> and <code>NumFECPackets</code> using the interceptor's <a rel="external" href="https://github.com/pion/interceptor/blob/a1938a5c1ed53b7cd245ae019cd358ad8080cd5f/pkg/flexfec/option.go">options</a>.</p>
+<p>It will result in a protection profile which uses <code>NumFECPackets</code> FEC packets to protect each <code>NumMediaPackets</code> media packets. Interleaved protection will be used, which means that media packet <code>X</code> will be protected by FEC packet <code>(X mod NumFECPackets)</code>.</p>
+<h3 id="verify-that-flexfec-is-enabled"><a class="zola-anchor" href="#verify-that-flexfec-is-enabled" aria-label="Anchor link for: verify-that-flexfec-is-enabled">Verify that FlexFEC is Enabled</a></h3>
+<ul>
+<li>On sender side, which is within Pion, you can log the packets using the <a rel="external" href="https://github.com/pion/interceptor/tree/a1938a5c1ed53b7cd245ae019cd358ad8080cd5f/pkg/packetdump">packetdump interceptor</a>.</li>
+<li>On receiver side, for example, in Chromium, you can go to <code>chrome://webrtc-internals</code> and search for the stats graph of <code>fecBytesReceived</code>.</li>
+</ul>
+<h2 id="credits"><a class="zola-anchor" href="#credits" aria-label="Anchor link for: credits">Credits</a></h2>
+<p>Huge thanks to everyone who contributed to this project: <a rel="external" href="https://github.com/aalekseevx/">Aleksandr Alekseev</a>, <a rel="external" href="https://github.com/3DRX/">Jingyang Kang</a>, <a rel="external" href="https://github.com/JoTurk">Jo Turk</a>, <a rel="external" href="https://github.com/pougetat">Thomas Pouget-Abadie</a>.</p>
+
+    </div>
+</article>
+
+
+
+        <footer>
+            <div class="icons">
+                
+<a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+            </div>
+        </footer>
+
+    </main>
+</body>
+
+</html>
