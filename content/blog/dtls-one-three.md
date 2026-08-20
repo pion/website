@@ -1,7 +1,7 @@
 ---
-title: "DTLS 1.3 Is Coming to Go: An Implementer's Perspective"
+title: "DTLS 1.3 in Go: An Implementer’s Perspective"
 description: DTLS 1.3 uses less data and connects faster. It is more secure and handles bad networks better.
-date: 1970-01-01
+date: 2026-08-21
 authors: ["Theodor Midtlien", "Jo Turk", "Adriano Sela Aviles", "R Chiu", "Sean DuBois"]
 ---
 
@@ -177,7 +177,7 @@ You can now uniquely identify your DTLS traffic. This solves a few problems for 
 ## Implementer's Perspective
 
 ### Finished Is a Different Story in 1.3
-In DTLS 1.2, you have one finite state machine. **After the handshake finishes, you are done.** With DTLS 1.3, things get a bit more complicated! You need to handle `NewSessionTicket` and `KeyUpdate`. *Going into this project, I didn't appreciate that complication from just reading the IETF doc.*
+In Pion DTLS 1.2, we had one finite state machine. **After the handshake finishes, you are done.** With DTLS 1.3, things get a bit more complicated! You need to handle `NewSessionTicket` and `KeyUpdate`. *Going into this project, I didn't appreciate that complication from just reading the IETF doc.*
 
 **This required a second state machine** with its own `ACK` handling, retransmission timer, etc. See Pion's [post-handshake implementation](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/internal/handshake/post_handshake.go#L36-L55).
 
@@ -192,6 +192,23 @@ The TLS and DTLS specs make things feel really complex, but the concepts underne
 You can implement something near the end of the spec and discover that you need to refactor everything from the record layer to the ciphers. [Section 6.1](https://www.rfc-editor.org/rfc/rfc9147.html#section-6.1) introduces epochs, but it isn't until [Section 8](https://www.rfc-editor.org/rfc/rfc9147.html#section-8) that it becomes clear that the client can be at epoch 3 while the server is at epoch 4, and that the state needs to be explicitly directional.
 
 Our initial implementation maintained only one active epoch and record protection per direction. Supporting `KeyUpdate` required per-epoch state and a series of refactors. See [the tracking issue](https://github.com/pion/dtls/issues/983).
+
+*— [Jo Turk](https://github.com/JoTurk)*
+
+### DTLS 1.2 Fallback Isn't a Fresh Handshake
+Falling back from a 1.3 handshake to 1.2 is not the same as starting a fresh 1.2 handshake. State from the dual-version path can leak into the fallback and break interoperability with a pure 1.2 implementation. It's important to test a 1.2 only implementation. It's not good enough to just force a 1.3 implementation into 1.2 mode!
+
+We found several bugs where the fallback offered 1.3 extensions or dropped 1.2 extensions. [One example was fixed in Pion DTLS #1030](https://github.com/pion/dtls/pull/1030).
+
+*— [Jo Turk](https://github.com/JoTurk)*
+
+### Sharing Code Means Understanding Both Specs
+Supporting DTLS 1.2 and 1.3 in one stack was harder than implementing 1.3 alone. Reusing negotiation and extension-validation code appears straightforward, but they have minor differences between the versions.
+
+Retry behavior is different between versions. In DTLS 1.2 a `ClientHello` could change from a `HelloVerifyRequest`. In 1.3 a `HelloRetryRequest` causes the client to send a second `ClientHello` and it has stricter rules around what can change.
+Moving negotiation and validation into shared libraries exposed extension-validation bugs. We had to [reject unsolicited server extensions](https://github.com/pion/dtls/pull/1028), [require configured SRTP profiles on both the client and server](https://github.com/pion/dtls/pull/1038), and [validate extension blocks in every context](https://github.com/pion/dtls/pull/1023).
+
+Reducing code duplication ended up being a much harder task than anticipated.
 
 *— [Jo Turk](https://github.com/JoTurk)*
 
