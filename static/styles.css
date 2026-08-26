@@ -392,14 +392,20 @@ table {
     }
 }
 
-@media screen and (max-width: 35em) {
+@media screen and (max-width: 45em) {
     main {
         font-size: 17px;
         width: 93%;
     }
 
     header nav {
-        justify-content: space-around;
+        justify-content: space-between;
+        flex-wrap: wrap;
+
+        & a:first-child {
+            flex: 1 0 100%;
+            display: flex;
+        }
     }
 
     footer {
@@ -418,11 +424,6 @@ table {
             display: flex;
             gap: 2rem;
         }
-    }
-
-    .pion-logo {
-        height: 36px !important;
-        margin-right: auto !important;
     }
 
     .brand-links {
