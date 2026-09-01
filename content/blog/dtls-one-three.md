@@ -179,7 +179,7 @@ You can now uniquely identify your DTLS traffic. This solves a few problems for 
 ### Finished Is a Different Story in 1.3
 In Pion DTLS 1.2, we had one finite state machine. **After the handshake finishes, you are done.** With DTLS 1.3, things get a bit more complicated! You need to handle `NewSessionTicket` and `KeyUpdate`. *Going into this project, I didn't appreciate that complication from just reading the IETF doc.*
 
-**This required a second state machine** with its own `ACK` handling, retransmission timer, etc. See Pion's [post-handshake implementation](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/internal/handshake/post_handshake.go#L36-L55).
+**This required a second state machine** with its own `ACK` handling, retransmission timer, etc. See Pion's [post-handshake implementation](https://github.com/pion/dtls/blob/73d391cb31c053930e23d929ac1ab23d9ede7844/internal/handshake/post_handshake.go#L37-L56).
 
 *— [Sean-Der](https://github.com/Sean-Der)*
 
