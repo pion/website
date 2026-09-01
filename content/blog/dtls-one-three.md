@@ -143,8 +143,8 @@ This was a big fingerprinting surface that is now closed.
 **Fragile and difficult-to-implement cipher suites are removed.** Only `AEAD` cipher suites are available now.
 `AEAD` is easier to use because encryption and authentication are done in one call.
 
-Compare Pion's use of [CBC](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/pkg/crypto/ciphersuite/cbc.go#L71)
-to its use of [AEAD](https://github.com/pion/dtls/blob/eb478beb01bd0e4e6b62d934314311308dc5b514/pkg/crypto/ciphersuite/ciphersuite.go#L64).
+Compare Pion's use of [CBC](https://github.com/pion/dtls/blob/73d391cb31c053930e23d929ac1ab23d9ede7844/internal/ciphersuite/record_protection12.go#L165-L192)
+to its use of [AEAD](https://github.com/pion/dtls/blob/73d391cb31c053930e23d929ac1ab23d9ede7844/internal/ciphersuite/tls_13_record_protection.go#L90-L113).
 
 With `CBC`, we have to do authentication and encryption separately. `AEAD` combines authentication and encryption into one operation. Another benefit is
 that `AES-GCM` is often more performant. Since `CBC-and-HMAC` involves two operations, you end up with more copying and instructions.
