@@ -9,7 +9,7 @@ build_search_index = false
 
 default_language = "en"
 
-generate_feeds = true
+generate_feeds = false
 feed_filenames = ["atom.xml", "rss.xml"]
 
 
