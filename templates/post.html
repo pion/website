@@ -16,6 +16,11 @@
 <meta property="og:title" content="{{page.title}}" />
 <meta property="og:url" content="{{page.permalink}}" />
 <meta property="og:type" content="article" />
+<meta property="og:image" content="{{ get_url(path="social.png", trailing_slash=false) }}" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="460" />
+<meta property="og:image:height" content="460" />
+<meta property="og:image:alt" content="Pion logo" />
 
 {% if page.authors %}
 <meta name="article:author" content="{{page.authors | join(sep=', ')}}" />
