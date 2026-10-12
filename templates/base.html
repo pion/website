@@ -1,5 +1,3 @@
-{% import "macros/socials.html" as socials %}
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -38,7 +36,7 @@
                 <a href="https://explainer.pion.ly/">SDP Explainer</a>
 
                 <div class="brand-links">
-                    {{ socials::links() }}
+                    {% include "socials.html" %}
                 </div>
             </nav>
         </header>
@@ -47,7 +45,7 @@
 
         <footer>
             <div class="icons">
-                {{ socials::links() }}
+                {% include "socials.html" %}
             </div>
         </footer>
 
