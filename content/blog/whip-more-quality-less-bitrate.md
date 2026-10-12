@@ -65,6 +65,6 @@ A few caveats to call out.
 
 - *Keyframes aren't instant* - Sending a PLI to OBS to request a keyframe takes time. If internet/servers are slow this could be worse than having a pre-set interval.
 - *Set a floor on keyframes* - If you have many viewers you could be requesting constant keyframes. For high traffic streams the server needs to set a floor on PLI requests.
-- *CDN/Recording Impacts* - Long keyframes will have impacts on things like HLS/Recording. With high keyframe interval it will make seeing on saved Videos longer.
+- *CDN/Recording Impacts* - Long keyframes will have impacts on things like HLS/Recording. With high keyframe interval it will make seeking on saved Videos longer.
 
 I'm excited about these results and look forward to testing this with [Broadcast Box](https://github.com/glimesh/broadcast-box) to see how it performs in practice.
