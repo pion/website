@@ -30,7 +30,8 @@ Pion
     <section class="recent-posts">
         <h1>Recent blog posts</h1>
         <ul>
-            {% for page in blog_section.pages | slice(end=5) %}
+            {% for page in blog_section.pages %}
+            {% if loop.index > 5 %}{% break %}{% endif %}
             <li>
                 <span>
                     <time datetime="{{page.date}}">{{ page.date }}</time>
