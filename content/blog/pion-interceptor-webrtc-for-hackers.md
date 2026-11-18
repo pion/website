@@ -120,7 +120,6 @@ Today we provide these pre-made interceptors:
 - [Sender and Receiver Reports](https://github.com/pion/interceptor/tree/main/pkg/report) - Generates RTCP reports about sent and received media.
 - [Transport-Wide Congestion Control](https://github.com/pion/interceptor/tree/main/pkg/twcc) - Adds transport sequence numbers and generates congestion feedback.
 - [Congestion Control Feedback](https://github.com/pion/interceptor/tree/main/pkg/ccfb) - Generates congestion feedback reports defined by RFC 8888.
-- [Google Congestion Control](https://github.com/pion/interceptor/tree/main/pkg/cc) - Estimates available bandwidth using GCC.
 - [RTP Feedback](https://github.com/pion/interceptor/tree/main/pkg/rtpfb) - Converts TWCC and CCFB feedback into per-packet reports.
 - [Pacing](https://github.com/pion/interceptor/tree/main/pkg/pacing) - Spreads outgoing packets over time to reduce bursts.
 - [Jitter Buffer](https://github.com/pion/interceptor/tree/main/pkg/jitterbuffer) - Buffers and reorders incoming RTP packets.
