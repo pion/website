@@ -63,8 +63,8 @@ type Interceptor interface {
 
 ## NACK Example
 
-A `NACK` is how WebRTC handles packet loss. A receiver sends a `NACK` so that the sender knows to re-send a packet. The following is
-a minimal example to show how it could be implemented.
+A [`NACK`](https://webrtcforthecurious.com/docs/05-real-time-networking/#negative-acknowledgments) is how WebRTC handles packet loss. A
+receiver sends a `NACK` so that the sender knows to re-send a packet. The following is a minimal example to show how it could be implemented.
 
 ```go
 type nackGenerator struct {
