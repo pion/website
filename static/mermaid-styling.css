@@ -1,0 +1,28 @@
+.pele {
+  --pele-bg: #ffffff;
+  --pele-fg: #424242;
+  --pele-muted: #6b6b6b;
+  --pele-line: #686868;
+  --pele-surface: #fcfcfc;
+  --pele-surface-alt: #f0f0f0;
+  --pele-border: #d6d6d6;
+  --pele-accent: #4820a6;
+  --pele-critical: #af3029;
+
+  --pele-font: var(--main-font);
+  --pele-font-mono: var(--mono-font);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pele {
+    --pele-bg: #363644;
+    --pele-fg: #d5d5d5;
+    --pele-muted: #cecdc3;
+    --pele-line: #dad6e7;
+    --pele-surface: #38334d;
+    --pele-surface-alt: #494266;
+    --pele-border: #5d5a64;
+    --pele-accent: #5c34b9;
+    --pele-critical: #d14d41;
+  }
+}
