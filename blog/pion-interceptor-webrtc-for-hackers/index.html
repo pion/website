@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+Pion Interceptor: WebRTC for Hackers - Pion
+</title>
+
+    <link rel="stylesheet" href="/reset.css" />
+    <link rel="stylesheet" href="/styles.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta name="theme-color" content="#e53935">
+    <meta property="og:site_name" content="Pion" />
+
+    <link rel="alternate" type="application/rss+xml" title="Pion Blog" href="https://pion.ly/blog/rss.xml">
+    <link rel="alternate" type="application/atom+xml" title="Pion Blog" href="https://pion.ly/blog/atom.xml">
+
+    
+
+<link rel="canonical" href="https://pion.ly/blog/pion-interceptor-webrtc-for-hackers/">
+
+
+<meta name="description" content="Pion&#39;s RTP/RTCP pipeline makes Pion useful for unique WebRTC use cases." />
+<meta property="og:description" content="Pion&#39;s RTP/RTCP pipeline makes Pion useful for unique WebRTC use cases." />
+
+
+<meta property="og:title" content="Pion Interceptor: WebRTC for Hackers" />
+<meta property="og:url" content="https://pion.ly/blog/pion-interceptor-webrtc-for-hackers/" />
+<meta property="og:type" content="article" />
+<meta property="og:image" content="https://pion.ly/social.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="460" />
+<meta property="og:image:height" content="460" />
+<meta property="og:image:alt" content="Pion logo" />
+
+
+<meta name="article:author" content="Sean DuBois" />
+
+
+
+<meta name="article:published_time" content='2026-11-16T00:00:00+0000' />
+
+
+
+
+
+</head>
+
+<body>
+    <main>
+        <header>
+            <nav class="links">
+                <a href="/">
+                    <svg class="pion-logo" viewBox="0 0 423 125" preserveAspectRatio="xMidYMid meet" width="100%"
+                        height="100%">
+                        <use href="/img/pion-logo.svg#Page-1"></use>
+                    </svg>
+                </a>
+                <a href="/blog">Blog</a>
+                <a href="/why-pion">Why Pion?</a>
+                <a href="https://explainer.pion.ly/">SDP Explainer</a>
+
+                <div class="brand-links">
+                    <a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+                </div>
+            </nav>
+        </header>
+
+        
+<article class="post-article">
+    <div class="article-header">
+        <h1>Pion Interceptor: WebRTC for Hackers</h1>
+        
+        <p class="details">
+            <span class="authors">Sean DuBois</span> — <time datetime="2026-11-16">2026-11-16</time>
+        </p>
+        
+    </div>
+
+    <div class="article-content">
+        <p>Pion was started with unique use cases in mind. Existing WebRTC software was very good at handling
+popular use cases. It was difficult to build unique/niche things with it though. This idea has
+always been at the core of Pion. Pion Interceptor was designed with the idea that we make it
+easy for developers to build their cool ideas. Without the frustration of forking/modifying Pion.</p>
+<h2 id="prior-art"><a class="zola-anchor" href="#prior-art" aria-label="Anchor link for: prior-art">Prior Art</a></h2>
+<p>Pion's Interceptor design was heavily influenced by GStreamer Pipelines. With GStreamer pipelines you have a
+pipeline of elements that modify media. Things like resizing, croping or rotating media. A simple visualization
+like this.</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);" ><code data-lang="plain"><span class="giallo-l"><span>Video source --&gt; Resize --&gt; Crop --&gt; Rotate --&gt; Video output</span></span></code></pre>
+<p>We wanted the same for Pion. Provide a library of elements for users to build pipelines. The default interceptors would give a good experience.
+Or you can bring your own to have custom behavior if you need it</p>
+<h2 id="interceptor-api"><a class="zola-anchor" href="#interceptor-api" aria-label="Anchor link for: interceptor-api">Interceptor API</a></h2>
+<p>An <code>Interceptor</code> is started when <code>Bind</code> is called on it. <code>Bind</code> passes a <code>StreamInfo</code> that contains all the metadata about the
+stream. When a <code>Interceptor</code> is no longer <code>Unbind</code> is called. Then each RTP/RTCP packet is passed through in the Reader/Writer
+methods. This allows a user to process incoming/outgoing packets.</p>
+<p>The following is the full API as generated by <code>go doc</code></p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);" ><code data-lang="plain"><span class="giallo-l"><span>type Interceptor interface {</span></span>
+<span class="giallo-l"><span>	// BindRTCPReader lets you modify any incoming RTCP packets. It is called once per sender/receiver, however this might</span></span>
+<span class="giallo-l"><span>	// change in the future. The returned method will be called once per packet batch.</span></span>
+<span class="giallo-l"><span>	BindRTCPReader(reader RTCPReader) RTCPReader</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>	// BindRTCPWriter lets you modify any outgoing RTCP packets. It is called once per PeerConnection. The returned method</span></span>
+<span class="giallo-l"><span>	// will be called once per packet batch.</span></span>
+<span class="giallo-l"><span>	BindRTCPWriter(writer RTCPWriter) RTCPWriter</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>	// BindLocalStream lets you modify any outgoing RTP packets. It is called once for per LocalStream. The returned method</span></span>
+<span class="giallo-l"><span>	// will be called once per rtp packet.</span></span>
+<span class="giallo-l"><span>	BindLocalStream(info *StreamInfo, writer RTPWriter) RTPWriter</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>	// UnbindLocalStream is called when the Stream is removed. It can be used to clean up any data related to that track.</span></span>
+<span class="giallo-l"><span>	UnbindLocalStream(info *StreamInfo)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>	// BindRemoteStream lets you modify any incoming RTP packets.</span></span>
+<span class="giallo-l"><span>	// It is called once for per RemoteStream. The returned method</span></span>
+<span class="giallo-l"><span>	// will be called once per rtp packet.</span></span>
+<span class="giallo-l"><span>	BindRemoteStream(info *StreamInfo, reader RTPReader) RTPReader</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>	// UnbindRemoteStream is called when the Stream is removed. It can be used to clean up any data related to that track.</span></span>
+<span class="giallo-l"><span>	UnbindRemoteStream(info *StreamInfo)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>	io.Closer</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h2 id="nack-example"><a class="zola-anchor" href="#nack-example" aria-label="Anchor link for: nack-example">NACK Example</a></h2>
+<p>A <a rel="external" href="https://webrtcforthecurious.com/docs/05-real-time-networking/#negative-acknowledgments"><code>NACK</code></a> is how WebRTC handles packet loss. A
+receiver sends a <code>NACK</code> so that the sender knows to re-send a packet. The following is a minimal example to show how it could be implemented.</p>
+<pre class="giallo" style="color-scheme: light dark; color: light-dark(#000000, #CDD6F4); background-color: light-dark(#FFFFFF, #1E1E2E);" ><code data-lang="go"><span class="giallo-l"><span style="color: light-dark(#0000FF, #CBA6F7);">type</span><span style="color: light-dark(#267F99, #F9E2AF);"> nackGenerator</span><span style="color: light-dark(#0000FF, #CBA6F7);"> struct</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#267F99, #F9E2AF);">	interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">NoOp</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">	writer</span><span style="color: light-dark(#267F99, #F9E2AF);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">RTCPWriter</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#0000FF, #CBA6F7);">func</span><span style="color: light-dark(#000000, #9399B2);"> (</span><span style="color: light-dark(#001080, #EBA0AC);">g </span><span style="color: light-dark(#000000, #94E2D5);">*</span><span style="color: light-dark(#267F99, #F9E2AF);">nackGenerator</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#795E26, #89B4FA);"> BindRTCPWriter</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #EBA0AC);">writer</span><span style="color: light-dark(#267F99, #F9E2AF);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">RTCPWriter</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#267F99, #F9E2AF);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">RTCPWriter</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">	g</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">writer</span><span style="color: light-dark(#000000, #94E2D5);"> =</span><span style="color: light-dark(#001080, #CDD6F4);"> writer</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">	return</span><span style="color: light-dark(#001080, #CDD6F4);"> writer</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#0000FF, #CBA6F7);">func</span><span style="color: light-dark(#000000, #9399B2);"> (</span><span style="color: light-dark(#001080, #EBA0AC);">g </span><span style="color: light-dark(#000000, #94E2D5);">*</span><span style="color: light-dark(#267F99, #F9E2AF);">nackGenerator</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#795E26, #89B4FA);"> BindRemoteStream</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #EBA0AC);">info</span><span style="color: light-dark(#000000, #94E2D5);"> *</span><span style="color: light-dark(#267F99, #F9E2AF);">interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">StreamInfo</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #EBA0AC);"> reader</span><span style="color: light-dark(#267F99, #F9E2AF);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">RTPReader</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#267F99, #F9E2AF);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">RTPReader</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#0000FF, #CBA6F7);">	var</span><span style="color: light-dark(#001080, #CDD6F4);"> last</span><span style="color: light-dark(#267F99, #CBA6F7);"> uint16</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">	seen</span><span style="color: light-dark(#000000, #94E2D5);"> :=</span><span style="color: light-dark(#0000FF, #FAB387);"> false</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#008000, #9399B2);">	//</span><span style="color: light-dark(#008000, #9399B2);"> Read incoming RTP Packets</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">	return</span><span style="color: light-dark(#001080, #CDD6F4);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">RTPReaderFunc</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#0000FF, #CBA6F7);">func</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #EBA0AC);">b</span><span style="color: light-dark(#000000, #9399B2);"> [</span><span style="color: light-dark(#000000, #9399B2);">]</span><span style="color: light-dark(#267F99, #CBA6F7);">byte</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #EBA0AC);"> a</span><span style="color: light-dark(#267F99, #F9E2AF);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">Attributes</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#000000, #9399B2);"> (</span><span style="color: light-dark(#267F99, #CBA6F7);">int</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#267F99, #F9E2AF);"> interceptor</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">Attributes</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#267F99, #CBA6F7);"> error</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">		n</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> a</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span><span style="color: light-dark(#000000, #94E2D5);"> :=</span><span style="color: light-dark(#001080, #CDD6F4);"> reader</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">Read</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #CDD6F4);">b</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> a</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">		if</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span><span style="color: light-dark(#000000, #94E2D5);"> !=</span><span style="color: light-dark(#0000FF, #F38BA8);"> nil</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">			return</span><span style="color: light-dark(#001080, #CDD6F4);"> n</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> a</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">		}</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">		header</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span><span style="color: light-dark(#000000, #94E2D5);"> :=</span><span style="color: light-dark(#001080, #CDD6F4);"> a</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">GetRTPHeader</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #CDD6F4);">b</span><span style="color: light-dark(#000000, #9399B2);">[</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#001080, #CDD6F4);">n</span><span style="color: light-dark(#000000, #9399B2);">]</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">		if</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span><span style="color: light-dark(#000000, #94E2D5);"> !=</span><span style="color: light-dark(#0000FF, #F38BA8);"> nil</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">			return</span><span style="color: light-dark(#001080, #CDD6F4);"> n</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> a</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">		}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#008000, #9399B2);">		//</span><span style="color: light-dark(#008000, #9399B2);"> Check if we have a gap in packets seen</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">		if</span><span style="color: light-dark(#001080, #CDD6F4);"> seen</span><span style="color: light-dark(#000000, #94E2D5);"> &amp;&amp;</span><span style="color: light-dark(#267F99, #CBA6F7);"> int16</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#001080, #CDD6F4);">header</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">SequenceNumber</span><span style="color: light-dark(#000000, #94E2D5);">-</span><span style="color: light-dark(#001080, #CDD6F4);">last</span><span style="color: light-dark(#000000, #9399B2);">)</span><span style="color: light-dark(#000000, #94E2D5);"> &gt;</span><span style="color: light-dark(#098658, #FAB387);"> 1</span><span style="color: light-dark(#000000, #9399B2);"> {</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: light-dark(#008000, #9399B2);">			//</span><span style="color: light-dark(#008000, #9399B2);"> Send a NACK back to sender</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">			_</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span><span style="color: light-dark(#000000, #94E2D5);"> =</span><span style="color: light-dark(#001080, #CDD6F4);"> g</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">writer</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#795E26, #89B4FA);">Write</span><span style="color: light-dark(#000000, #9399B2);">(</span><span style="color: light-dark(#000000, #9399B2);">[</span><span style="color: light-dark(#000000, #9399B2);">]</span><span style="color: light-dark(#267F99, #F9E2AF);">rtcp</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">Packet</span><span style="color: light-dark(#000000, #9399B2);">{</span><span style="color: light-dark(#000000, #94E2D5);">&amp;</span><span style="color: light-dark(#267F99, #F9E2AF);">rtcp</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">TransportLayerNack</span><span style="color: light-dark(#000000, #9399B2);">{</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">				MediaSSRC</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#001080, #CDD6F4);"> info</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">SSRC</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">				Nacks</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#000000, #9399B2);"> [</span><span style="color: light-dark(#000000, #9399B2);">]</span><span style="color: light-dark(#267F99, #F9E2AF);">rtcp</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#267F99, #F9E2AF);">NackPair</span><span style="color: light-dark(#000000, #9399B2);">{</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">					{</span><span style="color: light-dark(#001080, #CDD6F4);">PacketID</span><span style="color: light-dark(#000000, #9399B2);">:</span><span style="color: light-dark(#001080, #CDD6F4);"> last</span><span style="color: light-dark(#000000, #94E2D5);"> +</span><span style="color: light-dark(#098658, #FAB387);"> 1</span><span style="color: light-dark(#000000, #9399B2);">}</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">				}</span><span style="color: light-dark(#000000, #9399B2);">,</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">			}</span><span style="color: light-dark(#000000, #9399B2);">}</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#0000FF, #F38BA8);"> nil</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">		}</span></span>
+<span class="giallo-l"><span style="color: light-dark(#001080, #CDD6F4);">		last</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> seen</span><span style="color: light-dark(#000000, #94E2D5);"> =</span><span style="color: light-dark(#001080, #CDD6F4);"> header</span><span style="color: light-dark(#000000, #9399B2);">.</span><span style="color: light-dark(#001080, #CDD6F4);">SequenceNumber</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#0000FF, #FAB387);"> true</span></span>
+<span class="giallo-l"><span style="color: light-dark(#AF00DB, #CBA6F7);">		return</span><span style="color: light-dark(#001080, #CDD6F4);"> n</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> a</span><span style="color: light-dark(#000000, #9399B2);">,</span><span style="color: light-dark(#001080, #CDD6F4);"> err</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">	}</span><span style="color: light-dark(#000000, #9399B2);">)</span></span>
+<span class="giallo-l"><span style="color: light-dark(#000000, #9399B2);">}</span></span></code></pre>
+<p>This simple NACK implementation detects gaps between packets and sends NACKs back to senders to fix a stream with packet loss.</p>
+<h2 id="pre-made-interceptors"><a class="zola-anchor" href="#pre-made-interceptors" aria-label="Anchor link for: pre-made-interceptors">Pre-Made Interceptors</a></h2>
+<p>Today we provide these pre-made interceptors:</p>
+<ul>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/nack">NACK Generator/Responder</a> - Requests missing packets and retransmits them.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/report">Sender and Receiver Reports</a> - Generates RTCP reports about sent and received media.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/twcc">Transport-Wide Congestion Control</a> - Adds transport sequence numbers and generates congestion feedback.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/ccfb">Congestion Control Feedback</a> - Generates congestion feedback reports defined by RFC 8888.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/rtpfb">RTP Feedback</a> - Converts TWCC and CCFB feedback into per-packet reports.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/pacing">Pacing</a> - Spreads outgoing packets over time to reduce bursts.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/jitterbuffer">Jitter Buffer</a> - Buffers and reorders incoming RTP packets.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/packetdump">Packet Dump</a> - Logs incoming and outgoing RTP/RTCP packets.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/stats">Stats</a> - Collects RTP stream statistics.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/intervalpli">Interval PLI</a> - Requests keyframes at a fixed interval.</li>
+<li><a rel="external" href="https://github.com/pion/interceptor/tree/main/pkg/flexfec">FlexFEC</a> - Generates repair packets for forward error correction.</li>
+</ul>
+<h2 id="foot-guns"><a class="zola-anchor" href="#foot-guns" aria-label="Anchor link for: foot-guns">Foot Guns</a></h2>
+<p>When building your interceptors keep these in mind.</p>
+<ul>
+<li>
+<p>Order Matters - Register the stats interceptor before the NACK responder so it can count retransmitted RTP packets. Registering stats after the responder means retransmissions bypass it. Incoming NACKs are counted in either order.</p>
+</li>
+<li>
+<p>Don't forget to read - Interceptors are fired by you calling Read. If your application doesn't do a Read things like Stats or NACKs won't happen.</p>
+</li>
+</ul>
+
+    </div>
+</article>
+
+
+
+        <footer>
+            <div class="icons">
+                <a href="https://x.com/_pion">
+    <img class="brand-icon" src="/img/brand/x.svg" alt="X Logo" width="24" height="24">
+</a>
+<a href="https://github.com/pion">
+    <img class="brand-icon" src="/img/brand/github.svg" alt="GitHub Logo" width="24" height="24">
+</a>
+<a href="https://bsky.app/profile/pion.ly">
+    <img class="brand-icon" src="/img/brand/bluesky.svg" alt="Bluesky Logo" width="24" height="24">
+</a>
+<a href="https://discord.gg/6EsQz85vPE">
+    <img class="brand-icon" src="/img/brand/discord.svg" alt="Discord Logo" width="24" height="24">
+</a>
+
+            </div>
+        </footer>
+
+    </main>
+</body>
+
+</html>
