@@ -31,8 +31,17 @@
 {% endif %}
 
 {% if page.content and 'data-lang="mermaid"' in page.content %}
-<script src="/js/vendor/mermaid.min.js"></script>
-<script src="/js/mermaid-render.js"></script>
+<style>
+    @import "/mermaid-styling.css";
+</style>
+
+<script type="module">
+    import { mount } from "/js/vendor/pele.min.js"
+
+    for (const el of document.querySelectorAll(`code[data-lang="mermaid"]`)) {
+        mount(el, el.textContent)
+    }
+</script>
 {% endif %}
 
 {% endblock head_stuff %}
